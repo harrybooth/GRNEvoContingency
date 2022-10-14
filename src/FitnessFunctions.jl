@@ -127,7 +127,7 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segmen
 
 end
 
-function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segment_lengths::Vector{Float64},min_width ::Float64)
+function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segment_lengths::Vector{Float64},min_width::Float64)
 
     up = 0.
     down = 0.
