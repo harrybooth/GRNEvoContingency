@@ -188,7 +188,7 @@ end
 
 function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
 
-    p = (start_network,grn_parameters.diffusion,grn_parameters.degradation,step(grn_parameters.tissue))
+    p = (start_network,grn_parameters.degradation)
     
     grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
 
@@ -224,7 +224,7 @@ end
 
 function SSWM_Evolution_error(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
 
-    p = (start_network,grn_parameters.diffusion,grn_parameters.degradation,step(grn_parameters.tissue))
+    p = (start_network,grn_parameters.degradation)
     
     grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
 
