@@ -1,6 +1,3 @@
-using DifferentialEquations
-# using Symbolics
-
 const Nc = 100
 const Ng = 3
 const L = 1.
@@ -10,8 +7,6 @@ const λm = 0.4
 
 const tissue = range(0,L,length = Nc)
 
-limit(a, N) = a == N+1 ? N : a == 0 ? 1 : a
-
 m(x) = c0*exp(-x/λm)
 
 σ(I) = 1/(1+exp(θ-θ*I))  # σ(0.) > 0 ?
@@ -20,7 +15,7 @@ m(x) = c0*exp(-x/λm)
 
 function gene_regulation_1d!(dg,g,p,t)
 
-    w, Dg, λg, dx = p
+    w, Dg, λg = p
 
     @inbounds for j in 1:Nc
         x = tissue[j]
@@ -32,27 +27,8 @@ function gene_regulation_1d!(dg,g,p,t)
 end
 
 function init_gene_regulation_1d(start_conc)
-
-    g0 = zeros(Ng,Nc)
-
-    for j in 1:Nc
-        for i in 1:Ng
-            g0[i,j] = start_conc
-        end
-    end
-
-    return g0
+    return start_conc .* ones(Ng,Nc)
 end
 
 
-# const w_ex = [0.0 0.0 0.0 1.04715;
-#     1.26868 0.0 0.0 0.0;
-#     0.0370965 -0.281208 0.972401 0.0]
-
-const w_ex = [ 0.0 0.0 0.0 1.25937;
-0.167521 0.0 0.0 0.0;
-0.257394 -2.84893 2.34484 0.0]
-
-const Dg_ex = zeros(Ng)
-const λg_ex = 0.05 .* ones(Ng)
 
