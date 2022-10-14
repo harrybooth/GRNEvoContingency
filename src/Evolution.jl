@@ -4,8 +4,6 @@ using DiffEqBase
 using StatsBase
 using Random
 
-include("GRNTissueModel_ND.jl")
-
 # Solvers 
 
 struct DESystemSolver{A <: DEAlgorithm}
@@ -14,7 +12,7 @@ struct DESystemSolver{A <: DEAlgorithm}
 end
 
 function DefaultGRNSolver()
-    DESystemSolver(AutoTsit5(Rosenbrock23()),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(1e-5,1e-3),abstol = 1e-3,reltol = 1e-3,maxiters = 1e3, verbose = false, save_everystep = false))
+    DESystemSolver(AutoTsit5(Rosenbrock23()),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(1e-5,1e-3),maxiters = 1e3, verbose = false, save_everystep = false))
 end
 
 # Model parameters
@@ -22,12 +20,11 @@ end
 struct GRNParameters
     diffusion :: Vector{Float64}
     degradation :: Vector{Float64}
-    tissue :: StepRangeLen
     g0 :: Matrix{Float64}
 end
 
 function DefaultGRNParameters()
-    GRNParameters(zeros(Ng),0.05 .* ones(Ng),range(0,L,length = Nc),init_gene_regulation_1d(0.01))
+    GRNParameters(zeros(Ng),0.05 .* ones(Ng),0.01 .* ones(Ng,Nc))
 end
 
 # Individual and populations
@@ -44,7 +41,7 @@ end
 
 function Individual(start_network::Matrix{Float64},grn_parameters::GRNParameters,development::DESystemSolver)
 
-    p = (start_network,grn_parameters.diffusion,grn_parameters.degradation,step(grn_parameters.tissue))
+    p = (start_network,grn_parameters.diffusion,grn_parameters.degradation)
 
     genotype = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
     phenotype  = solve(genotype,development.alg;development.kwargs...)
