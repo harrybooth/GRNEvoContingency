@@ -15,7 +15,7 @@ m(x) = c0*exp(-x/λm)
 
 function gene_regulation_1d!(dg,g,p,t)
 
-    w, Dg, λg = p
+    w, λg = p
 
     @inbounds for j in 1:Nc
         x = tissue[j]

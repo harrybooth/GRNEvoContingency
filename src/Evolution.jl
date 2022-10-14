@@ -18,13 +18,12 @@ end
 # Model parameters
 
 struct GRNParameters
-    diffusion :: Vector{Float64}
     degradation :: Vector{Float64}
     g0 :: Matrix{Float64}
 end
 
 function DefaultGRNParameters()
-    GRNParameters(zeros(Ng),0.05 .* ones(Ng),0.01 .* ones(Ng,Nc))
+    GRNParameters(0.05 .* ones(Ng),0.01 .* ones(Ng,Nc))
 end
 
 # Individual and populations
@@ -41,7 +40,7 @@ end
 
 function Individual(start_network::Matrix{Float64},grn_parameters::GRNParameters,development::DESystemSolver)
 
-    p = (start_network,grn_parameters.diffusion,grn_parameters.degradation)
+    p = (start_network,grn_parameters.degradation)
 
     genotype = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
     phenotype  = solve(genotype,development.alg;development.kwargs...)
