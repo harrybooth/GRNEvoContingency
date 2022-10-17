@@ -2,14 +2,18 @@ using DrWatson
 
 @quickactivate "GRNEvoContingency"
 
-include(srcdir("TissueModel_ND.jl"))
-include(srcdir("NetworkTopologies.jl"))
+@everywhere include(srcdir("TissueModel_ND.jl"))
+@everywhere include(srcdir("NetworkTopologies.jl"))
 
 using DifferentialEquations
 using Random
 using Parameters
 using StatsBase
 using Printf
+using Distributed
+
+using Base.Threads
+using Base.Threads: @spawn
 
 # Define viable mutations
 
@@ -71,7 +75,11 @@ problem_types = Dict("feed_forward" => random_feed_forward,
 
 # Define simulation output
 
-output_func(sol,i) = ((sol.retcode,sol.destats.naccept,sol.destats.nreject),false)
+function get_outputs(prob_ode,remake_func,i,ss_abstol,ss_reltol)
+    new_prob = remake_func(prob_ode,i,false)
+    sol = solve(new_prob,AutoTsit5(Rosenbrock23()), isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(ss_abstol,ss_reltol),maxiters = 1e6 + 1, verbose = false, save_everystep = false)
+    return (sol.retcode,sol.destats.naccept,sol.destats.nreject)
+end
 
 # Test network function
 
@@ -89,20 +97,22 @@ function test_networks(n_traj,method = "random",ss_abstol=1e-5,ss_reltol=1e-3)
 
     prob_ode = ODEProblem(gene_regulation_1d!,g0,tspan,p);
 
-    EnsembleSS = EnsembleProblem(prob_ode,prob_func = problem_types[method],output_func = output_func)
-    
-    sim = solve(EnsembleSS,AutoTsit5(Rosenbrock23()), isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(ss_abstol,ss_reltol),maxiters = 1e6 + 1, verbose = false, save_everystep = false, trajectories = n_traj)
+    sim = fill((:Success,1,1),n_traj)
 
-    n_2 = count(x->x[2] + x[3] < 1e2,sim.u)
-    n_3 = count(x->x[2] + x[3] < 1e3,sim.u)
-    n_4 = count(x->x[2] + x[3] < 1e4,sim.u)
-    n_5 = count(x->x[2] + x[3] < 1e5,sim.u)
-    n_6 = count(x->x[2] + x[3] < 1e6,sim.u)
+    @sync for i in 1:n_traj
+        @spawn sim[i] = get_outputs(prob_ode,problem_types[method],i,ss_abstol,ss_reltol)
+    end
 
-    n_unstable = count(x->x[1]==:Unstable,sim.u)
-    n_maxiter = count(x->x[1]==:MaxIters,sim.u)
+    n_2 = count(x->x[2] + x[3] < 1e2,sim)
+    n_3 = count(x->x[2] + x[3] < 1e3,sim)
+    n_4 = count(x->x[2] + x[3] < 1e4,sim)
+    n_5 = count(x->x[2] + x[3] < 1e5,sim)
+    n_6 = count(x->x[2] + x[3] < 1e6,sim)
 
-    med_it = median(map(x->x[2] + x[3] ,sim.u))
+    n_unstable = count(x->x[1]==:Unstable,sim)
+    n_maxiter = count(x->x[1]==:MaxIters,sim)
+
+    med_it = median(map(x->x[2] + x[3] ,sim))
 
     return sim,n_2,n_3,n_4,n_5,n_6,n_unstable,n_maxiter,med_it
 end
@@ -135,7 +145,7 @@ end
 
 # Run
 
-n_traj = 30000
+n_traj = 100
 
 test_specification = Dict("n_traj" => n_traj,"method"=>["random","random_bs","classical","bistable","overlap_dom","frozen_osc","mutual_inh","feed_forward"],"ss_abstol" => 1e-5,"ss_reltol" => 1e-3)
 
