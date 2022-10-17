@@ -12,7 +12,7 @@ struct DESystemSolver{A <: DEAlgorithm}
 end
 
 function DefaultGRNSolver()
-    DESystemSolver(AutoTsit5(Rosenbrock23()),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(1e-5,1e-3),maxiters = 1e3, verbose = false, save_everystep = false))
+    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(1e-5,1e-3),maxiters = 1e3, verbose = false, save_everystep = false))
 end
 
 # Model parameters
