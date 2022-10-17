@@ -1,6 +1,4 @@
 using OptimalTransport
-using Hungarian
-using DynamicAxisWarping
 using Distances
 
 # Optimal transport approaches
@@ -57,11 +55,6 @@ f_ot_max(target) = x->(1/maximum(x))*ot_cost(SqEuclidean(),conc2dist(x), target)
 
 f_ot_pen(target,thresh,n_stripe,penalisation) = x->penalty(x,thresh,n_stripe,penalisation)*ot_cost(SqEuclidean(),conc2dist(x), target)
 
-# Dynamic warping approach
-
-f_dw(target,radius) = x->dtw_cost(x,target,SqEuclidean(),radius)
-
-f_ot_dw(target,radius) = x->dtw_cost(x,target,SqEuclidean(),radius) + ot_cost(SqEuclidean(),conc2dist(x), conc2dist(target))
 
 # Dual evaluation approach
 

@@ -17,8 +17,6 @@ using Base.Threads: @spawn
 @everywhere include(srcdir("Evolution.jl"))
 @everywhere include(srcdir("FitnessFunctions.jl"))
 @everywhere include(srcdir("TissueModel_ND.jl"))
-@everywhere include(srcdir("NetworkTopologies.jl"))
-
 
 # Test network function
 
@@ -76,15 +74,12 @@ function makesim(d::Dict)
     
     @unpack n_traj, target, β, max_gen, noise_σ, noise_method, mutation_method = d
 
-    sim = repeated_evolution(n_traj, target, β, noise_σ, noise_method, mutation_method)
+    sim = repeated_evolution(n_traj, target, β, max_gen, noise_σ, noise_method, mutation_method)
 
     fulld = copy(d)
 
-    fulld["n_max_iters_reached"] = count(x->length(x[2].fitness_trajectory) == max_gen,sim)
-    fulld["median_fitness_max_iters"] = median(map(x->x[2].fitness_trajectory[end],filter(x->length(x[2].fitness_trajectory) == max_gen,sim)))
-    fulld["median_fitness_converged"] = median(map(x->x[2].fitness_trajectory[end],filter(x->length(x[2].fitness_trajectory) != max_gen,sim)))
-    
-    full_d["median_proportion_mutants_maxiter"] = map(x->count(y->y == :MaxIters,x.retcodes)/length(x.retcodes),sim)
+    fulld["n_max_iters_reached"] = count(x->length(x[2].fitness_trajectory) == max_gen,sim)    
+    fulld["describe_proportion_mutants_rejected"] = summarystats(map(x->count(y->y == :MaxIters,x[2].retcodes)/length(x[2].retcodes),sim))
 
     fulld["raw_data"] = sim
 
@@ -93,13 +88,12 @@ end
 
 # Run
 
-n_traj = 100
-target = [10.,50.,40.]
+n_traj = 10
 β = Inf
 max_gen = 10000
 noise_σ = 1.
 
-test_specification = Dict("n_traj" => n_traj, "target"=> target, "β" => β, "max_gen" => max_gen, "noise_σ" => noise_σ, 
+test_specification = Dict("n_traj" => n_traj, "target"=> [target], "β" => β, "max_gen" => max_gen, "noise_σ" => noise_σ, 
                           "noise_method" => "additive", "mutation_method" => "all_viable")
 
 all_tests = dict_list(test_specification);
