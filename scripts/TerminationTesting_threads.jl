@@ -2,8 +2,6 @@ using DrWatson
 
 @quickactivate "GRNEvoContingency"
 
-@everywhere include(srcdir("TissueModel_ND.jl"))
-@everywhere include(srcdir("NetworkTopologies.jl"))
 
 using DifferentialEquations
 using Random
@@ -14,6 +12,9 @@ using Distributed
 
 using Base.Threads
 using Base.Threads: @spawn
+
+@everywhere include(srcdir("TissueModel_ND.jl"))
+@everywhere include(srcdir("NetworkTopologies.jl"))
 
 # Define viable mutations
 
