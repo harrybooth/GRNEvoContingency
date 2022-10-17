@@ -148,7 +148,10 @@ end
 
 n_traj = 100
 
-test_specification = Dict("n_traj" => n_traj,"method"=>["random","random_bs","classical","bistable","overlap_dom","frozen_osc","mutual_inh","feed_forward"],"ss_abstol" => 1e-5,"ss_reltol" => 1e-3)
+test_specification = Dict("n_traj" =>[50000,50000,25000,25000,25000,25000,25000,25000],
+                          "method"=>["random","random_bs","classical","bistable","overlap_dom","frozen_osc","mutual_inh","feed_forward"],
+                          "ss_abstol" => 1e-5,
+                          "ss_reltol" => 1e-3)
 
 all_tests = dict_list(test_specification);
 
