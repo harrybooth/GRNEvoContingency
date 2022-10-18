@@ -82,7 +82,7 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64)
 
     push!(segment_lengths,sl)
 
-    return (2*n_stripe - up - down)^2, sum((segment_lengths .- Nc/(2*n_stripe + 1)) .^ 2)
+    return (2*n_stripe - up - down)^2, sum((segment_lengths .- Nc/(2*n_stripe + 1)) .^ 2), segment_lengths
 
 end
 
@@ -112,10 +112,10 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segmen
 
     if length(segment_lengths) != length(target_segment_lengths)
 
-        return (2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2)
+        return (2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2), segment_lengths
 
     else
-        return (2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2)
+        return (2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2), segment_lengths
     end
 
 end
@@ -156,10 +156,10 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segmen
 
     if length(segment_lengths) != length(target_segment_lengths)
 
-        return (2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2)
+        return (2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2), segment_lengths
 
     else
-        return (2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2)
+        return (2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2), segment_lengths
     end
 
 end
@@ -197,7 +197,7 @@ function f_sim_eval(x::Vector{Float64},thresh::Float64,min_width ::Float64)
 
     push!(segment_lengths,sl)
 
-    return (up,down,segment_lengths)
+    return up,down,segment_lengths
 
 end
 

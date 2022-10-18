@@ -48,13 +48,13 @@ function Individual(start_network::Matrix{Float64},grn_parameters::GRNParameters
     Individual(genotype,phenotype)
 end
 
-mutable struct Population{T<:Union{Float64,Tuple{Float64,Float64}}}
+mutable struct Population{T<:Union{Tuple{Float64,Vector{Any}},Tuple{Float64,Float64,Vector{Any}}}}
     dominant_individual::Individual
     fitness :: T
 end
 
 function Population(founder::Individual,fitness_function)
-    fitness = fitness_function(founder.phenotype)
+    fitness  = fitness_function(founder.phenotype)
     Population(founder,fitness)
 end
 
@@ -136,7 +136,7 @@ function fixation_probability(Δf1,Δf2,β)
     end
 end
 
-function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,fitness_function)
+function strong_selection!(population::Tuple{Float64,Vector{Any}},mutant::Individual,β::Float64,fitness_function)
 
     mutant_fitness = fitness_function(mutant.phenotype)
 
@@ -146,7 +146,7 @@ function strong_selection!(population::Population{Float64},mutant::Individual,β
     end
 end
 
-function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Float64,fitness_function)
+function strong_selection!(population::Population{Tuple{Float64,Float64,Vector{Any}}},mutant::Individual,β::Float64,fitness_function)
 
     mutant_fitness = fitness_function(mutant.phenotype)
 
@@ -174,15 +174,15 @@ mutable struct EvoTrace
     retcodes :: Any
 end
 
-function stopping_criteria(population::Population{Float64},tolerance::Float64)
-    population.fitness > tolerance
+function stopping_criteria(population::Population{Tuple{Float64,Vector{Any}}},tolerance::Float64)
+    population.fitness[1] > tolerance
 end
 
-function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Float64)
+function stopping_criteria(population::Population{Tuple{Float64,Float64,Vector{Any}}},tolerance::Float64)
      (population.fitness[2] > tolerance) || (population.fitness[1] != 0)
 end
 
-function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Tuple{Float64,Float64})
+function stopping_criteria(population::Population{Tuple{Float64,Float64,Vector{Any}}},tolerance::Tuple{Float64,Float64})
     (population.fitness[2] > tolerance[2]) || (population.fitness[1] > tolerance[1])
 end
 
