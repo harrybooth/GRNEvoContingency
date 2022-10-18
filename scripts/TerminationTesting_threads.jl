@@ -76,15 +76,15 @@ problem_types = Dict("feed_forward" => random_feed_forward,
 
 # Define simulation output
 
-function get_outputs(prob_ode,remake_func,i,ss_abstol,ss_reltol)
+function get_outputs(prob_ode,alg,remake_func,i,ss_abstol,ss_reltol)
     new_prob = remake_func(prob_ode,i,false)
-    sol = solve(new_prob,AutoTsit5(Rosenbrock23()), isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(ss_abstol,ss_reltol),maxiters = 1e6 + 1, verbose = false, save_everystep = false)
+    sol = solve(new_prob,alg, isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(ss_abstol,ss_reltol),maxiters = 1e6 + 1, verbose = false, save_everystep = false)
     return (sol.retcode,sol.destats.naccept,sol.destats.nreject)
 end
 
 # Test network function
 
-function test_networks(n_traj,method = "random",ss_abstol=1e-5,ss_reltol=1e-3)
+function test_networks(n_traj,method = "random",algo = "Tsit5",ss_abstol=1e-5,ss_reltol=1e-3)
 
     w = zeros(Ng,Ng+1)
 
@@ -100,8 +100,18 @@ function test_networks(n_traj,method = "random",ss_abstol=1e-5,ss_reltol=1e-3)
 
     sim = fill((:Success,1,1),n_traj)
 
+    if algo == "Tsit5-Rosenbrock23"
+        alg_choice = AutoTsit5(Rosenbrock23())
+    elseif algo == "Tsit5-Radau"
+        alg_choice = AutoTsit5(RadauIIA5())
+    elseif algo == "Tsit5"
+        alg_choice = Tsit5()
+    else
+        throw(DomainError(algo,"Wrong solver spec"))
+    end
+
     @sync for i in 1:n_traj
-        @spawn sim[i] = get_outputs(prob_ode,problem_types[method],i,ss_abstol,ss_reltol)
+        @spawn sim[i] = get_outputs(prob_ode,alg_choice,problem_types[method],i,ss_abstol,ss_reltol)
     end
 
     n_2 = count(x->x[2] + x[3] < 1e2,sim)
@@ -122,9 +132,9 @@ end
 
 function makesim(d::Dict)
     
-    @unpack n_traj, method,ss_abstol,ss_reltol = d
+    @unpack n_traj, method,algo,ss_abstol,ss_reltol = d
 
-    r,n_2,n_3,n_4,n_5,n_6,n_unstable,n_maxiter,med_it = test_networks(n_traj,method,ss_abstol,ss_reltol)
+    r,n_2,n_3,n_4,n_5,n_6,n_unstable,n_maxiter,med_it = test_networks(n_traj,method,algo,ss_abstol,ss_reltol)
 
     fulld = copy(d)
 
@@ -146,10 +156,12 @@ end
 
 # Run
 
-n_traj = 100
+n_traj_r = 100
+n_traj_o = 100
 
-test_specification = Dict("n_traj" =>[50000,50000,25000,25000,25000,25000,25000,25000],
+test_specification = Dict("n_traj" =>[n_traj_r,n_traj_r,n_traj_o,n_traj_o,n_traj_o,n_traj_o,n_traj_o,n_traj_o],
                           "method"=>["random","random_bs","classical","bistable","overlap_dom","frozen_osc","mutual_inh","feed_forward"],
+                          "algo"=>"Tsit5-Radau",
                           "ss_abstol" => 1e-5,
                           "ss_reltol" => 1e-3)
 
