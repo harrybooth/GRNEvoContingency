@@ -4,15 +4,12 @@ const L = 1.
 const θ = 5.
 const c0 = 1.
 const λm = 0.4
-const Hill_n = 1
 
 const tissue = range(0,L,length = Nc)
 
 m(x) = c0*exp(-x/λm)
 
-# σ(I) = 1/(1+exp(θ-θ*I))  # σ(0.) > 0 ?
-
-σ(I) = 1/(1+I^Hill_n)  # σ(0.) > 0 ?
+σ(I) = 1/(1+exp(θ-θ*I))  # σ(0.) > 0 ?
 
 # MOL: u_{j}(t) = u(x_j,t) where x_j = j*dx
 
