@@ -2,15 +2,15 @@ const Nc = 100
 const Ng = 3
 const L = 1.
 const θ = 5.
-const c0 = 1.
+const c0 = 10.
 const λm = 0.4
-const b = 5.
+const b = 1.
 
 const tissue = range(0,L,length = Nc)
 
 m(x) = c0*exp(-x/λm)
 
-h2(w,g) = w >= 0 ? 1 + (w*g)^2/(b^2+(w*g)^2) : b^2/(b^2+(w*g)^2) # squared so dont need abs value of w
+h2(w,g) = (abs(w)*g)^sign(w) # squared so dont need abs value of w
 
 # MOL: u_{j}(t) = u(x_j,t) where x_j = j*dx
 
