@@ -30,7 +30,7 @@ function new_start(grn_parameters,β,max_gen,tolerance,fitness_function,noise_σ
 
     mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_σ),start_topology)
 
-    noise_application = (x,n) -> x + x*n  
+    noise_application = (x,n) -> x + n  
 
     mutate_function = i -> noise(i,mutation_op,noise_application)
 
@@ -89,12 +89,12 @@ end
 
 # Run
 
-n_traj = 10
+n_traj = 1
 β = Inf
 max_gen = 10000
 noise_σ = 1.
 
-target = [85.,30.,85.]
+target = [80.,40.,80.]
 
 test_specification = Dict("n_traj" => n_traj, "target"=> [target], "β" => β, "max_gen" => max_gen, "noise_σ" => noise_σ)
 

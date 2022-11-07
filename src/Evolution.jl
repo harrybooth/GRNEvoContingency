@@ -12,8 +12,10 @@ struct DESystemSolver{A <: DEAlgorithm}
 end
 
 function DefaultGRNSolver()
-    DESystemSolver(AutoTsit5(RadauIIA5()),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(1e-5,1e-3),maxiters = 1e5, verbose = false, save_everystep = false))
+    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-10,1e-6),maxiters = 1e4, verbose = false, save_everystep = false))
 end
+
+# AutoTsit5(RadauIIA5())
 
 # Model parameters
 
@@ -32,6 +34,7 @@ struct Individual
     genotype :: DEProblem
     phenotype :: DESolution
 end
+
 
 function Individual(genotype::DEProblem,development::DESystemSolver)
     phenotype  = solve(genotype,development.alg;development.kwargs...)
