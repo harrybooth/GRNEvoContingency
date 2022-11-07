@@ -6,3 +6,6 @@ const w_frozen_osc = [1 -1 -1 1 ; 0 1 0 0 ; 1 -1 0 0];
 const w_overlap_dom = [0 0 -1 1 ; 1 0 0 0 ; -1 1 0 0];
 const w_bistable = [0 0 0 1 ; -1 0 1 0 ; 0 -1 1 0];
 const w_classical = [0 0 0 1 ; -1 1 0 0 ; -1 -1 1 0];
+
+
+const network_topology_list = [w_feed_forward,w_mutual_inh,w_frozen_osc,w_overlap_dom,w_bistable,w_classical]
