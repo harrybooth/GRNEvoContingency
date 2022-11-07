@@ -97,11 +97,11 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segmen
 
     for i in 1:length(x)-1
         sl +=1
-        if  x[i] <= thresh && x[i+1] > thresh
+        if  x[i] <= thresh && x[i+1] >  thresh
             up += 1.
             push!(segment_lengths,sl)
             sl = 0.
-        elseif x[i] >= thresh && x[i+1] < thresh
+        elseif x[i] >= thresh && x[i+1] <  thresh
             down += 1.
             push!(segment_lengths,sl)
             sl = 0.
@@ -206,15 +206,26 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64,target::Discre
     up = 0.
     down = 0.
 
+    sl = 0.
+
+    segment_lengths = []
+
     for i in 1:length(x)-1
+        sl +=1
         if x[i] <= thresh && x[i+1] > thresh
             up += 1.
+            push!(segment_lengths,sl)
+            sl = 0.
         elseif x[i] >= thresh && x[i+1] < thresh
             down += 1.
+            push!(segment_lengths,sl)
+            sl = 0.
         end
     end
 
+    push!(segment_lengths,sl)
 
-    return (2*n_stripe - up - down)^2, ot_cost(SqEuclidean(),conc2dist(x), target)
+    return (2*n_stripe - up - down)^2, ot_cost(SqEuclidean(),conc2dist(x), target), segment_lengths
 
 end
+

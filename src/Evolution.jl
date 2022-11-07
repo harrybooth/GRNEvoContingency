@@ -12,7 +12,7 @@ struct DESystemSolver{A <: DEAlgorithm}
 end
 
 function DefaultGRNSolver()
-    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(1e-5,1e-3),maxiters = 1e3, verbose = false, save_everystep = false))
+    DESystemSolver(AutoTsit5(RadauIIA5()),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), callback = TerminateSteadyState(1e-5,1e-3),maxiters = 1e5, verbose = false, save_everystep = false))
 end
 
 # Model parameters
@@ -232,43 +232,45 @@ function SSWM_Evolution_error(start_network::Matrix{Float64},grn_parameters::GRN
     
     founder = Individual(grn,development)
 
-    population = Population(founder,fitness_function)
+    # population = Population(founder,fitness_function)
 
-    evo_trace = EvoTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode])
+    # evo_trace = EvoTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode])
 
-    gen = 0
+    # gen = 0
 
-    w_s = []
+    # w_s = []
 
-    errors  = []
+    # errors  = []
 
-    while stopping_criteria(population,tolerance) && gen < max_gen
+    # while stopping_criteria(population,tolerance) && gen < max_gen
 
-        new_w = mutate_function(population.dominant_individual.genotype.p[1])
-        push!(w_s,new_w)
+    #     new_w = mutate_function(population.dominant_individual.genotype.p[1])
+    #     push!(w_s,new_w)
 
-        try
+    #     try
 
-            mutant = create_mutant(population.dominant_individual,new_w,development)
+    #         mutant = create_mutant(population.dominant_individual,new_w,development)
 
-            if mutant.phenotype.retcode == :Terminated
-                strong_selection!(population,mutant,β,fitness_function)
-            end
+    #         if mutant.phenotype.retcode == :Terminated
+    #             strong_selection!(population,mutant,β,fitness_function)
+    #         end
     
-            push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
-            push!(evo_trace.fitness_trajectory,population.fitness)
-            push!(evo_trace.retcodes,mutant.phenotype.retcode)
+    #         push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
+    #         push!(evo_trace.fitness_trajectory,population.fitness)
+    #         push!(evo_trace.retcodes,mutant.phenotype.retcode)
     
-            gen += 1
+    #         gen += 1
 
-        catch e
-            push!(errors,gen)
-            gen += 1
-        end
+    #     catch e
+    #         push!(errors,gen)
+    #         gen += 1
+    #     end
 
-    end
+    # end
 
-    return population,w_s,errors
+    # return population,w_s,errors
+
+    return founder,fitness_function
 
 end
 
