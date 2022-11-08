@@ -82,7 +82,7 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64)
 
     push!(segment_lengths,sl)
 
-    return (2*n_stripe - up - down)^2, sum((segment_lengths .- Nc/(2*n_stripe + 1)) .^ 2), segment_lengths
+    return ((2*n_stripe - up - down)^2, sum((segment_lengths .- Nc/(2*n_stripe + 1)) .^ 2)), segment_lengths
 
 end
 
@@ -112,10 +112,10 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segmen
 
     if length(segment_lengths) != length(target_segment_lengths)
 
-        return (2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2), segment_lengths
+        return ((2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2)), segment_lengths
 
     else
-        return (2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2), segment_lengths
+        return ((2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2)), segment_lengths
     end
 
 end
@@ -156,10 +156,84 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segmen
 
     if length(segment_lengths) != length(target_segment_lengths)
 
-        return (2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2), segment_lengths
+        return ((2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2)), segment_lengths
 
     else
-        return (2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2), segment_lengths
+        return ((2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2)), segment_lengths
+    end
+
+end
+
+function f_sim_cw(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_centre_widths::Vector{Tuple{Float64,Float64}},min_width::Float64)
+
+    up = false
+
+    sl = 0.
+
+    high_segment_lengths = []
+    low_segment_lengths = []
+
+    for i in 1:length(x)-1
+        sl +=1
+        if  x[i] <= thresh && x[i+1] > thresh
+            up = true
+            if sl >= min_width
+                push!(low_segment_lengths,sl)
+            else
+                push!(low_segment_lengths,0.)
+            end
+
+            sl = 0.
+
+        elseif x[i] >= thresh && x[i+1] < thresh
+            up = false
+            if sl >= min_width
+                push!(high_segment_lengths,sl)
+            else
+                push!(high_segment_lengths,0.)
+            end
+
+            sl = 0.
+        end
+
+    end
+
+    if up
+        push!(high_segment_lengths,sl)
+    else
+        push!(low_segment_lengths,sl)
+    end
+
+    n_stripe_pheno = length(high_segment_lengths)
+    valid_pheno = length(low_segment_lengths) == n_stripe + 1
+
+    if valid_pheno
+
+        pheno_centre_widths = []
+
+        length_traversed = 0.
+
+        for il in 1:length(low_segment_lengths) - 1
+
+            length_traversed += low_segment_lengths[il]
+
+            found_centre = length_traversed + 0.5*high_segment_lengths[il]
+
+            push!(pheno_centre_widths,(found_centre,0.5*high_segment_lengths[il]))
+
+            length_traversed += high_segment_lengths[il]
+        end
+
+        error = 0.
+
+        for (c,w) in target_centre_widths
+            error += minimum([(c - cp)^2 + (w - wp)^2 for (cp,wp) in pheno_centre_widths])
+        end
+
+        return (float((n_stripe - n_stripe_pheno)^2), error), pheno_centre_widths
+
+    else
+        return (float((n_stripe - n_stripe_pheno)^2), Inf), (low_segment_lengths,high_segment_lengths)
     end
 
 end
@@ -225,7 +299,7 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64,target::Discre
 
     push!(segment_lengths,sl)
 
-    return (2*n_stripe - up - down)^2, ot_cost(SqEuclidean(),conc2dist(x), target), segment_lengths
+    return ((2*n_stripe - up - down)^2, ot_cost(SqEuclidean(),conc2dist(x), target)), segment_lengths
 
 end
 

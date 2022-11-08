@@ -51,14 +51,15 @@ function Individual(start_network::Matrix{Float64},grn_parameters::GRNParameters
     Individual(genotype,phenotype)
 end
 
-mutable struct Population{T<:Union{Tuple{Float64,Vector{Any}},Tuple{Float64,Float64,Vector{Any}}}}
+mutable struct Population{T}
     dominant_individual::Individual
     fitness :: T
+    pheno_class :: Any
 end
 
 function Population(founder::Individual,fitness_function)
-    fitness  = fitness_function(founder.phenotype)
-    Population(founder,fitness)
+    fitness,pheno_class  = fitness_function(founder.phenotype)
+    Population(founder,fitness,pheno_class)
 end
 
 # Mutation
@@ -139,23 +140,25 @@ function fixation_probability(Δf1,Δf2,β)
     end
 end
 
-function strong_selection!(population::Tuple{Float64,Vector{Any}},mutant::Individual,β::Float64,fitness_function)
+function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,fitness_function)
 
-    mutant_fitness = fitness_function(mutant.phenotype)
+    mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
 
     if rand() < fixation_probability(population.fitness - mutant_fitness,β)
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
+        population.pheno_class = mutant_pheno_class
     end
 end
 
-function strong_selection!(population::Population{Tuple{Float64,Float64,Vector{Any}}},mutant::Individual,β::Float64,fitness_function)
+function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Float64,fitness_function)
 
-    mutant_fitness = fitness_function(mutant.phenotype)
+    mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
 
     if rand() < fixation_probability(population.fitness[1] - mutant_fitness[1],population.fitness[2] - mutant_fitness[2],β)
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
+        population.pheno_class = mutant_pheno_class
     end
 end
 
@@ -173,19 +176,20 @@ end
 
 mutable struct EvoTrace
     traversed_topologies :: Any
+    traversed_phenotypes :: Any
     fitness_trajectory :: Any
     retcodes :: Any
 end
 
-function stopping_criteria(population::Population{Tuple{Float64,Vector{Any}}},tolerance::Float64)
-    population.fitness[1] > tolerance
+function stopping_criteria(population::Population{Float64},tolerance::Float64)
+    population.fitness > tolerance
 end
 
-function stopping_criteria(population::Population{Tuple{Float64,Float64,Vector{Any}}},tolerance::Float64)
+function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Float64)
      (population.fitness[2] > tolerance) || (population.fitness[1] != 0)
 end
 
-function stopping_criteria(population::Population{Tuple{Float64,Float64,Vector{Any}}},tolerance::Tuple{Float64,Float64})
+function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Tuple{Float64,Float64})
     (population.fitness[2] > tolerance[2]) || (population.fitness[1] > tolerance[1])
 end
 
@@ -201,7 +205,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     population = Population(founder,fitness_function)
 
-    evo_trace = EvoTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode])
+    evo_trace = EvoTrace([population.dominant_individual.genotype.p[1]],[population.pheno_class],[population.fitness],[founder.phenotype.retcode])
 
     gen = 0
 
@@ -214,6 +218,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
         end
 
         push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
+        push!(evo_trace.traversed_phenotypes,population.pheno_class)
         push!(evo_trace.fitness_trajectory,population.fitness)
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
 
@@ -292,6 +297,7 @@ function SSWM_Evolution!(population::Population,evo_trace::EvoTrace,β::Float64,
         end
 
         push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
+        push!(evo_trace.traversed_phenotypes,population.pheno_class)
         push!(evo_trace.fitness_trajectory,population.fitness)
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
 

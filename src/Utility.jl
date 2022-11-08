@@ -11,3 +11,8 @@ function plot_SS(sol_u_end)
     plot(transpose(sol_u_end),xlabel = "Tissue",ylabel = "Concentration",label = ["Gene A" "Gene B" "Gene C (output)"])
     plot!(map(x->m(x),tissue),label = "Morphogen (steady state)")
 end
+
+function plot_SS_nl(sol_u_end)
+    plot(transpose(sol_u_end),legend = false)
+    plot!(map(x->m(x),tissue),label = "Morphogen (steady state)")
+end
