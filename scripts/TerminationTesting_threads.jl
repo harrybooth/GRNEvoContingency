@@ -18,10 +18,9 @@ using Base.Threads: @spawn
 
 # Define viable mutations
 
-viable_mutations = ones(Ng,Ng+1)
-
-viable_mutations[2,4] = 0.
-viable_mutations[3,4] = 0.
+viable_mutations = ones(Int,Ng,Ng+1)
+viable_mutations[2,4] = 0
+viable_mutations[3,4] = 0
 
 # Define randomized network generators
 

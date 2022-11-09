@@ -18,14 +18,11 @@ using Base.Threads: @spawn
 @everywhere include(srcdir("FitnessFunctions.jl"))
 @everywhere include(srcdir("TissueModel_ND.jl"))
 
-# Test network function
+@everywhere example_networks = load(datadir("exp_pro/80-40-80_networks/examples.jld"))
 
-function repeated_evolution(n_traj, target = [10.,50.,40.], β = Inf, max_gen = 10000, noise_σ = 1., noise_method = "additive", mutation_method = "all_viable")
+function repeated_evolution(topology,n_traj, target =  [(40.,20.)], β = Inf, max_gen = 20000, noise_cv = 1., noise_method = "additive", mutation_method = "all_viable")
 
-    start_network =  [ 2.46532  -2.18916   -0.482151  0.100882;
-                        0.0       0.336411   0.0       0.0;
-                        3.8411   -5.86916    0.0       0.0]
-
+    start_network = example_networks[topology]
 
     grn_parameters = DefaultGRNParameters();
 
@@ -35,12 +32,12 @@ function repeated_evolution(n_traj, target = [10.,50.,40.], β = Inf, max_gen = 
     viable_mutations[2,4] = 0
     viable_mutations[3,4] = 0
 
-    mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_σ),viable_mutations)
+    mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),viable_mutations)
 
     if noise_method == "multiplicative"
         noise_application = (x,n) -> x * n
     else
-        noise_application = (x,n) -> x + n  
+        noise_application = (x,n) -> x + x*n  
     end
 
     mutate_function = i -> noise(i,mutation_op,noise_application)
@@ -53,9 +50,9 @@ function repeated_evolution(n_traj, target = [10.,50.,40.], β = Inf, max_gen = 
 
     output_gene = 3
 
-    fitness_function = s -> fitness_evaluation(s,x->f_sim(x,stripe_threshold,n_stripe,target,min_width),output_gene)
+    fitness_function = s -> fitness_evaluation(s,x->f_sim_cw(x,stripe_threshold,n_stripe,target,min_width),output_gene)
 
-    tolerance = 4.
+    tolerance = 2.
 
     p_final, evo_trace = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
 
@@ -72,9 +69,9 @@ end
 
 function makesim(d::Dict)
     
-    @unpack n_traj, target, β, max_gen, noise_σ, noise_method, mutation_method = d
+    @unpack topology,n_traj, target, β, max_gen, noise_cv, noise_method, mutation_method = d
 
-    sim = repeated_evolution(n_traj, target, β, max_gen, noise_σ, noise_method, mutation_method)
+    sim = repeated_evolution(topology,n_traj, target, β, max_gen, noise_cv, noise_method, mutation_method)
 
     fulld = copy(d)
 
@@ -88,17 +85,21 @@ end
 
 # Run
 
-n_traj = 10
+n_traj = 100
 β = Inf
-max_gen = 10000
-noise_σ = 1.
+max_gen = 20000
+noise_cv = 1.
 
-test_specification = Dict("n_traj" => n_traj, "target"=> [target], "β" => β, "max_gen" => max_gen, "noise_σ" => noise_σ, 
+target = [[(40.,20.)]]
+
+topologies_test = collect(keys(filter(x->typeof(x[2]) == Matrix{Float64},example_networks)))
+
+test_specification = Dict("topology" => topologies_test, "n_traj" => n_traj, "target"=> target, "β" => β, "max_gen" => max_gen, "noise_cv" => noise_cv, 
                           "noise_method" => "additive", "mutation_method" => "all_viable")
 
 all_tests = dict_list(test_specification);
 
 for (i,d) in enumerate(all_tests)
     f = makesim(d)
-    safesave(datadir("sims/repeated_evolution_consistent_start", savename(d, "jld2")), f)
+    safesave(datadir("sims/repeated_evolution_different_topologies", savename(d, "jld2")), f)
 end
