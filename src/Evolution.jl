@@ -103,17 +103,17 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator{Float64},noise_functi
     return new_w
 end
 
-function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Float64}},noise_function)
-    new_w = copy(w)
-    for j in 1:size(w,2)
-        for i in 1:size(w,1)
-            if rand() < mut_op.mutation_freq[i,j]
-                new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
-            end
-        end
-    end
-    return new_w
-end
+# function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Float64}},noise_function)
+#     new_w = copy(w)
+#     for j in 1:size(w,2)
+#         for i in 1:size(w,1)
+#             if rand() < mut_op.mutation_freq[i,j]
+#                 new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
+#             end
+#         end
+#     end
+#     return new_w
+# end
 
 function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Int64}},noise_function)
     new_w = copy(w)
