@@ -89,7 +89,7 @@ end
 
 # Run
 
-n_traj = 1
+n_traj = 1000
 β = Inf
 max_gen = 10000
 noise_σ = 1.
