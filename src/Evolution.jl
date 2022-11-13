@@ -117,8 +117,8 @@ end
 
 function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Int64}},noise_function)
     new_w = copy(w)
-    number_of = maximum(mut_op.mutation_freq)
-    for index in sample(findall(x-> x > 0,mut_op.mutation_freq),number_of,replace = false)
+    # number_of = maximum(mut_op.mutation_freq)
+    for index in sample(findall(x-> x > 0,mut_op.mutation_freq),1,replace = false)
         new_w[index] = noise_function(new_w[index],rand(mut_op.noise_distribution))
     end
     return new_w

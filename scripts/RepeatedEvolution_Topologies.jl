@@ -37,7 +37,7 @@ function repeated_evolution(topology,n_traj, target =  [(40.,20.)], β = Inf, ma
     if noise_method == "multiplicative"
         noise_application = (x,n) -> x * n
     else
-        noise_application = (x,n) -> x + x*n  
+        noise_application = (x,n) -> x == 0 ? x + n : x + x*n
     end
 
     mutate_function = i -> noise(i,mutation_op,noise_application)
@@ -46,7 +46,7 @@ function repeated_evolution(topology,n_traj, target =  [(40.,20.)], β = Inf, ma
 
     stripe_threshold = 5.
 
-    min_width = 5.
+    min_width = 1.
 
     output_gene = 3
 
@@ -85,7 +85,7 @@ end
 
 # Run
 
-n_traj = 100
+n_traj = 2500
 β = Inf
 max_gen = 20000
 noise_cv = 1.
