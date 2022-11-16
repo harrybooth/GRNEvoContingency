@@ -233,7 +233,7 @@ function f_sim_cw(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_cen
         return (float((n_stripe - n_stripe_pheno)^2), error), pheno_centre_widths
 
     else
-        return (float((n_stripe - n_stripe_pheno)^2), Inf), (low_segment_lengths,high_segment_lengths)
+        return (float((n_stripe - n_stripe_pheno)^2), Inf), [(NaN,NaN)]
     end
 
 end
