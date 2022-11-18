@@ -144,7 +144,7 @@ function strong_selection!(population::Population{Float64},mutant::Individual,β
 
     mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
 
-    if rand() < fixation_probability(population.fitness - mutant_fitness,β)
+    if rand() < fixation_probability(mutant_fitness - population.fitness,β)
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
         population.pheno_class = mutant_pheno_class
@@ -155,7 +155,7 @@ function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant
 
     mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
 
-    if rand() < fixation_probability(population.fitness[1] - mutant_fitness[1],population.fitness[2] - mutant_fitness[2],β)
+    if rand() < fixation_probability(mutant_fitness[1] - population.fitness[1],mutant_fitness[2] - population.fitness[2],β)
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
         population.pheno_class = mutant_pheno_class

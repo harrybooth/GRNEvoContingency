@@ -82,7 +82,7 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64)
 
     push!(segment_lengths,sl)
 
-    return ((2*n_stripe - up - down)^2, sum((segment_lengths .- Nc/(2*n_stripe + 1)) .^ 2)), segment_lengths
+    return (-(2*n_stripe - up - down)^2, -sum((segment_lengths .- Nc/(2*n_stripe + 1)) .^ 2)), segment_lengths
 
 end
 
@@ -156,10 +156,10 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_segmen
 
     if length(segment_lengths) != length(target_segment_lengths)
 
-        return ((2*n_stripe - up - down)^2, sum((segment_lengths .- mean(target_segment_lengths)) .^ 2)), segment_lengths
+        return (-(2*n_stripe - up - down)^2, -sum((segment_lengths .- mean(target_segment_lengths)) .^ 2)), segment_lengths
 
     else
-        return ((2*n_stripe - up - down)^2, sum((segment_lengths .- target_segment_lengths) .^ 2)), segment_lengths
+        return (-(2*n_stripe - up - down)^2, -sum((segment_lengths .- target_segment_lengths) .^ 2)), segment_lengths
     end
 
 end
@@ -230,10 +230,10 @@ function f_sim_cw(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_cen
             error += minimum([(c - cp)^2 + (w - wp)^2 for (cp,wp) in pheno_centre_widths])
         end
 
-        return (float((n_stripe - n_stripe_pheno)^2), error), pheno_centre_widths
+        return (-float((n_stripe - n_stripe_pheno)^2), -error), pheno_centre_widths
 
     else
-        return (float((n_stripe - n_stripe_pheno)^2), Inf), [(NaN,NaN)]
+        return (-float((n_stripe - n_stripe_pheno)^2), -Inf), [(NaN,NaN)]
     end
 
 end
@@ -299,7 +299,7 @@ function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64,target::Discre
 
     push!(segment_lengths,sl)
 
-    return ((2*n_stripe - up - down)^2, ot_cost(SqEuclidean(),conc2dist(x), target)), segment_lengths
+    return (-(2*n_stripe - up - down)^2, -ot_cost(SqEuclidean(),conc2dist(x), target)), segment_lengths
 
 end
 
