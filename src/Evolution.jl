@@ -4,6 +4,7 @@ using DiffEqBase
 using StatsBase
 using Random
 
+
 # Solvers 
 
 struct DESystemSolver{A <: DEAlgorithm}
@@ -34,7 +35,6 @@ struct Individual
     genotype :: DEProblem
     phenotype :: DESolution
 end
-
 
 function Individual(genotype::DEProblem,development::DESystemSolver)
     phenotype  = solve(genotype,development.alg;development.kwargs...)
