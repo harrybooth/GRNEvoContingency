@@ -55,7 +55,7 @@ function repeated_evolution(n_traj, target = [10.,50.,40.], β = Inf, max_gen = 
 
     fitness_function = s -> fitness_evaluation(s,x->f_sim(x,stripe_threshold,n_stripe,target,min_width),output_gene)
 
-    tolerance = 4.
+    tolerance = -4.
 
     p_final, evo_trace = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
 

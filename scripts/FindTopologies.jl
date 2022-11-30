@@ -54,7 +54,7 @@ function find_topologies(n_traj, target = [85.,30.,85.], β = Inf, max_gen = 100
 
     fitness_function = s -> fitness_evaluation(s,x->f_sim(x,stripe_threshold,n_stripe,target,min_width),output_gene)
 
-    tolerance = 4.
+    tolerance = -4.
 
     choice, p_final, evo_trace = new_start(grn_parameters,β,max_gen,tolerance,fitness_function,noise_σ)
 

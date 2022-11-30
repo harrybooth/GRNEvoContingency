@@ -186,11 +186,11 @@ function stopping_criteria(population::Population{Float64},tolerance::Float64)
 end
 
 function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Float64)
-     (population.fitness[2] > tolerance) || (population.fitness[1] != 0)
+     (population.fitness[2] < tolerance) || (population.fitness[1] != 0)
 end
 
 function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Tuple{Float64,Float64})
-    (population.fitness[2] > tolerance[2]) || (population.fitness[1] > tolerance[1])
+    (population.fitness[2] < tolerance[2]) || (population.fitness[1] < tolerance[1])
 end
 
 function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
