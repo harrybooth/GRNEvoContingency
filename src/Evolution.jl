@@ -230,6 +230,55 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
 end
 
+function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fm_id::Tuple{Int64,Int64},fm_gen::Int64,mutation_op::MutationOperator,noise_function,fitness_function,mutate_function)
+
+    p = (start_network,grn_parameters.degradation)
+    
+    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+
+    development = DefaultGRNSolver()
+    
+    founder = Individual(grn,development)
+
+    population = Population(founder,fitness_function)
+
+    evo_trace = EvoTrace([population.dominant_individual.genotype.p[1]],[population.pheno_class],[population.fitness],[founder.phenotype.retcode])
+
+    gen = 0
+
+    while stopping_criteria(population,tolerance) && gen < max_gen
+
+        if gen == fm_gen
+            no_mutant = true
+            while no_mutant
+                new_w = copy(population.dominant_individual.genotype.p[1])
+                new_w[fm_id...] = noise_function(new_w[fm_id...],rand(mutation_op.noise_distribution))
+                mutant = create_mutant(population.dominant_individual,new_w,development)
+                if mutant.phenotype.retcode == :Terminated
+                    no_mutant  = false
+                end
+            end
+        else
+            mutant = create_mutant(population.dominant_individual,mutate_function,development)
+        end
+
+        if mutant.phenotype.retcode == :Terminated
+            strong_selection!(population,mutant,β,fitness_function)
+        end
+
+        gen += 1
+
+        push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
+        push!(evo_trace.traversed_phenotypes,population.pheno_class)
+        push!(evo_trace.fitness_trajectory,population.fitness)
+        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
+    end
+
+    return population, evo_trace
+
+end
+
 function SSWM_Evolution_error(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
 
     p = (start_network,grn_parameters.degradation)
