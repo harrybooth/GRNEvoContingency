@@ -18,9 +18,11 @@ using Base.Threads: @spawn
 @everywhere include(srcdir("FitnessFunctions.jl"))
 @everywhere include(srcdir("TissueModel_ND.jl"))
 
-@everywhere example_networks = load(datadir("exp_pro/80-40-80_networks/examples.jld"))
+@everywhere start_network_name = "c100_w60"
 
-function repeated_evolution(topology,n_traj, target =  [(40.,20.)], β = Inf, max_gen = 20000, noise_cv = 1., noise_method = "additive", mutation_method = "all_viable")
+@everywhere example_networks = load(datadir("exp_pro/" * start_network_name * "_networks/examples.jld"))
+
+function repeated_evolution(topology,n_traj, target =  [(60.,20.)], β = Inf, max_gen = 20000, noise_cv = 1., noise_method = "additive", mutation_method = "all_viable")
 
     start_network = example_networks[topology]
 
@@ -69,7 +71,7 @@ end
 
 function makesim(d::Dict)
     
-    @unpack topology,n_traj, target, β, max_gen, noise_cv, noise_method, mutation_method = d
+    @unpack topology,n_traj, target, β, max_gen, noise_cv, noise_method, mutation_method,start_network_name = d
 
     sim = repeated_evolution(topology,n_traj, target, β, max_gen, noise_cv, noise_method, mutation_method)
 
@@ -85,17 +87,17 @@ end
 
 # Run
 
-n_traj = 2500
+n_traj = 10000
 β = Inf
 max_gen = 20000
 noise_cv = 1.
 
-target = [[(40.,20.)]]
+target = [[(60.,20.)]]
 
 topologies_test = collect(keys(filter(x->typeof(x[2]) == Matrix{Float64},example_networks)))
 
 test_specification = Dict("topology" => topologies_test, "n_traj" => n_traj, "target"=> target, "β" => β, "max_gen" => max_gen, "noise_cv" => noise_cv, 
-                          "noise_method" => "additive", "mutation_method" => "all_viable")
+                          "noise_method" => "additive", "mutation_method" => "all_viable","start_network_name" => start_network_name)
 
 all_tests = dict_list(test_specification);
 
