@@ -213,14 +213,20 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
+        old_fitness = population.fitness
+
+        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
         if mutant.phenotype.retcode == :Terminated
             strong_selection!(population,mutant,β,fitness_function)
         end
 
-        push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
-        push!(evo_trace.traversed_phenotypes,population.pheno_class)
         push!(evo_trace.fitness_trajectory,population.fitness)
-        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
+        if old_fitness < population.fitness
+            push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.traversed_phenotypes,population.pheno_class)
+        end
 
         gen += 1
 

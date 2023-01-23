@@ -77,6 +77,8 @@ function makesim(d::Dict)
 
     fulld = copy(d)
 
+    # save parameters as part of fulld so that they can be loaded in future notebooks
+
     fulld["n_max_iters_reached"] = count(x->length(x[2].fitness_trajectory) == max_gen,sim)    
     fulld["describe_proportion_mutants_rejected"] = summarystats(map(x->count(y->y == :MaxIters,x[2].retcodes)/length(x[2].retcodes),sim))
 

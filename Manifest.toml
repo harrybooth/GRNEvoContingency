@@ -2,7 +2,7 @@
 
 julia_version = "1.8.0"
 manifest_format = "2.0"
-project_hash = "52ef6350d807b7569dc4f6273a802241768a8ed6"
+project_hash = "2b4b3fb7f48e66712d41128cc689674e25684c2b"
 
 [[deps.AbstractAlgebra]]
 deps = ["GroupsCore", "InteractiveUtils", "LinearAlgebra", "MacroTools", "Markdown", "Random", "RandomExtensions", "SparseArrays", "Test"]
@@ -177,6 +177,11 @@ git-tree-sha1 = "d9a9701b899b30332bbcb3e1679c41cce81fb0e8"
 uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
 version = "1.3.2"
 
+[[deps.Bessels]]
+git-tree-sha1 = "f91c8ff27feaa4a80861d3c4629ff66f88107333"
+uuid = "0e736298-9ec6-45e8-9647-e4fc86a2fe38"
+version = "0.2.7"
+
 [[deps.Bijections]]
 git-tree-sha1 = "fe4f8c5ee7f76f2198d5c2a06d3961c249cce7bd"
 uuid = "e2ed5e7c-b2de-5872-ae92-c73ca462fb04"
@@ -328,6 +333,12 @@ deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
 git-tree-sha1 = "d4e54b053fc584e7a0f37e9d3a5c4500927b343a"
 uuid = "78a364fa-1a3c-552a-b4bb-8fa0f9c1fcca"
 version = "0.10.3+0"
+
+[[deps.CircularArrays]]
+deps = ["OffsetArrays"]
+git-tree-sha1 = "3587fdbecba8c44f7e7285a1957182711b95f580"
+uuid = "7a955b69-7140-5f4e-a0ed-f168c5e2e749"
+version = "1.3.1"
 
 [[deps.CloseOpenIntervals]]
 deps = ["ArrayInterface", "Static"]
@@ -1677,6 +1688,12 @@ git-tree-sha1 = "2b1dfcba103de714d31c033b5dacc2e4a12c7caa"
 uuid = "c03570c3-d221-55d1-a50c-7939bbd78826"
 version = "0.4.4"
 
+[[deps.Meshes]]
+deps = ["Bessels", "CircularArrays", "Distances", "IterTools", "LinearAlgebra", "NearestNeighbors", "Random", "ReferenceFrameRotations", "SparseArrays", "StaticArrays", "StatsBase", "Tables", "TransformsBase"]
+git-tree-sha1 = "0939a2035a6fc5c6df1fc16f7b0aae4b1a125d5a"
+uuid = "eacbb407-ea5a-433e-ab97-5258b1ca43fa"
+version = "0.26.6"
+
 [[deps.Metatheory]]
 deps = ["AutoHashEquals", "DataStructures", "Dates", "DocStringExtensions", "Parameters", "Reexport", "TermInterface", "ThreadsX", "TimerOutputs"]
 git-tree-sha1 = "0f39bc7f71abdff12ead4fc4a7d998fb2f3c171f"
@@ -2172,9 +2189,9 @@ version = "1.1.3"
 
 [[deps.PyCall]]
 deps = ["Conda", "Dates", "Libdl", "LinearAlgebra", "MacroTools", "Serialization", "VersionParsing"]
-git-tree-sha1 = "53b8b07b721b77144a0fbbbc2675222ebf40a02d"
+git-tree-sha1 = "62f417f6ad727987c755549e9cd88c46578da562"
 uuid = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
-version = "1.94.1"
+version = "1.95.1"
 
 [[deps.PyPlot]]
 deps = ["Colors", "LaTeXStrings", "PyCall", "Sockets", "Test", "VersionParsing"]
@@ -2284,6 +2301,12 @@ version = "0.2.12"
 git-tree-sha1 = "45e428421666073eab6f2da5c9d310d99bb12f9b"
 uuid = "189a3867-3050-52da-a836-e630ba90ab69"
 version = "1.2.2"
+
+[[deps.ReferenceFrameRotations]]
+deps = ["Crayons", "LinearAlgebra", "Printf", "Random", "StaticArrays"]
+git-tree-sha1 = "ec9bde2e30bc221e05e20fcec9a36a9c315e04a6"
+uuid = "74f56ac7-18b3-5285-802d-d4bd4f104033"
+version = "3.0.0"
 
 [[deps.Referenceables]]
 deps = ["Adapt"]
@@ -2672,6 +2695,12 @@ deps = ["Dates"]
 uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
 version = "1.0.0"
 
+[[deps.TSne]]
+deps = ["Distances", "LinearAlgebra", "Printf", "ProgressMeter", "Statistics"]
+git-tree-sha1 = "6f1dfbf9dad6958439816fa9c5fa20898203fdf4"
+uuid = "24678dba-d5e9-5843-a4c6-250288b04835"
+version = "1.3.0"
+
 [[deps.TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
 git-tree-sha1 = "c06b2f539df1c6efa794486abfb6ed2022561a39"
@@ -2756,6 +2785,12 @@ deps = ["Adapt", "ArgCheck", "BangBang", "Baselet", "CompositionsBase", "DefineS
 git-tree-sha1 = "77fea79baa5b22aeda896a8d9c6445a74500a2c2"
 uuid = "28d57a85-8fef-5791-bfe6-a80928e7c999"
 version = "0.4.74"
+
+[[deps.TransformsBase]]
+deps = ["AbstractTrees"]
+git-tree-sha1 = "2412fb54902b0063c69c2bcfbec6b571120cc856"
+uuid = "28dd2a49-a57a-4bfb-84ca-1a49db9b96b8"
+version = "0.1.2"
 
 [[deps.TreeViews]]
 deps = ["Test"]
