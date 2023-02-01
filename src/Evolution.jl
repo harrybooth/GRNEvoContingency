@@ -12,8 +12,12 @@ struct DESystemSolver{A <: DEAlgorithm}
     kwargs :: NamedTuple
 end
 
+# function DefaultGRNSolver()
+#     DESystemSolver(AutoTsit5(RadauIIA5()),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-10,1e-6),maxiters = 1e4, verbose = false, save_everystep = false))
+# end
+
 function DefaultGRNSolver()
-    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-10,1e-6),maxiters = 1e4, verbose = false, save_everystep = false))
+    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-8,1e-6),maxiters = 1e3, verbose = false, save_everystep = false))
 end
 
 # AutoTsit5(RadauIIA5())
@@ -124,6 +128,28 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Int64}},noise_
     return new_w
 end
 
+function noise(w::Matrix{Float64},mut_op::MutationOperator{Vector{CartesianIndex{2}}},noise_params::Tuple{Int64,Float64})
+    new_w = copy(w)
+
+    n_mut, deletion_p = noise_params
+
+    choices = sample(mut_op.mutation_freq,n_mut,replace = false)
+
+    for index in choices
+        if new_w[index] == 0
+            new_w[index] = new_w[index] + rand(mut_op.noise_distribution)
+        else
+            if rand() < deletion_p
+                new_w[index] = 0.
+            else
+                new_w[index] = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
+            end
+        end
+    end
+
+    return new_w
+end
+
 # Selection 
 
 function fixation_probability(Δf,β)
@@ -182,7 +208,7 @@ mutable struct EvoTrace
 end
 
 function stopping_criteria(population::Population{Float64},tolerance::Float64)
-    population.fitness > tolerance
+    population.fitness < tolerance
 end
 
 function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Float64)
@@ -213,9 +239,9 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
-        old_fitness = population.fitness
+        # old_fitness = population.fitness
 
-        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+        # push!(evo_trace.retcodes,mutant.phenotype.retcode)
 
         if mutant.phenotype.retcode == :Terminated
             strong_selection!(population,mutant,β,fitness_function)
@@ -223,10 +249,14 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
         push!(evo_trace.fitness_trajectory,population.fitness)
 
-        if old_fitness < population.fitness
-            push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
-            push!(evo_trace.traversed_phenotypes,population.pheno_class)
-        end
+        # if old_fitness < population.fitness
+        #     push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
+        #     push!(evo_trace.traversed_phenotypes,population.pheno_class)
+        # end
+
+        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+        push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
+        push!(evo_trace.traversed_phenotypes,population.pheno_class)
 
         gen += 1
 

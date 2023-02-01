@@ -205,7 +205,7 @@ function f_sim_cw(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_cen
     end
 
     n_stripe_pheno = length(high_segment_lengths)
-    valid_pheno = length(low_segment_lengths) == n_stripe + 1
+    valid_pheno = length(low_segment_lengths) > 1 ? length(low_segment_lengths) == n_stripe_pheno + 1 : false
 
     if valid_pheno
 
@@ -233,7 +233,8 @@ function f_sim_cw(x::Vector{Float64},thresh::Float64,n_stripe::Int64, target_cen
         return (-float((n_stripe - n_stripe_pheno)^2), -error), pheno_centre_widths
 
     else
-        return (-float((n_stripe - n_stripe_pheno)^2), -Inf), [(NaN,NaN)]
+        # return (-float((n_stripe - n_stripe_pheno)^2), -Inf), [(NaN,NaN)]
+        return (-Inf, -Inf), [(NaN,NaN)]
     end
 
 end
@@ -275,31 +276,161 @@ function f_sim_eval(x::Vector{Float64},thresh::Float64,min_width ::Float64)
 
 end
 
-function f_sim(x::Vector{Float64},thresh::Float64,n_stripe::Int64,target::DiscreteNonParametric)
+function f_sim_cw(x::Vector{Float64},thresh::Float64,n_stripe::Int64,target::DiscreteNonParametric, min_width::Float64)
 
-    up = 0.
-    down = 0.
+    up = false
 
     sl = 0.
 
-    segment_lengths = []
+    high_segment_lengths = []
+    low_segment_lengths = []
 
     for i in 1:length(x)-1
         sl +=1
-        if x[i] <= thresh && x[i+1] > thresh
-            up += 1.
-            push!(segment_lengths,sl)
+        if  x[i] <= thresh && x[i+1] > thresh
+            up = true
+            if sl >= min_width
+                push!(low_segment_lengths,sl)
+            else
+                push!(low_segment_lengths,0.)
+            end
+
             sl = 0.
+
         elseif x[i] >= thresh && x[i+1] < thresh
-            down += 1.
-            push!(segment_lengths,sl)
+            up = false
+            if sl >= min_width
+                push!(high_segment_lengths,sl)
+            else
+                push!(high_segment_lengths,0.)
+            end
+
             sl = 0.
         end
+
     end
 
-    push!(segment_lengths,sl)
+    if up
+        push!(high_segment_lengths,sl)
+    else
+        push!(low_segment_lengths,sl)
+    end
 
-    return (-(2*n_stripe - up - down)^2, -ot_cost(SqEuclidean(),conc2dist(x), target)), segment_lengths
+    n_stripe_pheno = length(high_segment_lengths)
+    valid_pheno = length(low_segment_lengths) > 1 ? length(low_segment_lengths) == n_stripe_pheno + 1 : false
+
+    if valid_pheno
+
+        pheno_centre_widths = []
+
+        length_traversed = 0.
+
+        for il in 1:length(low_segment_lengths) - 1
+
+            length_traversed += low_segment_lengths[il]
+
+            found_centre = length_traversed + 0.5*high_segment_lengths[il]
+
+            push!(pheno_centre_widths,(found_centre,0.5*high_segment_lengths[il]))
+
+            length_traversed += high_segment_lengths[il]
+        end
+
+        return (-float((n_stripe - n_stripe_pheno)^2), -ot_cost(SqEuclidean(),conc2dist(x), target)), pheno_centre_widths
+
+    else
+        # return (-float((n_stripe - n_stripe_pheno)^2), -Inf), [(NaN,NaN)]
+        return (-Inf, -Inf), [(NaN,NaN)]
+    end
 
 end
 
+function f_mse(x::Vector{Float64},target::Vector{Float64})
+    return (0.,-sum((x .- target).^2)), [(NaN,NaN)]
+
+end
+
+function f_dist(x::Vector{Float64},target::DiscreteNonParametric)
+    return (0., -ot_cost(SqEuclidean(),conc2dist(x), target)), [(NaN,NaN)]
+
+end
+
+
+function malt_fitness_half(conc::Vector{Float64})
+
+    Lt = length(conc)
+
+    N = 2
+
+    id_segments = [Int(floor((k-1)*(Lt/N) + 1)) : Int(floor(k*Lt/N)) for k in 1:N]
+
+    high_sum = 0.
+    low_sum = 0.
+
+    for i in 1:N
+        if i % 2 == 0
+            high_sum += sum(conc[id_segments[i]])
+        else
+            low_sum += sum(conc[id_segments[i]])
+        end
+    end
+
+    # max_conc = maximum(conc)
+
+    # max_conc = max(min_height,maximum(conc))
+
+    max_conc = 20.
+
+    return (high_sum - low_sum) / ((Lt/N)*max_conc),  [(NaN,NaN)]
+
+end
+
+function malt_fitness(conc::Vector{Float64},n_stripe::Int64)
+
+    Lt = length(conc)
+
+    N = 2*n_stripe + 1
+
+    id_segments = [Int(floor((k-1)*(Lt/N) + 1)) : Int(floor(k*Lt/N)) for k in 1:N]
+
+    high_sum = 0.
+    low_sum = 0.
+
+    for i in 1:N
+        if i % 2 == 0
+            high_sum += sum(conc[id_segments[i]])
+        else
+            low_sum += sum(conc[id_segments[i]])
+        end
+    end
+
+    # max_conc = maximum(conc)
+
+    # max_conc = max(min_height,maximum(conc))
+
+    max_conc = 20.
+
+    return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc), [(NaN,NaN)]
+    # return ((2/(N-1))*high_sum - low_sum) / ((Lt/N)*max_conc), [(NaN,NaN)]
+
+end
+
+function perfect_malt_conc!(conc::Vector{Float64},n_stripe::Int64,max_conc::Float64)
+
+    Lt = length(conc)
+
+    N = 2*n_stripe + 1
+
+    id_segments = [Int(floor((k-1)*(Lt/N) + 1)) : Int(floor(k*Lt/N)) for k in 1:N]
+
+    high_sum = 0.
+    low_sum = 0.
+
+    for i in 1:N
+        if i % 2 == 0
+            conc[id_segments[i]] .= max_conc
+        else
+            conc[id_segments[i]] .= 0.
+        end
+    end
+end
