@@ -129,6 +129,9 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Int64}},noise_
 end
 
 function noise(w::Matrix{Float64},mut_op::MutationOperator{Vector{CartesianIndex{2}}},noise_params::Tuple{Int64,Float64})
+
+    max_w = 10.
+
     new_w = copy(w)
 
     n_mut, deletion_p = noise_params
@@ -137,12 +140,14 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator{Vector{CartesianIndex
 
     for index in choices
         if new_w[index] == 0
-            new_w[index] = new_w[index] + rand(mut_op.noise_distribution)
+            proposal = new_w[index] + rand(mut_op.noise_distribution)
+            new_w[index] = abs(proposal) > max_w ? max_w*sign(proposal) : proposal
         else
             if rand() < deletion_p
                 new_w[index] = 0.
             else
-                new_w[index] = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
+                proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
+                new_w[index] = abs(proposal) > max_w ? max_w*sign(proposal) : proposal
             end
         end
     end
@@ -153,13 +158,13 @@ end
 # Selection 
 
 function fixation_probability(Δf,β)
-    Δf > 0 ? 1 - exp(-2*β*Δf) : 0
+    Δf > 1e-10 ? 1 - exp(-2*β*Δf) : 0
 end
 
 function fixation_probability(Δf1,Δf2,β)
-    if Δf1 > 0 
+    if Δf1 > 1e-10
         1 - exp(-2*β*Δf1)
-    elseif (Δf1 == 0) && (Δf2 > 0)
+    elseif (Δf1 == 0) && (Δf2 > 1e-10)
         1 - exp(-2*β*Δf2)
     else
         0
