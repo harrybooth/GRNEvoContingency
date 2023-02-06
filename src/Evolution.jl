@@ -4,7 +4,7 @@ using DiffEqBase
 using StatsBase
 using Random
 
-[0.0 0.0 0.0 0.19002370162025478; 0.0 0.32277636563140455 0.0 0.0; -0.49509655348612014 0.5460979076224355 0.9692696881064365 0.0] 
+[0.0 0.0 0.0 0.28368795845354794; 0.09693796878733349 0.0 0.0 0.0; 0.02660150950444218 -0.26272166357617865 0.6146272196396064 0.0]
 
 # Solvers 
 
@@ -131,7 +131,7 @@ end
 
 function noise(w::Matrix{Float64},mut_op::MutationOperator{Vector{CartesianIndex{2}}},noise_params::Tuple{Int64,Float64})
 
-    max_w = 10.
+    max_w = 1.
 
     new_w = copy(w)
 
