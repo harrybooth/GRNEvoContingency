@@ -34,11 +34,7 @@ function repeated_evolution(n_traj,topology = "classical", n_target_stripe =  1,
 
     mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),findall(viable_mutations .> 0))
 
-    if isnothing(mut_prob)
-        n_sample_func() = 1
-    else
-        n_sample_func() = rand(Binomial(length(mutation_op.mutation_freq),mut_prob))
-    end
+    n_sample_func() = rand(Binomial(length(mutation_op.mutation_freq),mut_prob))
 
     noise_params = (n_sample_func,deletion_prob)
     
