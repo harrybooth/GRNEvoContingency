@@ -131,13 +131,19 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Int64}},noise_
     return new_w
 end
 
-function noise(w::Matrix{Float64},mut_op::MutationOperator{Vector{CartesianIndex{2}}},noise_params::Tuple{Int64,Float64})
+function noise(w::Matrix{Float64},mut_op::MutationOperator{Vector{CartesianIndex{2}}},noise_params)
 
     max_w = 1.
 
     new_w = copy(w)
 
-    n_mut, deletion_p = noise_params
+    n_sample_func, deletion_p = noise_params
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = n_sample_func()
+    end
 
     choices = sample(mut_op.mutation_freq,n_mut,replace = false)
 
