@@ -88,33 +88,21 @@ function create_mutant(ind::Individual,new_w::Matrix{Float64},development)
     Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development)
 end
 
-function noise(w::Matrix{Float64},mut_op::MutationOperator{Int64},noise_function)
-    new_w = copy(w)
-    for j in rand(1:size(w,2),mut_op.mutation_freq)
-        for i in rand(1:size(w,1),mut_op.mutation_freq)
-            new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
-        end
-    end
-    return new_w
-end
+# function noise(w::Matrix{Float64},mut_op::MutationOperator{Int64},noise_function)
+#     new_w = copy(w)
+#     for j in rand(1:size(w,2),mut_op.mutation_freq)
+#         for i in rand(1:size(w,1),mut_op.mutation_freq)
+#             new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
+#         end
+#     end
+#     return new_w
+# end
 
-function noise(w::Matrix{Float64},mut_op::MutationOperator{Float64},noise_function)
-    new_w = copy(w)
-    for j in 1:size(w,2)
-        for i in 1:size(w,1)
-            if rand() < mut_op.mutation_freq
-                new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
-            end
-        end
-    end
-    return new_w
-end
-
-# function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Float64}},noise_function)
+# function noise(w::Matrix{Float64},mut_op::MutationOperator{Float64},noise_function)
 #     new_w = copy(w)
 #     for j in 1:size(w,2)
 #         for i in 1:size(w,1)
-#             if rand() < mut_op.mutation_freq[i,j]
+#             if rand() < mut_op.mutation_freq
 #                 new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
 #             end
 #         end
@@ -122,14 +110,26 @@ end
 #     return new_w
 # end
 
-function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Int64}},noise_function)
-    new_w = copy(w)
-    # number_of = maximum(mut_op.mutation_freq)
-    for index in sample(findall(x-> x > 0,mut_op.mutation_freq),1,replace = false)
-        new_w[index] = noise_function(new_w[index],rand(mut_op.noise_distribution))
-    end
-    return new_w
-end
+# # function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Float64}},noise_function)
+# #     new_w = copy(w)
+# #     for j in 1:size(w,2)
+# #         for i in 1:size(w,1)
+# #             if rand() < mut_op.mutation_freq[i,j]
+# #                 new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
+# #             end
+# #         end
+# #     end
+# #     return new_w
+# # end
+
+# function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Int64}},noise_function)
+#     new_w = copy(w)
+#     # number_of = maximum(mut_op.mutation_freq)
+#     for index in sample(findall(x-> x > 0,mut_op.mutation_freq),1,replace = false)
+#         new_w[index] = noise_function(new_w[index],rand(mut_op.noise_distribution))
+#     end
+#     return new_w
+# end
 
 function noise(w::Matrix{Float64},mut_op::MutationOperator{Vector{CartesianIndex{2}}},noise_params)
 
@@ -167,7 +167,7 @@ end
 # Selection 
 
 function fixation_probability(Δf,β)
-    Δf > 1e-10 ? 1 - exp(-2*β*Δf) : 0
+    1 - exp(-2*β*Δf) 
 end
 
 function fixation_probability(Δf1,Δf2,β)

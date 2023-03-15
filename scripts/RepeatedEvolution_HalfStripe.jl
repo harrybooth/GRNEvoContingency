@@ -22,9 +22,19 @@ using Base.Threads: @spawn
 
 # @everywhere example_networks = load(datadir("exp_pro/" * start_network_name * "_networks/examples.jld"))
 
-function repeated_evolution(n_traj,topology = "classical", n_target_stripe =  1, β = Inf, max_gen = 5000, noise_cv = 1., mut_prob = nothing, deletion_prob = 0.05,noise_method = "additive+deletion", mutation_method = "all_viable")
+function repeated_evolution(n_traj,topology = "feed_forward", n_target_stripe =  1, β = Inf, max_gen = 5000, noise_cv = 1., mut_prob = nothing, deletion_prob = 0.05,noise_method = "additive_deletion", mutation_method = "all_viable")
 
-    start_network = [0.0 0.0 0.0 0.28368795845354794; 0.09693796878733349 0.0 0.0 0.0; 0.02660150950444218 -0.26272166357617865 0.6146272196396064 0.0] # right handed
+    if topology == "feed_forward"
+        start_network = [0.0 0.0 0.0 0.28368795845354794; 0.09693796878733349 0.0 0.0 0.0; 0.02660150950444218 -0.26272166357617865 0.6146272196396064 0.0] # right handed feed forward
+    elseif topology == "bistable"
+        start_network = [0.0 0.0 0.0 0.12728709721871537; -0.014075930837614938 0.0 0.49938778625866675 0.0; 0.0 0.1997636901215515 0.05755668522756788 0.0] # right handed bistable
+    elseif topology == "mutual_inh"
+        start_network = [0.0 0.0 0.0 -0.06486368943640441; -1.0 0.0 0.7990661288117087 0.0; 0.8329310528122276 0.05802424255402265 0.0 0.0]  # right handed mutual_inh
+    elseif topology == "classical"
+        start_network = [0.0 0.0 0.0 0.31336321352475677; 0.034733909122486334 0.011312260670141676 0.0 0.0; -0.002116043070043973 -0.1751097063592794 0.5246935289524377 0.0] # right handed classical
+    else
+        start_network = [0.0 0.0 0.0 0.28368795845354794; 0.09693796878733349 0.0 0.0 0.0; 0.02660150950444218 -0.26272166357617865 0.6146272196396064 0.0] # right handed feed forward
+    end
 
     grn_parameters = DefaultGRNParameters();
 
@@ -79,20 +89,20 @@ end
 
 # Run
 
-n_traj = 2500
-β = Inf
-max_gen = 10000
+n_traj = 500
+β = 1.
+max_gen = 50000
 noise_cv = 0.5
 
 n_target_stripe = 1
 
-mut_prob = 0.2
+mut_prob = 0.1
 deletion_prob = 0.05
 
-topologies_test = "classical"
+topologies_test = ["feed_forward","classical","mutual_inh"]
 
 test_specification = Dict("n_traj" => n_traj,"topology" => topologies_test, "n_target_stripe" => n_target_stripe, "β" => β, "max_gen" => max_gen, "noise_cv" => noise_cv, "mut_prob" => mut_prob, "deletion_prob" => deletion_prob,
-                          "noise_method" => "additive+deletion", "mutation_method" => "all_viable","start_network_name" => start_network_name)
+                          "noise_method" => "additive_deletion", "mutation_method" => "all_viable","start_network_name" => start_network_name)
 
 all_tests = dict_list(test_specification);
 

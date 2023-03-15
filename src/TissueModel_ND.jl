@@ -1,4 +1,4 @@
-const Nc = 200
+const Nc = 100
 const Ng = 3
 const L = 1.
 const θ = 5.
