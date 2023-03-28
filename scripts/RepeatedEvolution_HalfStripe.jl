@@ -22,7 +22,7 @@ using Base.Threads: @spawn
 
 # @everywhere example_networks = load(datadir("exp_pro/" * start_network_name * "_networks/examples.jld"))
 
-function repeated_evolution(n_traj,topology = "feed_forward", n_target_stripe =  1, β = Inf, max_gen = 5000, noise_cv = 1., mut_prob = nothing, deletion_prob = 0.05,noise_method = "additive_deletion", mutation_method = "all_viable")
+function repeated_evolution(n_traj,topology = "feed_forward", n_target_stripe =  1, β = Inf, max_gen = 5000, noise_cv = 1., mut_prob = nothing, deletion_prob = 0.05)
 
     if topology == "feed_forward"
         start_network = [0.0 0.0 0.0 0.28368795845354794; 0.09693796878733349 0.0 0.0 0.0; 0.02660150950444218 -0.26272166357617865 0.6146272196396064 0.0] # right handed feed forward
@@ -71,9 +71,9 @@ end
 
 function makesim(d::Dict)
     
-    @unpack n_traj,topology,n_target_stripe, β, max_gen, noise_cv, mut_prob, deletion_prob, noise_method, mutation_method,start_network_name = d
+    @unpack n_traj,topology,n_target_stripe, β, max_gen, noise_cv, mut_prob, deletion_prob, start_network_name = d
 
-    sim = repeated_evolution(n_traj,topology,n_target_stripe, β, max_gen, noise_cv, mut_prob, deletion_prob, noise_method, mutation_method)
+    sim = repeated_evolution(n_traj,topology,n_target_stripe, β, max_gen, noise_cv, mut_prob, deletion_prob)
 
     fulld = copy(d)
 
@@ -84,14 +84,16 @@ function makesim(d::Dict)
 
     fulld["raw_data"] = sim
 
+    fulld["parameter_choices"] = Dict("n_traj" => n_traj,"topology" => topologies_test, "n_target_stripe" => n_target_stripe, "β" => β, "max_gen" => max_gen, "noise_cv" => noise_cv, "mut_prob" => mut_prob, "deletion_prob" => deletion_prob, "start_network_name" => start_network_name)
+
     return fulld
 end
 
 # Run
 
-n_traj = 500
+n_traj = 5000
 β = 1.
-max_gen = 50000
+max_gen = 40000
 noise_cv = 0.5
 
 n_target_stripe = 1
@@ -99,15 +101,14 @@ n_target_stripe = 1
 mut_prob = 0.1
 deletion_prob = 0.05
 
-topologies_test = ["feed_forward","classical","mutual_inh"]
+topologies_test = ["mutual_inh","classical"]
 
-test_specification = Dict("n_traj" => n_traj,"topology" => topologies_test, "n_target_stripe" => n_target_stripe, "β" => β, "max_gen" => max_gen, "noise_cv" => noise_cv, "mut_prob" => mut_prob, "deletion_prob" => deletion_prob,
-                          "noise_method" => "additive_deletion", "mutation_method" => "all_viable","start_network_name" => start_network_name)
+test_specification = Dict("n_traj" => n_traj,"topology" => topologies_test, "n_target_stripe" => n_target_stripe, "β" => β, "max_gen" => max_gen, "noise_cv" => noise_cv, "mut_prob" => mut_prob, "deletion_prob" => deletion_prob,"start_network_name" => start_network_name)
 
 all_tests = dict_list(test_specification);
 
 for (i,d) in enumerate(all_tests)
     f = makesim(d)
-    # safesave(datadir("sims/repeated_evolution_different_topologies", savename(d, "jld2")), f)
-    save(datadir("sims/repeated_evolution_different_topologies", "a6.jld2"), f)
+    save(datadir("sims\\repeated_evolution_different_topologies", savename(d, "jld2")), f)
+    # save(datadir("sims/repeated_evolution_different_topologies", "a6.jld2"), f)
 end
