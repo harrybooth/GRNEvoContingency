@@ -415,6 +415,51 @@ function malt_fitness(conc::Vector{Float64},n_stripe::Int64)
 
 end
 
+function malt_fitness_right(conc::Vector{Float64})
+
+    Lt = length(conc)
+
+    N = 2
+
+    id_segments = [Int(floor((k-1)*(Lt/N) + 1)) : Int(floor(k*Lt/N)) for k in 1:N]
+
+    high_sum = sum(conc[id_segments[2]])
+
+    low_sum = sum(conc[id_segments[1]])
+
+    # max_conc = maximum(conc)
+
+    # max_conc = max(min_height,maximum(conc))
+
+    max_conc = 20.
+
+    return (high_sum - low_sum) / ((Lt/N)*max_conc),  [(NaN,NaN)]
+
+end
+
+function malt_fitness_left(conc::Vector{Float64})
+
+    Lt = length(conc)
+
+    N = 2
+
+    id_segments = [Int(floor((k-1)*(Lt/N) + 1)) : Int(floor(k*Lt/N)) for k in 1:N]
+
+    high_sum = sum(conc[id_segments[1]])
+
+    low_sum = sum(conc[id_segments[2]])
+
+    # max_conc = maximum(conc)
+
+    # max_conc = max(min_height,maximum(conc))
+
+    max_conc = 20.
+
+    return (high_sum - low_sum) / ((Lt/N)*max_conc),  [(NaN,NaN)]
+
+end
+
+
 function perfect_malt_conc!(conc::Vector{Float64},n_stripe::Int64,max_conc::Float64)
 
     Lt = length(conc)
