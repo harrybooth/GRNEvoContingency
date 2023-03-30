@@ -2,7 +2,7 @@
 
 julia_version = "1.8.0"
 manifest_format = "2.0"
-project_hash = "408b2f78126be12faeaebaebc9379fe14ae9888a"
+project_hash = "3746654f838e43b543ee4eb11ed51eb6e05f690f"
 
 [[deps.ASL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1049,6 +1049,12 @@ git-tree-sha1 = "039be665faf0b8ae36e089cd694233f5dee3f7d6"
 uuid = "92fee26a-97fe-5a0c-ad85-20a5f3185b63"
 version = "0.5.1"
 
+[[deps.GenericLinearAlgebra]]
+deps = ["LinearAlgebra", "Printf", "Random", "libblastrampoline_jll"]
+git-tree-sha1 = "dd1ab32f7a0d889ea6b8acc4f8ad35624a856d93"
+uuid = "14197337-ba66-59df-a3e3-ca00e7dcff7a"
+version = "0.3.8"
+
 [[deps.GenericSchur]]
 deps = ["LinearAlgebra", "Printf"]
 git-tree-sha1 = "fb69b2a645fa69ba5f474af09221b9308b160ce6"
@@ -1535,6 +1541,12 @@ git-tree-sha1 = "a560dd966b386ac9ae60bdd3a3d3a326062d3c3e"
 uuid = "8cdb02fc-e678-4876-92c5-9defec4f444e"
 version = "0.3.1"
 
+[[deps.LazySets]]
+deps = ["Distributed", "GLPK", "IntervalArithmetic", "JuMP", "LinearAlgebra", "Random", "ReachabilityBase", "RecipesBase", "Reexport", "Requires", "SharedArrays", "SparseArrays", "StaticArraysCore"]
+git-tree-sha1 = "9018fad0c08f1ea283df1a5b8553a914cdf71d0c"
+uuid = "b4f0291d-fe17-52bc-9479-3d1a343d9043"
+version = "2.7.0"
+
 [[deps.LearnBase]]
 git-tree-sha1 = "a0d90569edd490b82fdc4dc078ea54a5a800d30a"
 uuid = "7f8f8fb0-2700-5f03-b4bd-41f8cfc144b6"
@@ -1551,6 +1563,14 @@ deps = ["AbstractTrees"]
 git-tree-sha1 = "fb6803dafae4a5d62ea5cab204b1e657d9737e7f"
 uuid = "1d6d02ad-be62-4b6b-8a6d-2f90e265016e"
 version = "0.2.0"
+
+[[deps.Leiden]]
+deps = ["LinearAlgebra", "Random", "SparseArrays", "StatsFuns"]
+git-tree-sha1 = "72bedc9f2b8f36cc85ac5c5dfe754cafd8d1ed01"
+repo-rev = "master"
+repo-url = "https://github.com/bicycle1885/Leiden.jl"
+uuid = "e5cf005d-d64d-44d4-821e-2384bf4ace83"
+version = "0.1.0"
 
 [[deps.LevyArea]]
 deps = ["LinearAlgebra", "Random", "SpecialFunctions"]
@@ -2304,6 +2324,12 @@ git-tree-sha1 = "77b3d3605fc1cd0b42d95eba87dfcd2bf67d5ff6"
 uuid = "647866c9-e3ac-4575-94e7-e3d426903924"
 version = "0.1.2"
 
+[[deps.Polyhedra]]
+deps = ["GenericLinearAlgebra", "GeometryBasics", "JuMP", "LinearAlgebra", "MutableArithmetics", "RecipesBase", "SparseArrays", "StaticArrays"]
+git-tree-sha1 = "e7b1e266cc9f3cb046d6c8d2c3aefc418a53428d"
+uuid = "67491407-f73d-577b-9b50-8179a7c68029"
+version = "0.7.6"
+
 [[deps.Polynomials]]
 deps = ["Intervals", "LinearAlgebra", "MutableArithmetics", "RecipesBase"]
 git-tree-sha1 = "a1f7f4e41404bed760213ca01d7f384319f717a5"
@@ -2456,6 +2482,12 @@ deps = ["Requires"]
 git-tree-sha1 = "dc84268fe0e3335a62e315a3a7cf2afa7178a734"
 uuid = "c84ed2f1-dad5-54f0-aa8e-dbefe2724439"
 version = "0.4.3"
+
+[[deps.ReachabilityBase]]
+deps = ["ExprTools", "InteractiveUtils", "LinearAlgebra", "Random", "Requires", "SparseArrays"]
+git-tree-sha1 = "048fc23bb2392018c735e3d6d43c4dd8e5cb2f23"
+uuid = "379f33d0-9447-4353-bd03-d664070e549f"
+version = "0.1.5"
 
 [[deps.RealDot]]
 deps = ["LinearAlgebra"]
