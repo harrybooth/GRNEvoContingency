@@ -121,7 +121,6 @@ function LocalLandscape_mass(start_network::Matrix{Float64},range_percentile::Fl
 end
 
 
-
 mutable struct InterpolatedLandscape
     origin :: Individual    
     origin_fitness :: Union{Float64,Nothing}
@@ -179,6 +178,15 @@ function InterpolatedLandscape(start_network_v::Vector{Float64},end_network_v::V
     end
 
     InterpolatedLandscape(origin,origin_fitness,n_interp,itp_networks,slice_fitnesses,nothing)
+
+end
+
+
+function instability(network_1,network_2,grn_parameters,development,fitness_function)
+
+    itp_ll = InterpolatedLandscape(network_1,network_2,30,grn_parameters,development,fitness_function);
+
+    return 0.5*(itp_ll.slice_fitnesses[1] + itp_ll.slice_fitnesses[end] + 2) - minimum(itp_ll.slice_fitnesses .+ 1)
 
 end
 

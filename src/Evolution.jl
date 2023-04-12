@@ -180,6 +180,10 @@ function fixation_probability(Δf1,Δf2,β)
     end
 end
 
+function fixation_probability_kim(Δf,β,N)
+    (1 - exp(-2*β*Δf)) / (1 - exp(-2*β*N*Δf))
+end
+
 function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,fitness_function)
 
     mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
@@ -201,6 +205,18 @@ function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant
         population.pheno_class = mutant_pheno_class
     end
 end
+
+function strong_selection!(population::Population{Float64},mutant::Individual,β::Tuple{Float64,Int64},fitness_function)
+
+    mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
+
+    if rand() < fixation_probability_kim(mutant_fitness - population.fitness,β[1],β[2])
+        population.dominant_individual = mutant
+        population.fitness = mutant_fitness
+        population.pheno_class = mutant_pheno_class
+    end
+end
+
 
 # Fitness fitness_evaluation
 
@@ -233,7 +249,7 @@ function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolera
     (population.fitness[2] < tolerance[2]) || (population.fitness[1] < tolerance[1])
 end
 
-function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
+function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
 
     p = (start_network,grn_parameters.degradation)
     
