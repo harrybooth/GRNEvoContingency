@@ -106,28 +106,24 @@ ln_frv = reduce(vcat,ln_fr)
 
 result =  Dict()
 
-for fb_n in 2:9
+eval_networks = map(x->x[3],ln_frv)
 
-    fb_networks = filter(x->x[2] == fb_n, ln_frv)
+run_ids = map(x->(x[1],x[2]),ln_frv)
 
-    eval_networks = map(x->x[3],fb_networks)
+n_sample = length(eval_networks)
 
-    run_ids = map(x->x[1],fb_networks)
+dmat = zeros(n_sample,n_sample)
 
-    n_sample = length(eval_networks)
+dmat_id = [(i,j) for i in 1:n_sample, j in 1:n_sample if i>j]
 
-    dmat = zeros(n_sample,n_sample)
+print("Status: calculating " * string(n_sample) * "\n")
 
-    dmat_id = [(i,j) for i in 1:n_sample, j in 1:n_sample if i>j]
-
-    @sync for id in dmat_id
-        @spawn dmat[id...] = instability(eval_networks[id[1]],eval_networks[id[2]],grn_parameters,development,fitness_function)
-    end
-
-    result[fb_n] = (dmat,run_ids,eval_networks)
-
-    print("Status: completed " * string(fb_n) * " \n")
-
+@sync for id in dmat_id
+    @spawn dmat[id...] = instability(eval_networks[id[1]],eval_networks[id[2]],grn_parameters,development,fitness_function)
 end
 
-save(datadir("sims/repeated_evolution_different_topologies","pairwise_instabilities_mi_fitness_bins.jld2"),"data",result)
+result["All"] = (dmat,run_ids,eval_networks)
+
+print("Status: completed \n")
+
+save(datadir("sims/repeated_evolution_different_topologies","pairwise_instabilities_mi_fitness_bins_all.jld2"),"data",result)
