@@ -55,9 +55,9 @@ function repeated_evolution(n_traj,topology = "feed_forward", n_target_stripe = 
     
     output_gene = 3
     
-    # fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_target_stripe),output_gene);
+    fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_target_stripe),output_gene);
 
-    fitness_function = s -> fitness_evaluation(s,x->malt_fitness_left(x),output_gene);
+    # fitness_function = s -> fitness_evaluation(s,x->malt_fitness_left(x),output_gene);
 
     tolerance = 0.9
 
@@ -108,17 +108,17 @@ end
 
 # Run
 
-n_traj = 750
+n_traj = 5000
 β = 1.
 max_gen = 20000
 noise_cv = 0.25
 
 n_target_stripe = 1
 
-mut_prob = 0.1
+mut_prob = 0.5
 deletion_prob = 0.05
 
-topologies_test = ["mutual_inh","classical","bistable"]
+topologies_test = "mutual_inh"
 
 test_specification = Dict("n_traj" => n_traj,"topology" => topologies_test, "n_target_stripe" => n_target_stripe, "β" => β, "max_gen" => max_gen, "noise_cv" => noise_cv, "mut_prob" => mut_prob, "deletion_prob" => deletion_prob,"start_network_name" => start_network_name)
 
@@ -127,6 +127,6 @@ all_tests = dict_list(test_specification);
 for (i,d) in enumerate(all_tests)
     f = makesim(d)
     # save(datadir("sims\\repeated_evolution_different_topologies", savename(d, "jld2")), f)
-    save(datadir("sims\\repeated_evolution_different_topologies", d["topology"] * "_halfright_to_halfleft.jld2"), f)
+    save(datadir("sims\\repeated_evolution_different_topologies", d["topology"] * "mi_stripe_0.5_mutation_rate_1000.jld2"), f)
     # save(datadir("sims/repeated_evolution_different_topologies", "a6.jld2"), f)
 end

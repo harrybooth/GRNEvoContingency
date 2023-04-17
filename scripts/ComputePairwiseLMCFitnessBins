@@ -43,11 +43,23 @@ function last_networks(run_id,fitness_route,geno_route) 
 
 end
 
-evo_traces_mi = load(datadir("sims/repeated_evolution_different_topologies","deletion_prob=0.05_max_gen=40000_mut_prob=0.1_n_target_stripe=1_n_traj=5000_noise_cv=0.5_start_network_name=half_right_topology=mutual_inh_β=1.0_1000.jld2"))["data"];
+# evo_traces_mi = load(datadir("sims/repeated_evolution_different_topologies","deletion_prob=0.05_max_gen=40000_mut_prob=0.1_n_target_stripe=1_n_traj=5000_noise_cv=0.5_start_network_name=half_right_topology=mutual_inh_β=1.0_1000.jld2"))["data"];
 
-n_sub_sample = 500
+# n_sub_sample = 500
 
-gt_mi = GenoTrajectories(evo_traces_mi[1:n_sub_sample]);
+run_data_mi = load(datadir("sims/repeated_evolution_different_topologies","mutual_inhmi_stripe_0.5_mutation_rate_1000.jld2"))["raw_data"];
+
+evo_traces_mi = map(x->x[2],run_data_mi);
+
+gt_mi = GenoTrajectories(evo_traces_mi);
+
+end_fitness_mi = map(x->x[end],gt_mi.fitness_traj);
+
+converged_mi = end_fitness_mi .> 0.9
+
+n_sub_sample = 1000
+
+gt_mi = GenoTrajectories(evo_traces_mi[converged_mi][1:n_sub_sample]);
 
 ############
 
@@ -130,4 +142,4 @@ for fb_n in 2:9
 
 end
 
-save(datadir("sims/repeated_evolution_different_topologies","pairwise_instabilities_mi_fitness_bins.jld2"),"data",result)
+save(datadir("sims/repeated_evolution_different_topologies","mutual_inhmi_stripe_0.5_mutation_rate_1000_lmc_fitness_bins.jld2"),"data",result) 

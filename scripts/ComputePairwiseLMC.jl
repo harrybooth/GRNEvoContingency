@@ -56,21 +56,35 @@ end
 
 #########################################
 
-evo_traces_cl = load(datadir("sims/repeated_evolution_different_topologies","deletion_prob=0.05_max_gen=40000_mut_prob=0.1_n_target_stripe=1_n_traj=5000_noise_cv=0.5_start_network_name=half_right_topology=classical_β=1.0_1000.jld2"))["data"]
-evo_traces_ff = load(datadir("sims/repeated_evolution_different_topologies","deletion_prob=0.05_max_gen=30000_mut_prob=0.1_n_target_stripe=1_n_traj=2000_noise_cv=0.5_start_network_name=half_right_topology=feed_forward_β=1.0_1000.jld2"))["data"]
-evo_traces_mi = load(datadir("sims/repeated_evolution_different_topologies","deletion_prob=0.05_max_gen=40000_mut_prob=0.1_n_target_stripe=1_n_traj=5000_noise_cv=0.5_start_network_name=half_right_topology=mutual_inh_β=1.0_1000.jld2"))["data"];
+# evo_traces_cl = load(datadir("sims/repeated_evolution_different_topologies","deletion_prob=0.05_max_gen=40000_mut_prob=0.1_n_target_stripe=1_n_traj=5000_noise_cv=0.5_start_network_name=half_right_topology=classical_β=1.0_1000.jld2"))["data"]
+# evo_traces_ff = load(datadir("sims/repeated_evolution_different_topologies","deletion_prob=0.05_max_gen=30000_mut_prob=0.1_n_target_stripe=1_n_traj=2000_noise_cv=0.5_start_network_name=half_right_topology=feed_forward_β=1.0_1000.jld2"))["data"]
+# evo_traces_mi = load(datadir("sims/repeated_evolution_different_topologies","mutual_inhmi_stripe_0.5_mutation_rate_1000.jld2"))["raw_data"];
 
-n_sub_sample = 500
+run_data_mi = load(datadir("sims/repeated_evolution_different_topologies","mutual_inhmi_stripe_0.5_mutation_rate_1000.jld2"))["raw_data"];
+evo_traces_mi = map(x->x[2],run_data_mi);
 
-gt_cl = GenoTrajectories(evo_traces_cl[1:n_sub_sample]);
-gt_ff = GenoTrajectories(evo_traces_ff[1:n_sub_sample]);
-gt_mi = GenoTrajectories(evo_traces_mi[1:n_sub_sample]);
 
-end_networks_cl = map(x->x[:,end],gt_cl.geno_traj);
-end_networks_ff = map(x->x[:,end],gt_ff.geno_traj);
-end_networks_mi = map(x->x[:,end],gt_mi.geno_traj);
+gt_mi = GenoTrajectories(evo_traces_mi);
 
-all_networks = reduce(vcat,[end_networks_cl,end_networks_ff,end_networks_mi]);
+end_fitness_mi = map(x->x[end],gt_mi.fitness_traj);
+
+converged_mi = end_fitness_mi .> 0.9
+
+end_networks_mi = map(x->x[:,end],gt_mi.geno_traj[converged_mi]);
+
+n_sub_sample = 1000
+
+# gt_cl = GenoTrajectories(evo_traces_cl[1:n_sub_sample]);
+# gt_ff = GenoTrajectories(evo_traces_ff[1:n_sub_sample]);
+# gt_mi = GenoTrajectories(evo_traces_mi[1:n_sub_sample]);
+
+# end_networks_cl = map(x->x[:,end],gt_cl.geno_traj);
+# end_networks_ff = map(x->x[:,end],gt_ff.geno_traj);
+# end_networks_mi = map(x->x[:,end],gt_mi.geno_traj);
+
+# all_networks = reduce(vcat,[end_networks_cl,end_networks_ff,end_networks_mi]);
+
+all_networks = copy(end_networks_mi[1:n_sub_sample])
 
 print("loaded data...")
 
@@ -104,4 +118,6 @@ print("finished comp...")
 #     dmat[i,i] = 0.
 # end
 
-save(datadir("sims/repeated_evolution_different_topologies","pairwise_instabilities_mi_cl_ff_" * string(n_sample) * ".jld2"),"data",dmat)
+# save(datadir("sims/repeated_evolution_different_topologies","pairwise_instabilities_mi_1000_" * string(n_sample) * ".jld2"),"data",dmat)
+
+save(datadir("sims/repeated_evolution_different_topologies","mutual_inhmi_stripe_0.5_mutation_rate_1000_pairwise_lmc.jld2"),"data",dmat)
