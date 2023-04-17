@@ -110,14 +110,18 @@ end
 
 # Run
 
+<<<<<<< HEAD
+n_traj = 5000
+=======
 n_traj = 1000
+>>>>>>> 24e314cb8992f4369f4949b5f68b447a3343c5a6
 β = 1.
 max_gen = 20000
 noise_cv = 0.25
 
 n_target_stripe = 1
 
-mut_prob = 0.1
+mut_prob = 0.5
 deletion_prob = 0.05
 
 topologies_test = "mutual_inh"
@@ -129,6 +133,10 @@ all_tests = dict_list(test_specification);
 for (i,d) in enumerate(all_tests)
     f = makesim(d)
     # save(datadir("sims\\repeated_evolution_different_topologies", savename(d, "jld2")), f)
+<<<<<<< HEAD
+    save(datadir("sims\\repeated_evolution_different_topologies", d["topology"] * "mi_stripe_0.5_mutation_rate_1000.jld2"), f)
+=======
     save(datadir("sims\\repeated_evolution_different_topologies", d["topology"] * "_mi_stripe_1000.jld2"), f)
+>>>>>>> 24e314cb8992f4369f4949b5f68b447a3343c5a6
     # save(datadir("sims/repeated_evolution_different_topologies", "a6.jld2"), f)
 end
