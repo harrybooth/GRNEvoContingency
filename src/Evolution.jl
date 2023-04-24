@@ -4,10 +4,6 @@ using DiffEqBase
 using StatsBase
 using Random
 
-[0.0 0.0 0.0 0.28368795845354794; 0.09693796878733349 0.0 0.0 0.0; 0.02660150950444218 -0.26272166357617865 0.6146272196396064 0.0] # right handed
-
-[0.0 0.0 0.0 0.3219064710740815; 0.0007433918641741762 0.0 0.0 0.0; 0.1607444642281683 -1.0 0.025164093745334126 0.0] # left handed
-
 # Solvers 
 
 struct DESystemSolver{A <: DEAlgorithm}
@@ -15,15 +11,9 @@ struct DESystemSolver{A <: DEAlgorithm}
     kwargs :: NamedTuple
 end
 
-# function DefaultGRNSolver()
-#     DESystemSolver(AutoTsit5(RadauIIA5()),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-10,1e-6),maxiters = 1e4, verbose = false, save_everystep = false))
-# end
-
 function DefaultGRNSolver()
     DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-8,1e-6),maxiters = 1e3, verbose = false, save_everystep = false))
 end
-
-# AutoTsit5(RadauIIA5())
 
 # Model parameters
 
@@ -33,7 +23,7 @@ struct GRNParameters
 end
 
 function DefaultGRNParameters()
-    GRNParameters(0.05 .* ones(Ng),0.01 .* ones(Ng,Nc))
+    GRNParameters(degradation_rate .* ones(Ng),initial_concentration .* ones(Ng,Nc))
 end
 
 # Individual and populations
@@ -61,23 +51,25 @@ end
 mutable struct Population{T}
     dominant_individual::Individual
     fitness :: T
-    pheno_class :: Any
 end
 
 function Population(founder::Individual,fitness_function)
-    fitness,pheno_class  = fitness_function(founder.phenotype)
-    Population(founder,fitness,pheno_class)
+    fitness = fitness_function(founder.phenotype)
+    Population(founder,fitness)
 end
 
 # Mutation
 
-struct MutationOperator{T} 
+struct MutationOperator 
     noise_distribution :: Distribution
-    mutation_freq :: T
+    n_sample_func :: Any
+    deletion_p :: Float64
+    max_w ::Float64
+    mutation_weights :: Vector{CartesianIndex{2}}
 end
 
-function MutationOperator(noise_distribution,noise_kwargs,mutation_freq)
-    return MutationOperator(noise_distribution(noise_kwargs...),mutation_freq)
+function MutationOperator(noise_distribution,noise_kwargs,n_sample_func,deletion_p,max_w,mutation_freq)
+    return MutationOperator(noise_distribution(noise_kwargs...),n_sample_func,deletion_p,max_w,mutation_freq)
 end
 
 function create_mutant(ind::Individual,mutate_function,development)
@@ -88,75 +80,28 @@ function create_mutant(ind::Individual,new_w::Matrix{Float64},development)
     Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development)
 end
 
-# function noise(w::Matrix{Float64},mut_op::MutationOperator{Int64},noise_function)
-#     new_w = copy(w)
-#     for j in rand(1:size(w,2),mut_op.mutation_freq)
-#         for i in rand(1:size(w,1),mut_op.mutation_freq)
-#             new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
-#         end
-#     end
-#     return new_w
-# end
-
-# function noise(w::Matrix{Float64},mut_op::MutationOperator{Float64},noise_function)
-#     new_w = copy(w)
-#     for j in 1:size(w,2)
-#         for i in 1:size(w,1)
-#             if rand() < mut_op.mutation_freq
-#                 new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
-#             end
-#         end
-#     end
-#     return new_w
-# end
-
-# # function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Float64}},noise_function)
-# #     new_w = copy(w)
-# #     for j in 1:size(w,2)
-# #         for i in 1:size(w,1)
-# #             if rand() < mut_op.mutation_freq[i,j]
-# #                 new_w[i,j] = noise_function(new_w[i,j],rand(mut_op.noise_distribution))
-# #             end
-# #         end
-# #     end
-# #     return new_w
-# # end
-
-# function noise(w::Matrix{Float64},mut_op::MutationOperator{Matrix{Int64}},noise_function)
-#     new_w = copy(w)
-#     # number_of = maximum(mut_op.mutation_freq)
-#     for index in sample(findall(x-> x > 0,mut_op.mutation_freq),1,replace = false)
-#         new_w[index] = noise_function(new_w[index],rand(mut_op.noise_distribution))
-#     end
-#     return new_w
-# end
-
-function noise(w::Matrix{Float64},mut_op::MutationOperator{Vector{CartesianIndex{2}}},noise_params)
-
-    max_w = 1.
+function noise(w::Matrix{Float64},mut_op::MutationOperator)
 
     new_w = copy(w)
-
-    n_sample_func, deletion_p = noise_params
 
     n_mut = 0
 
     while n_mut == 0
-        n_mut = n_sample_func()
+        n_mut = mut_op.n_sample_func()
     end
 
-    choices = sample(mut_op.mutation_freq,n_mut,replace = false)
+    choices = sample(mut_op.mutation_weights,n_mut,replace = false)
 
     for index in choices
         if new_w[index] == 0
             proposal = new_w[index] + rand(mut_op.noise_distribution)
-            new_w[index] = abs(proposal) > max_w ? max_w*sign(proposal) : proposal
+            new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
         else
-            if rand() < deletion_p
+            if rand() < mut_op.deletion_p
                 new_w[index] = 0.
             else
                 proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
-                new_w[index] = abs(proposal) > max_w ? max_w*sign(proposal) : proposal
+                new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
             end
         end
     end
@@ -170,53 +115,29 @@ function fixation_probability(Δf,β)
     1 - exp(-2*β*Δf) 
 end
 
-function fixation_probability(Δf1,Δf2,β)
-    if Δf1 > 1e-10
-        1 - exp(-2*β*Δf1)
-    elseif (Δf1 == 0) && (Δf2 > 1e-10)
-        1 - exp(-2*β*Δf2)
-    else
-        0
-    end
-end
-
 function fixation_probability_kim(Δf,β,N)
     (1 - exp(-2*β*Δf)) / (1 - exp(-2*β*N*Δf))
 end
 
 function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,fitness_function)
 
-    mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
+    mutant_fitness = fitness_function(mutant.phenotype)
 
     if rand() < fixation_probability(mutant_fitness - population.fitness,β)
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
-        population.pheno_class = mutant_pheno_class
-    end
-end
-
-function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Float64,fitness_function)
-
-    mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
-
-    if rand() < fixation_probability(mutant_fitness[1] - population.fitness[1],mutant_fitness[2] - population.fitness[2],β)
-        population.dominant_individual = mutant
-        population.fitness = mutant_fitness
-        population.pheno_class = mutant_pheno_class
     end
 end
 
 function strong_selection!(population::Population{Float64},mutant::Individual,β::Tuple{Float64,Int64},fitness_function)
 
-    mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
+    mutant_fitness = fitness_function(mutant.phenotype)
 
     if rand() < fixation_probability_kim(mutant_fitness - population.fitness,β[1],β[2])
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
-        population.pheno_class = mutant_pheno_class
     end
 end
-
 
 # Fitness fitness_evaluation
 
@@ -230,23 +151,21 @@ end
 
 # Evolution 
 
-mutable struct EvoTrace
+mutable struct EvoTrace # For legacy data
     traversed_topologies :: Any
     traversed_phenotypes :: Any
     fitness_trajectory :: Any
     retcodes :: Any
 end
 
+mutable struct EvolutionaryTrace
+    traversed_networks :: Any
+    fitness_trajectory :: Any
+    retcodes :: Any
+end
+
 function stopping_criteria(population::Population{Float64},tolerance::Float64)
     population.fitness < tolerance
-end
-
-function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Float64)
-     (population.fitness[2] < tolerance) || (population.fitness[1] != 0)
-end
-
-function stopping_criteria(population::Population{Tuple{Float64,Float64}},tolerance::Tuple{Float64,Float64})
-    (population.fitness[2] < tolerance[2]) || (population.fitness[1] < tolerance[1])
 end
 
 function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
@@ -261,7 +180,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     population = Population(founder,fitness_function)
 
-    evo_trace = EvoTrace([population.dominant_individual.genotype.p[1]],[population.pheno_class],[population.fitness],[founder.phenotype.retcode])
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode])
 
     gen = 0
 
@@ -269,135 +188,23 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
-        # old_fitness = population.fitness
-
-        # push!(evo_trace.retcodes,mutant.phenotype.retcode)
-
         if mutant.phenotype.retcode == :Terminated
             strong_selection!(population,mutant,β,fitness_function)
         end
 
         push!(evo_trace.fitness_trajectory,population.fitness)
-
-        # if old_fitness < population.fitness
-        #     push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
-        #     push!(evo_trace.traversed_phenotypes,population.pheno_class)
-        # end
-
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
-        push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
-        push!(evo_trace.traversed_phenotypes,population.pheno_class)
+        push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
 
         gen += 1
 
     end
 
-    return population, evo_trace
+    return evo_trace
 
 end
 
-function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fm_id::Tuple{Int64,Int64},fm_gen::Int64,mutation_op::MutationOperator,noise_function,fitness_function,mutate_function)
-
-    p = (start_network,grn_parameters.degradation)
-    
-    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
-
-    development = DefaultGRNSolver()
-    
-    founder = Individual(grn,development)
-
-    population = Population(founder,fitness_function)
-
-    evo_trace = EvoTrace([population.dominant_individual.genotype.p[1]],[population.pheno_class],[population.fitness],[founder.phenotype.retcode])
-
-    gen = 0
-
-    while stopping_criteria(population,tolerance) && gen < max_gen
-
-        if gen == fm_gen
-            no_mutant = true
-            while no_mutant
-                new_w = copy(population.dominant_individual.genotype.p[1])
-                new_w[fm_id...] = noise_function(new_w[fm_id...],rand(mutation_op.noise_distribution))
-                mutant = create_mutant(population.dominant_individual,new_w,development)
-                if mutant.phenotype.retcode == :Terminated
-                    no_mutant  = false
-                end
-            end
-        else
-            mutant = create_mutant(population.dominant_individual,mutate_function,development)
-        end
-
-        if mutant.phenotype.retcode == :Terminated
-            strong_selection!(population,mutant,β,fitness_function)
-        end
-
-        gen += 1
-
-        push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
-        push!(evo_trace.traversed_phenotypes,population.pheno_class)
-        push!(evo_trace.fitness_trajectory,population.fitness)
-        push!(evo_trace.retcodes,mutant.phenotype.retcode)
-
-    end
-
-    return population, evo_trace
-
-end
-
-function SSWM_Evolution_error(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
-
-    p = (start_network,grn_parameters.degradation)
-    
-    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
-
-    development = DefaultGRNSolver()
-    
-    founder = Individual(grn,development)
-
-    # population = Population(founder,fitness_function)
-
-    # evo_trace = EvoTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode])
-
-    # gen = 0
-
-    # w_s = []
-
-    # errors  = []
-
-    # while stopping_criteria(population,tolerance) && gen < max_gen
-
-    #     new_w = mutate_function(population.dominant_individual.genotype.p[1])
-    #     push!(w_s,new_w)
-
-    #     try
-
-    #         mutant = create_mutant(population.dominant_individual,new_w,development)
-
-    #         if mutant.phenotype.retcode == :Terminated
-    #             strong_selection!(population,mutant,β,fitness_function)
-    #         end
-    
-    #         push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
-    #         push!(evo_trace.fitness_trajectory,population.fitness)
-    #         push!(evo_trace.retcodes,mutant.phenotype.retcode)
-    
-    #         gen += 1
-
-    #     catch e
-    #         push!(errors,gen)
-    #         gen += 1
-    #     end
-
-    # end
-
-    # return population,w_s,errors
-
-    return founder,fitness_function
-
-end
-
-function SSWM_Evolution!(population::Population,evo_trace::EvoTrace,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
+function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
 
     development = DefaultGRNSolver()
 
@@ -411,10 +218,9 @@ function SSWM_Evolution!(population::Population,evo_trace::EvoTrace,β::Float64,
             strong_selection!(population,mutant,β,fitness_function)
         end
 
-        push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
-        push!(evo_trace.traversed_phenotypes,population.pheno_class)
         push!(evo_trace.fitness_trajectory,population.fitness)
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
+        push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
 
         gen += 1
 

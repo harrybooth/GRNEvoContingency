@@ -8,6 +8,9 @@ const λm = 0.4
 const h_a = -1.
 const h_b = 0.1
 
+const degradation_rate = 0.05
+const initial_concentration = 0.01
+
 const tissue = range(0,L,length = Nc)
 
 morph(x) = c0*exp(-x/λm)

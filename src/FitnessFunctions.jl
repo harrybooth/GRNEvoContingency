@@ -88,7 +88,6 @@ function malt_fitness_left(conc::Vector{Float64})
 
 end
 
-
 function perfect_malt_conc!(conc::Vector{Float64},n_stripe::Int64,max_conc::Float64)
 
     Lt = length(conc)
