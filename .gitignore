@@ -5,11 +5,13 @@
 # Folders to ignore - files may be too large, too many, etc. NOTE: EDIT IF NEEDED.
 videos
 plots
+papers
 data
-Presentations
+presentations
 notebooks
-notebooks_ignore
-_research
+old
+research
+summary_docs
 
 ################################################################################
 #                                    Julia                                     #

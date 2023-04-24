@@ -19,7 +19,7 @@ function draw_grn(network,color_scheme)
 
     vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
 
-    vertex_names = [vertex_names[i] for i in vertices(ng)]
+    vertex_names = [vertex_names[i] for i in Graphs.vertices(ng)]
 
     fixed_layout(_) = [(0.5, 1.), (0., 0), (1.,0),(0.5,2.)]
 
@@ -57,7 +57,7 @@ function draw_grn!(ax,network,color_scheme)
 
     vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
 
-    vertex_names = [vertex_names[i] for i in vertices(ng)]
+    vertex_names = [vertex_names[i] for i in Graphs.vertices(ng)]
 
     fixed_layout(_) = [(0.5, 1.), (0., 0), (1.,0),(0.5,2.)]
 
