@@ -2,7 +2,7 @@
 
 julia_version = "1.8.0"
 manifest_format = "2.0"
-project_hash = "feb9fc78d3cb370e080bb833c138043f6a9ab6d3"
+project_hash = "18ea71204a49dd09035118631859fdda531ccb26"
 
 [[deps.ARFFFiles]]
 deps = ["CategoricalArrays", "Dates", "Parsers", "Tables"]
@@ -365,6 +365,12 @@ git-tree-sha1 = "51861cd16c6c4e0018ad401b2afb36e51c7d4bcd"
 uuid = "06985876-5285-5a41-9fcb-8948a742cc53"
 version = "100.1700.700+1"
 
+[[deps.ClusterManagers]]
+deps = ["Distributed", "Logging", "Pkg", "Sockets"]
+git-tree-sha1 = "534e0568c6d928478082c71614151cf57e6b5fd8"
+uuid = "34f1f09b-3a8b-5176-ab39-66d58a4d544e"
+version = "0.4.4"
+
 [[deps.ClusterValidityIndices]]
 deps = ["DocStringExtensions", "LinearAlgebra", "Logging", "NumericalTypeAliases", "Pkg", "ProgressBars", "Random", "Statistics"]
 git-tree-sha1 = "adce112d0b3cb390d4a62cb3358c7a23ea542f37"
@@ -618,6 +624,12 @@ version = "0.10.7"
 [[deps.Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
+
+[[deps.DistributedArrays]]
+deps = ["Distributed", "LinearAlgebra", "Primes", "Random", "Serialization", "SparseArrays", "Statistics"]
+git-tree-sha1 = "8b73f8289d73306e3fc04e8622a2db562e01cd07"
+uuid = "aaf54ef3-cdf8-58ed-94cc-d582ad619b94"
+version = "0.6.6"
 
 [[deps.Distributions]]
 deps = ["ChainRulesCore", "DensityInterface", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns", "Test"]

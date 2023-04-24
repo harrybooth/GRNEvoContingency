@@ -3,14 +3,14 @@
 ################################################################################
 
 # Folders to ignore - files may be too large, too many, etc. NOTE: EDIT IF NEEDED.
-videos
-plots
-papers
-presentations
-notebooks
-old
-research
-summary_docs
+videos/
+plots/
+papers/
+presentations/
+notebooks/
+old/
+research/
+summary_docs/
 
 **/data/sims
 **/data/exp_pro
