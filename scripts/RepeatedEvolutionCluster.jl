@@ -1,4 +1,3 @@
-using DrWatson
 using Distributed
 using ClusterManagers
 
@@ -22,6 +21,7 @@ addprocs(SlurmManager(n_cores))
 @everywhere Pkg.precompile()
 
 @everywhere begin
+    using DrWatson
     using JLD2
     using Printf
     using Base.Threads
