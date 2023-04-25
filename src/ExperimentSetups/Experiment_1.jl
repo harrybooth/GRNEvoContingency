@@ -28,7 +28,7 @@ noise_cv = 0.25
 
 mut_prob = 0.1
 
-deletion_prob = 0.
+deletion_prob = 0.05
 
 grn_parameters = DefaultGRNParameters();
 
@@ -52,12 +52,12 @@ tolerance = 0.9
 
 ######### Simulation setup ######### 
 
-n_traj = 2
+n_traj = 5
 max_gen = 10000
 
 n_target_stripe = 1
 
-topology = "mutual_inh"
+topology = "bistable"
 
 if topology == "feed_forward"
     start_network = [0.0 0.0 0.0 0.28368795845354794; 0.09693796878733349 0.0 0.0 0.0; 0.02660150950444218 -0.26272166357617865 0.6146272196396064 0.0] # right handed feed forward

@@ -52,6 +52,7 @@ end
 mutable struct Population{T}
     dominant_individual::Individual
     fitness :: T
+    has_fixed :: Bool
 end
 
 # function Population(founder::Individual,fitness::Float64)
@@ -120,20 +121,20 @@ function fixation_probability_kim(Δf,β,N)
     (1 - exp(-2*β*Δf)) / (1 - exp(-2*β*N*Δf))
 end
 
-function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,has_fixed::Bool,fitness_function)
+function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,fitness_function)
 
     mutant_fitness = fitness_function(mutant.phenotype)
 
-    has_fixed = false
+    population.has_fixed = false
 
     if rand() < fixation_probability(mutant_fitness - population.fitness,β)
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
-        has_fixed = true
+        population.has_fixed = true
     end
 end
 
-function strong_selection!(population::Population{Float64},mutant::Individual,β::Tuple{Float64,Int64},has_fixed::Bool,fitness_function)
+function strong_selection!(population::Population{Float64},mutant::Individual,β::Tuple{Float64,Int64},fitness_function)
 
     mutant_fitness = fitness_function(mutant.phenotype)
 
@@ -190,11 +191,10 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     founder_fitness = fitness_function(founder.phenotype)
 
-    population = Population(founder,founder_fitness)
+    population = Population(founder,founder_fitness,false)
 
     gen = 0
 
-    has_fixed = false
     converged = false
 
     evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode],converged,gethostname())
@@ -204,13 +204,13 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
         if mutant.phenotype.retcode == :Terminated
-            strong_selection!(population,mutant,β,has_fixed,fitness_function)
+            strong_selection!(population,mutant,β,fitness_function)
         end
 
         push!(evo_trace.fitness_trajectory,population.fitness)
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
 
-        if has_fixed
+        if population.has_fixed
             push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
         end
 
@@ -237,7 +237,7 @@ function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β:
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
         if mutant.phenotype.retcode == :Terminated
-            strong_selection!(population,mutant,β,has_fixed,fitness_function)
+            strong_selection!(population,mutant,β,fitness_function)
         end
 
         push!(evo_trace.fitness_trajectory,population.fitness)
