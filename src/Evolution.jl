@@ -1,5 +1,6 @@
 using DifferentialEquations
 using Distributions
+using Distributed
 using DiffEqBase
 using StatsBase
 using Random
@@ -23,7 +24,7 @@ struct GRNParameters
 end
 
 function DefaultGRNParameters()
-    GRNParameters(degradation_rate .* ones(Ng),initial_concentration .* ones(Ng,Nc))
+    GRNParameters(deg_rate_g .* ones(Ng),init_conc_g .* ones(Ng,Nc))
 end
 
 # Individual and populations
@@ -53,10 +54,10 @@ mutable struct Population{T}
     fitness :: T
 end
 
-function Population(founder::Individual,fitness_function)
-    fitness = fitness_function(founder.phenotype)
-    Population(founder,fitness)
-end
+# function Population(founder::Individual,fitness::Float64)
+#     # fitness = fitness_function(founder.phenotype)
+#     Population(founder,fitness)
+# end
 
 # Mutation
 
@@ -119,23 +120,29 @@ function fixation_probability_kim(Δf,β,N)
     (1 - exp(-2*β*Δf)) / (1 - exp(-2*β*N*Δf))
 end
 
-function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,fitness_function)
+function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,has_fixed::Bool,fitness_function)
 
     mutant_fitness = fitness_function(mutant.phenotype)
+
+    has_fixed = false
 
     if rand() < fixation_probability(mutant_fitness - population.fitness,β)
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
+        has_fixed = true
     end
 end
 
-function strong_selection!(population::Population{Float64},mutant::Individual,β::Tuple{Float64,Int64},fitness_function)
+function strong_selection!(population::Population{Float64},mutant::Individual,β::Tuple{Float64,Int64},has_fixed::Bool,fitness_function)
 
     mutant_fitness = fitness_function(mutant.phenotype)
+
+    has_fixed = false
 
     if rand() < fixation_probability_kim(mutant_fitness - population.fitness,β[1],β[2])
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
+        has_fixed = true
     end
 end
 
@@ -146,7 +153,8 @@ function fitness_evaluation(sol::DESolution,fitness_measure)
 end
 
 function fitness_evaluation(sol::DESolution,fitness_measure,output::Int64)
-    fitness_measure(sol.u[end][output,:])
+    pheno = @view sol.u[end][output,:]
+    fitness_measure(pheno)
 end
 
 # Evolution 
@@ -162,9 +170,11 @@ mutable struct EvolutionaryTrace
     traversed_networks :: Any
     fitness_trajectory :: Any
     retcodes :: Any
+    converged :: Bool
+    worker_id :: Any
 end
 
-function stopping_criteria(population::Population{Float64},tolerance::Float64)
+function has_not_converged(population::Population{Float64},tolerance::Float64)
     population.fitness < tolerance
 end
 
@@ -178,26 +188,38 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
     
     founder = Individual(grn,development)
 
-    population = Population(founder,fitness_function)
+    founder_fitness = fitness_function(founder.phenotype)
 
-    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode])
+    population = Population(founder,founder_fitness)
 
     gen = 0
 
-    while stopping_criteria(population,tolerance) && gen < max_gen
+    has_fixed = false
+    converged = false
+
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode],converged,gethostname())
+
+    while has_not_converged(population,tolerance) && gen < max_gen
 
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
         if mutant.phenotype.retcode == :Terminated
-            strong_selection!(population,mutant,β,fitness_function)
+            strong_selection!(population,mutant,β,has_fixed,fitness_function)
         end
 
         push!(evo_trace.fitness_trajectory,population.fitness)
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
-        push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+
+        if has_fixed
+            push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+        end
 
         gen += 1
 
+    end
+
+    if population.fitness >= tolerance
+        evo_trace.converged = true
     end
 
     return evo_trace
@@ -210,20 +232,27 @@ function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β:
 
     gen = 0
 
-    while stopping_criteria(population,tolerance) && gen < max_gen
+    while has_not_converged(population,tolerance) && gen < max_gen
 
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
         if mutant.phenotype.retcode == :Terminated
-            strong_selection!(population,mutant,β,fitness_function)
+            strong_selection!(population,mutant,β,has_fixed,fitness_function)
         end
 
         push!(evo_trace.fitness_trajectory,population.fitness)
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
-        push!(evo_trace.traversed_topologies,population.dominant_individual.genotype.p[1])
+
+        if has_fixed
+            push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+        end
 
         gen += 1
 
+    end
+
+    if population.fitness >= tolerance
+        evo_trace.converged = true
     end
 
 end

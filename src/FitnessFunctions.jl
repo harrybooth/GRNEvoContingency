@@ -1,4 +1,4 @@
-function malt_fitness(conc::Vector{Float64},n_stripe::Int64)
+function malt_fitness(conc,n_stripe::Int64)
 
     Lt = length(conc)
 
@@ -19,11 +19,11 @@ function malt_fitness(conc::Vector{Float64},n_stripe::Int64)
 
     max_conc = 20.
 
-    return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc), [(NaN,NaN)]
+    return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc)
 
 end
 
-function malt_fitness(conc::Vector{Float64},n_stripe::Int64,min_height::Float64)
+function malt_fitness(conc,n_stripe::Int64,min_height::Float64)
 
     Lt = length(conc)
 
@@ -44,11 +44,10 @@ function malt_fitness(conc::Vector{Float64},n_stripe::Int64,min_height::Float64)
 
     max_conc = max(min_height,maximum(conc))
 
-    return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc), [(NaN,NaN)]
-
+    return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc)
 end
 
-function malt_fitness_right(conc::Vector{Float64})
+function malt_fitness_right(conc)
 
     Lt = length(conc)
 
@@ -66,11 +65,11 @@ function malt_fitness_right(conc::Vector{Float64})
 
     max_conc = 20.
 
-    return (high_sum - low_sum) / ((Lt/N)*max_conc),  [(NaN,NaN)]
+    return (high_sum - low_sum) / ((Lt/N)*max_conc)
 
 end
 
-function malt_fitness_left(conc::Vector{Float64})
+function malt_fitness_left(conc)
 
     Lt = length(conc)
 
@@ -84,7 +83,7 @@ function malt_fitness_left(conc::Vector{Float64})
 
     max_conc = 20.
 
-    return (high_sum - low_sum) / ((Lt/N)*max_conc),  [(NaN,NaN)]
+    return (high_sum - low_sum) / ((Lt/N)*max_conc)
 
 end
 

@@ -1,27 +1,10 @@
-const Nc = 100
-const Ng = 3
-const L = 1.
-const θ = 5.
-const c0 = 10.
-const λm = 0.4
+morph(x) = m0*exp(-x/λm)
 
-const h_a = -1.
-const h_b = 0.1
-
-const degradation_rate = 0.05
-const initial_concentration = 0.01
-
-const tissue = range(0,L,length = Nc)
-
-morph(x) = c0*exp(-x/λm)
+# morph(x) = m0*(cosh((x-L)/λm)/sinh(x/λm))
 
 # σ(I) = 1/(1+exp(θ-θ*I))  # σ(0.) > 0 ?
 
 σ(I) = 0.5*(((I + h_a)/sqrt((I + h_a)^2+h_b)) + 1) # σ(0.) > 0 ?
-
-s(i,w,g,m) = sum(w[i,k] * g[k] for k in 1:3) + w[i, 4] * m
-
-δ(i,w,g,m,λg) = σ(s(i,w,g,m)) - λg*g[i]
 
 # MOL: u_{j}(t) = u(x_j,t) where x_j = j*dx
 
@@ -43,6 +26,10 @@ function init_gene_regulation_1d(start_conc)
 end
 
 # For homotopy methods
+
+s(i,w,g,m) = sum(w[i,k] * g[k] for k in 1:3) + w[i, 4] * m
+
+δ(i,w,g,m,λg) = σ(s(i,w,g,m)) - λg*g[i]
 
 function Δ(i,w,g,d,m,λg)
     I = s(i,w,g,m) + h_a
