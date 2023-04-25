@@ -17,11 +17,11 @@ addprocs(SlurmManager(n_cores))
 
 @everywhere using Pkg
 
-@everywhere pkg"activate ."
+@everywhere Pkg.activate(projectdir())
 
-@everywhere pkg"instantiate"
+@everywhere Pkg.instantiate()
 
-@everywhere pkg"precompile"
+@everywhere Pkg.precompile()
 
 @everywhere begin
     using JLD2
