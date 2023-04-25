@@ -1,18 +1,12 @@
-#=
-ml Julia/1.8.2-linux-x86_64
-=#
-
 using DrWatson
 using Distributed
 using ClusterManagers
 
 @quickactivate "GRNEvoContingency"
 
-const n_cores = 64
+const n_cores = 100
 
-const n_workers = 2
-
-addprocs(SlurmManager(n_cores), N=n_workers, topology=:master_worker, mem_per_cpu= "4G", exeflags="--project=.",time = "00:30:00",partition = "cpu")
+addprocs(SlurmManager(n_cores), exeflags="--project=.")
 
 # @everywhere using Pkg
 

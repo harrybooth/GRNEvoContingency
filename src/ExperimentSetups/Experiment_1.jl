@@ -52,7 +52,7 @@ tolerance = 0.9
 
 ######### Simulation setup ######### 
 
-n_traj = 64
+n_traj = 100
 max_gen = 10000
 
 n_target_stripe = 1
