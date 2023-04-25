@@ -2,19 +2,26 @@ using DrWatson
 using Distributed
 using ClusterManagers
 
+# http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
+# 
+# This code is expected to be run from an sbatch script after a module load julia command has been run.
+# It starts the remote processes with srun within an allocation specified in the sbatch script.
+
 @quickactivate "GRNEvoContingency"
 
 const n_cores = 100
 
-addprocs(SlurmManager(n_cores), exeflags="--project=.")
+# addprocs(SlurmManager(n_cores), exeflags="--project=.")
 
-# @everywhere using Pkg
+addprocs(SlurmManager(n_cores))
 
-# @everywhere pkg"activate ."
+@everywhere using Pkg
 
-# @everywhere pkg"instantiate"
+@everywhere pkg"activate ."
 
-# @everywhere pkg"precompile"
+@everywhere pkg"instantiate"
+
+@everywhere pkg"precompile"
 
 @everywhere begin
     using JLD2

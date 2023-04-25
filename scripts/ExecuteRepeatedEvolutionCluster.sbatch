@@ -1,10 +1,11 @@
 #!/bin/bash
-#SBATCH --job-name=Harry
+#SBATCH --job-name=Evo100
 #SBATCH --ntasks=100
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4G
+#SBATCH --time=2:00:00
 #SBATCH --partition=cpu
-#SBATCH --mail-user=$USER@crick.ac.uk  
+#SBATCH --mail-user=harry.booth@crick.ac.uk  
 #SBATCH --mail-type=ALL
 
 # Initialise Julia
