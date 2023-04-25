@@ -7,8 +7,6 @@ using ClusterManagers
 # This code is expected to be run from an sbatch script after a module load julia command has been run.
 # It starts the remote processes with srun within an allocation specified in the sbatch script.
 
-@quickactivate "GRNEvoContingency"
-
 const n_cores = 100
 
 # addprocs(SlurmManager(n_cores), exeflags="--project=.")
@@ -17,7 +15,7 @@ addprocs(SlurmManager(n_cores))
 
 @everywhere using Pkg
 
-@everywhere Pkg.activate(projectdir())
+@everywhere Pkg.activate("..")
 
 @everywhere Pkg.instantiate()
 
