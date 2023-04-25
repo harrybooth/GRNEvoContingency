@@ -1,22 +1,24 @@
+using DrWatson
 using Distributed
 using ClusterManagers
 
-const n_cores = 500
+@quickactivate "GRNEvoContingency"
 
-const n_workers = 16
+const n_cores = 64
 
-# addprocs(SlurmManager(n_cores), N=n_workers, topology=:master_worker, exeflags="--project=.")
+const n_workers = 2
 
-@everywhere using Pkg
+addprocs(SlurmManager(n_cores), N=n_workers, topology=:master_worker, mem_per_cpu= "32G", exeflags="--project=.",time = "01:00:00",partition = "cpu")
 
-@everywhere pkg"activate ."
+# @everywhere using Pkg
 
-@everywhere pkg"instantiate"
+# @everywhere pkg"activate ."
 
-@everywhere pkg"precompile"
+# @everywhere pkg"instantiate"
+
+# @everywhere pkg"precompile"
 
 @everywhere begin
-    using DrWatson
     using JLD2
     using Printf
     using Base.Threads
