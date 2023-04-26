@@ -1,24 +1,29 @@
-using DrWatson
+cluster_calc = true
+
+if !cluster_calc
+    using DrWatson
+    @quickactivate "GRNEvoContingency"
+end
+
 using Distributed
 using ClusterManagers
 
-@quickactivate "GRNEvoContingency"
+# http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
+# 
+# This code is expected to be run from an sbatch script after a module load julia command has been run.
+# It starts the remote processes with srun within an allocation specified in the sbatch script.
 
-const n_cores = 64
-
-const n_workers = 2
-
-addprocs(SlurmManager(n_cores), N=n_workers, topology=:master_worker, mem_per_cpu= "32G", exeflags="--project=.",time = "01:00:00",partition = "cpu")
-
-# @everywhere using Pkg
-
-# @everywhere pkg"activate ."
-
-# @everywhere pkg"instantiate"
-
-# @everywhere pkg"precompile"
+if cluster_calc
+    n_tasks = parse(Int, ENV["SLURM_NTASKS"])
+    addprocs(SlurmManager(n_tasks))
+    @everywhere using Pkg
+    @everywhere Pkg.activate("..")
+    @everywhere Pkg.instantiate()
+    @everywhere Pkg.precompile()
+end
 
 @everywhere begin
+    using DrWatson
     using JLD2
     using Printf
     using Base.Threads
@@ -28,13 +33,15 @@ end
 @everywhere include(srcdir("Evolution.jl"))
 @everywhere include(srcdir("FitnessFunctions.jl"))
 
-@everywhere all_experiments = ["Experiment_1"]
+@everywhere all_experiments = ["RepeatedEvolution_Experiment_1"]
 
 for exp_name in all_experiments
 
     @everywhere include(srcdir("ExperimentSetups/" * $exp_name * ".jl"))
 
     evo_trace = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
+
+    evo_trace.converged = false
 
     sim = fill(evo_trace,n_traj)
 
@@ -46,9 +53,11 @@ for exp_name in all_experiments
 
         n_trials += length(sim_id)
 
-        @sync for i in sim_id
-            @spawn sim[i] = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
-        end
+        # @sync for i in sim_id
+        #     @spawn sim[i] = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
+        # end
+
+        sim = pmap(sim_i -> sim_i.converged ? sim_i : SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),sim)
 
         sim_id = findall(x->!x.converged,sim)
 
@@ -66,6 +75,8 @@ for exp_name in all_experiments
 
     summaryd = Dict{String, Any}()
 
+    summaryd["Total traj simulated"] = n_trials
+    summaryd["Total traj converged"] = n_traj
     summaryd["ConvergenceRate"] = n_traj/n_trials
     summaryd["N unique workers"] = length(unique(map(et->et.worker_id,sim)))
     summaryd["Average N non-terminated"] = mean(map(et->count(x->x!=:Terminated,et.retcodes) / length(et.retcodes),sim))

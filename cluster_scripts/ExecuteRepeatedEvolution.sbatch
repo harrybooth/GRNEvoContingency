@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=Evo100ii
+#SBATCH --job-name=RepeatedEvolution
 #SBATCH --ntasks=100
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4G
@@ -10,4 +10,4 @@
 
 # Initialise Julia
 ml Julia/1.8.2-linux-x86_64
-julia RepeatedEvolutionCluster.jl
+julia RepeatedEvolution.jl
