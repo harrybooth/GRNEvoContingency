@@ -1,7 +1,8 @@
+using DrWatson
+
 cluster_calc = true
 
 if !cluster_calc
-    using DrWatson
     @quickactivate "GRNEvoContingency"
 end
 
