@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=Evo100i
+#SBATCH --job-name=Evo100ii
 #SBATCH --ntasks=100
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4G

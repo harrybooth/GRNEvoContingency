@@ -39,6 +39,8 @@ for exp_name in all_experiments
 
     evo_trace = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
 
+    evo_trace.converged = false
+
     sim = fill(evo_trace,n_traj)
 
     sim_id = findall(x->!x.converged,sim)
@@ -69,6 +71,8 @@ for exp_name in all_experiments
 
     summaryd = Dict{String, Any}()
 
+    summaryd["Total traj simulated"] = n_trials
+    summaryd["Total traj converged"] = n_traj
     summaryd["ConvergenceRate"] = n_traj/n_trials
     summaryd["N unique workers"] = length(unique(map(et->et.worker_id,sim)))
     summaryd["Average N non-terminated"] = mean(map(et->count(x->x!=:Terminated,et.retcodes) / length(et.retcodes),sim))
