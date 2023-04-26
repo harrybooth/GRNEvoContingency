@@ -68,6 +68,6 @@ tolerance = 0.9
 
 ########## Simulation Setup ######### 
 
-n_networks_required = 25
+n_networks_required = 10
 
 max_gen = 10000
