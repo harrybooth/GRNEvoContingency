@@ -1,5 +1,12 @@
 using Distributed
 using ClusterManagers
+using DrWatson
+
+@quickactivate GRNEvoContingency
+
+const data_dir = datadir()
+const scr_dir = scrdir()
+const proj_dir = projectdir()
 
 # http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
 # 
@@ -7,8 +14,6 @@ using ClusterManagers
 # It starts the remote processes with srun within an allocation specified in the sbatch script.
 
 const n_cores = 100
-
-# addprocs(SlurmManager(n_cores), exeflags="--project=.")
 
 addprocs(SlurmManager(n_cores))
 
@@ -31,7 +36,7 @@ end
 @everywhere include(srcdir("Evolution.jl"))
 @everywhere include(srcdir("FitnessFunctions.jl"))
 
-@everywhere all_experiments = ["Experiment_1"]
+@everywhere all_experiments = ["RepeatedEvolution_Experiment_1"]
 
 for exp_name in all_experiments
 
