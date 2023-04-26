@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=RepeatedEvolution
+#SBATCH --job-name=FindNetworks
 #SBATCH --ntasks=10
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4G
