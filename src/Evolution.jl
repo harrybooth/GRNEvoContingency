@@ -129,7 +129,7 @@ function noise_no_additions(w::Matrix{Float64},mut_op::MutationOperator)
         while sign(proposal) != sign(new_w[index])
             proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
         end
-        
+
         new_w[index] = sign(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
     end
 
@@ -223,7 +223,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     converged = false
 
-    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,gethostname())
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,(myid(),gethostname()))
 
     while has_not_converged(population,tolerance) && gen < max_gen
 

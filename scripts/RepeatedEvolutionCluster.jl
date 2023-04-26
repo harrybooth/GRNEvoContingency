@@ -1,19 +1,24 @@
 using Distributed
 using ClusterManagers
-using DrWatson
 
-@quickactivate GRNEvoContingency
+# using DrWatson
 
-const data_dir = datadir()
-const scr_dir = scrdir()
-const proj_dir = projectdir()
+# @quickactivate GRNEvoContingency
+
+# const data_dir = datadir()
+# const scr_dir = scrdir()
+# const proj_dir = projectdir()
 
 # http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
 # 
 # This code is expected to be run from an sbatch script after a module load julia command has been run.
 # It starts the remote processes with srun within an allocation specified in the sbatch script.
 
-const n_cores = 100
+# const n_cores = 100
+
+const n_cores = parse(Int, ENV["SLURM_NTASKS"])
+
+print(n_cores)
 
 addprocs(SlurmManager(n_cores))
 
@@ -56,9 +61,11 @@ for exp_name in all_experiments
 
         n_trials += length(sim_id)
 
-        @sync for i in sim_id
-            @spawn sim[i] = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
-        end
+        # @sync for i in sim_id
+        #     @spawn sim[i] = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
+        # end
+
+        sim = pmap(sim_i -> sim_i.converged ? sim_i : SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),sim)
 
         sim_id = findall(x->!x.converged,sim)
 
