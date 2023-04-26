@@ -4,19 +4,18 @@ const Nc = 100
 const Ng = 3
 const L = 1.
 
-const m0 = 10.
-const λm = 0.4
+const m0 = 1.
+const λm = 0.2*L
 
-const h_a = -1.
-const h_b = 0.1
+const θ = 5.
 const deg_rate_g = 0.05
-const init_conc_g = 0.01
+const init_conc_g = 0.1 
 
 const tissue = range(0,L,length = Nc)
 
 morph(x) = m0*exp(-x/λm)
 
-σ(I) = 0.5*(((I + h_a)/sqrt((I + h_a)^2+h_b)) + 1) # σ(0.) > 0 ?
+σ(I) = 1/(1+exp(θ-θ*I))  # σ(0.) > 0 ?
 
 include(srcdir("TissueModel_ND.jl"))
 
@@ -28,31 +27,31 @@ noise_cv = 0.25
 
 mut_prob = 0.1
 
-deletion_prob = 0.05
+deletion_prob = 0.
 
 grn_parameters = DefaultGRNParameters();
 
-viable_mutations = ones(Int,Ng,Ng+1)
+viable_mutations = Int64.(start_network .!= 0)
 
 mutation_weights = findall(viable_mutations .> 0)
 
 n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
-max_w = 1.
+max_w = 10.
 
-mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
+mutation_op = MutationOperator(Normal,(μ = 0.0,σ = 1.),n_sample_func,deletion_prob,max_w,mutation_weights)
 
-mutate_function = i -> noise(i,mutation_op);
+mutate_function = i -> noise_no_additions(i,mutation_op);
 
 output_gene = 3
 
-fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_target_stripe),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->malt_fitness_left(x),output_gene);
 
 tolerance = 0.9
 
 ######### Simulation setup ######### 
 
-n_traj = 20
+n_traj = 100
 max_gen = 10000
 
 n_target_stripe = 1

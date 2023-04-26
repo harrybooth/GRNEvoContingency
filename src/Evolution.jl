@@ -111,6 +111,31 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator)
     return new_w
 end
 
+function noise_no_additions(w::Matrix{Float64},mut_op::MutationOperator)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sample(mut_op.mutation_weights,n_mut,replace = false)
+
+    for index in choices
+        proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
+
+        while sign(proposal) != sign(new_w[index])
+            proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
+        end
+        
+        new_w[index] = sign(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
+    end
+
+    return new_w
+end
+
 # Selection 
 
 function fixation_probability(Δf,β)
@@ -169,6 +194,7 @@ end
 
 mutable struct EvolutionaryTrace
     traversed_networks :: Any
+    traversed_t2s ::Any
     fitness_trajectory :: Any
     retcodes :: Any
     converged :: Bool
@@ -197,7 +223,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     converged = false
 
-    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.fitness],[founder.phenotype.retcode],converged,gethostname())
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,gethostname())
 
     while has_not_converged(population,tolerance) && gen < max_gen
 
@@ -212,6 +238,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
         if population.has_fixed
             push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
         end
 
         gen += 1

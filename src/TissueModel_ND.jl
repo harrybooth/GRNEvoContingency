@@ -4,7 +4,7 @@ morph(x) = m0*exp(-x/λm)
 
 # σ(I) = 1/(1+exp(θ-θ*I))  # σ(0.) > 0 ?
 
-σ(I) = 0.5*(((I + h_a)/sqrt((I + h_a)^2+h_b)) + 1) # σ(0.) > 0 ?
+# σ(I) = 0.5*(((I + h_a)/sqrt((I + h_a)^2+h_b)) + 1) # σ(0.) > 0 ?
 
 # MOL: u_{j}(t) = u(x_j,t) where x_j = j*dx
 
