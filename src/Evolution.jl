@@ -272,6 +272,7 @@ function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β:
 
         if has_fixed
             push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
         end
 
         gen += 1
