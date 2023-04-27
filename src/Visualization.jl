@@ -1,5 +1,5 @@
 using Graphs
-using CairoMakie
+using GraphMakie
 
 function select_marker(edge_value)
     edge_value > 0 ? :ltriangle : :vline

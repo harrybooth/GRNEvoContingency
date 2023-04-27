@@ -52,7 +52,7 @@ output_gene = 3
 
 fitness_function = s -> fitness_evaluation(s,x->malt_fitness_left(x),output_gene);
 
-tolerance = 0.9
+tolerance = 0.95
 
 ########## To define in script ######### 
 
