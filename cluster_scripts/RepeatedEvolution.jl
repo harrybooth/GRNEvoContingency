@@ -97,6 +97,7 @@ for exp_name in all_experiments
     fulld["geno_traj"] = geno_traj
     fulld["retcodes"] = map(et->map(x-> x == :Terminated ? 1 : 0,et.retcodes),sim)
     fulld["dmat"] = dmat
+    fulld["dmat_id"] = dmat_id
 
     @tag!(fulld)
 
