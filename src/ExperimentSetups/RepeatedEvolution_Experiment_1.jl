@@ -50,6 +50,11 @@ fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_target_stripe),
 
 tolerance = 0.9
 
+
+######### LMC Setup ##########
+
+N_interp_points = 30
+
 ######### Simulation setup ######### 
 
 n_traj = 20

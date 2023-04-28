@@ -61,9 +61,13 @@ n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
 mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
 
-mutate_function = i -> noise_no_additions(i,mutation_op);
+mutate_function = i -> noise(i,mutation_op);
+
+########## LMC Setup ######### 
+
+N_interp_points = 10
 
 ######### Simulation setup ######### 
 
-n_traj = 20000
-max_gen = 40000
+n_traj = 3
+max_gen = 10000

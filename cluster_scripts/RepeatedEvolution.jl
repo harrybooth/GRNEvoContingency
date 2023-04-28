@@ -33,8 +33,9 @@ end
 
 @everywhere include(srcdir("Evolution.jl"))
 @everywhere include(srcdir("FitnessFunctions.jl"))
+@everywhere include(srcdir("FitnessLandscapes.jl"))
 
-@everywhere all_experiments = ["RepeatedEvolution_Experiment_1"]
+@everywhere all_experiments = ["RepeatedEvolution_MutualInh"]
 
 for exp_name in all_experiments
 
@@ -54,25 +55,11 @@ for exp_name in all_experiments
 
         n_trials += length(sim_id)
 
-        # @sync for i in sim_id
-        #     @spawn sim[i] = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
-        # end
-
         sim = pmap(sim_i -> sim_i.converged ? sim_i : SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),sim)
 
         sim_id = findall(x->!x.converged,sim)
 
     end
-
-    fulld = Dict{String, Any}()
-
-    fulld["fitness_traj"] = map(et->et.fitness_trajectory,sim)
-    fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim);
-    fulld["retcodes"] = map(et->map(x-> x == :Terminated ? 1 : 0,et.retcodes),sim)
-
-    @tag!(fulld)
-
-    safesave(datadir("exp_raw",exp_name * "_RawData.jld2"), fulld)
 
     summaryd = Dict{String, Any}()
 
@@ -85,5 +72,34 @@ for exp_name in all_experiments
     @tag!(summaryd)
 
     safesave(datadir("exp_summaries",exp_name * "_Summary.jld2"), summaryd)
+
+    ########################################
+
+    geno_traj = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim);
+
+    @everywhere end_networks = map(x->x[:,end],geno_traj);
+
+    n_sample = length(end_networks)
+
+    print(n_sample)
+
+    dmat = zeros(n_sample,n_sample)
+
+    dmat_id = [(i,j) for i in 1:n_sample, j in 1:n_sample if i>j]
+
+    dmat = pmap(id-> instability_lean(end_networks[id[1]],end_networks[id[2]],N_interp_points,grn_parameters,development,fitness_function),dmat_id)
+
+    ########################################
+
+    fulld = Dict{String, Any}()
+
+    fulld["fitness_traj"] = map(et->et.fitness_trajectory,sim)
+    fulld["geno_traj"] = geno_traj
+    fulld["retcodes"] = map(et->map(x-> x == :Terminated ? 1 : 0,et.retcodes),sim)
+    fulld["dmat"] = dmat
+
+    @tag!(fulld)
+
+    safesave(datadir("exp_raw",exp_name * "_RawData.jld2"), fulld)
 
 end

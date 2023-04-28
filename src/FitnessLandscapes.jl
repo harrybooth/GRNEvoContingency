@@ -141,7 +141,7 @@ function InterpolatedLandscape(start_network_v::Vector{Float64},end_network_v::V
 
     origin = Individual(genotype,phenotype)
 
-    origin_fitness,origin_pheno_class = fitness_function(origin.phenotype) 
+    origin_fitness = fitness_function(origin.phenotype) 
 
     ######
 
@@ -168,7 +168,7 @@ function InterpolatedLandscape(start_network_v::Vector{Float64},end_network_v::V
             mutant = Individual(remake(origin.genotype, p = (new_w,origin.genotype.p[2:end]...)),development)
 
             if mutant.phenotype.retcode == :Terminated
-                mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
+                mutant_fitness = fitness_function(mutant.phenotype)
             else
                 mutant_fitness = -1.
             end
@@ -182,9 +182,17 @@ function InterpolatedLandscape(start_network_v::Vector{Float64},end_network_v::V
 end
 
 
-function instability(network_1,network_2,grn_parameters,development,fitness_function)
+function instability(network_1,network_2,N_interp_points,grn_parameters,development,fitness_function)
 
-    itp_ll = InterpolatedLandscape(network_1,network_2,30,grn_parameters,development,fitness_function);
+    itp_ll = InterpolatedLandscape(network_1,network_2,N_interp_points,grn_parameters,development,fitness_function);
+
+    return 0.5*(itp_ll.slice_fitnesses[1] + itp_ll.slice_fitnesses[end] + 2) - minimum(itp_ll.slice_fitnesses .+ 1)
+
+end
+
+function instability_lean(network_1,network_2,N_interp_points,grn_parameters,development,fitness_function)
+
+    itp_ll = InterpolatedLandscapeLean(network_1,network_2,N_interp_points,grn_parameters,development,fitness_function);
 
     return 0.5*(itp_ll.slice_fitnesses[1] + itp_ll.slice_fitnesses[end] + 2) - minimum(itp_ll.slice_fitnesses .+ 1)
 
@@ -205,7 +213,7 @@ function InterpolatedLandscapeLean(start_network_v::Vector{Float64},end_network_
 
     origin = Individual(genotype,phenotype)
 
-    origin_fitness,origin_pheno_class = fitness_function(origin.phenotype) 
+    origin_fitness = fitness_function(origin.phenotype) 
 
     ######
 
