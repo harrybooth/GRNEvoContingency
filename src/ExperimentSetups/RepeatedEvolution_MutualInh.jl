@@ -25,7 +25,7 @@ include(srcdir("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-networks = load(datadir("networks/FindNetworks_HalfStripeLeft_RawData.jld2"));
+# networks = load(datadir("networks/FindNetworks_HalfStripeLeft_RawData.jld2"));
 
 topology_choice = "mutual_inh"
 

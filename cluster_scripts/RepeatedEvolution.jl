@@ -37,6 +37,8 @@ end
 
 @everywhere all_experiments = ["RepeatedEvolution_MutualInh"]
 
+@everywhere networks = load(datadir("networks/FindNetworks_HalfStripeLeft_RawData.jld2"));
+
 for exp_name in all_experiments
 
     @everywhere include(srcdir("ExperimentSetups/" * $exp_name * ".jl"))
