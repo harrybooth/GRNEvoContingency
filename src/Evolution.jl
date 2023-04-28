@@ -130,7 +130,7 @@ function noise_no_additions(w::Matrix{Float64},mut_op::MutationOperator)
             proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
         end
 
-        new_w[index] = sign(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
+        new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
     end
 
     return new_w
