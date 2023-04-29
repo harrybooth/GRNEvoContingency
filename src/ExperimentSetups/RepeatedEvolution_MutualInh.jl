@@ -69,5 +69,5 @@ N_interp_points = 10
 
 ######### Simulation setup ######### 
 
-n_traj = 3
-max_gen = 10000
+n_traj = 5000
+max_gen = 40000
