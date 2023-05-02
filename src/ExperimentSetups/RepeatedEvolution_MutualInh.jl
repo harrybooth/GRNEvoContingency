@@ -1,7 +1,6 @@
 ########## GRN Model Setup ######### 
 
-# Experiment description: In this experiment, a mutual inhibition network is chosen. We run repeated evolution, selecting for a single central stripe, whilst restricting mutation to only take place within the topology. 
-
+# Experiment description: In this experiment, a mutual inhibition network is chosen. We run repeated evolution, selecting for a single central stripe.
 ########## GRN Model Setup ######### 
 
 const Nc = 100
