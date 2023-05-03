@@ -20,7 +20,7 @@ if cluster_calc
     @everywhere using Pkg
     @everywhere Pkg.activate("..")
     @everywhere Pkg.instantiate()
-    # @everywhere Pkg.precompile()
+    @everywhere Pkg.precompile()
 end
 
 @everywhere begin
