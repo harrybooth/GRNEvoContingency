@@ -1,10 +1,16 @@
 using DrWatson
+using Distributed
+using ClusterManagers
 
 cluster_calc = true
 
 if !cluster_calc
     @quickactivate "GRNEvoContingency"
 end
+
+Pkg.activate("..")
+Pkg.instantiate()
+Pkg.precompile()
 
 using Distributed
 using ClusterManagers
@@ -13,6 +19,9 @@ using ClusterManagers
 # 
 # This code is expected to be run from an sbatch script after a module load julia command has been run.
 # It starts the remote processes with srun within an allocation specified in the sbatch script.
+
+# https://github.com/JuliaLang/julia/pull/30174
+# https://github.com/JuliaLang/julia/issues/31953
 
 if cluster_calc
     n_tasks = parse(Int, ENV["SLURM_NTASKS"])
