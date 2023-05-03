@@ -1,6 +1,7 @@
 using DrWatson
 using Distributed
 using ClusterManagers
+using Pkg
 
 cluster_calc = true
 
