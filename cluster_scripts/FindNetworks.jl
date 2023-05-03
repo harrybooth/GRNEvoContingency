@@ -4,6 +4,8 @@ using ClusterManagers
 using Pkg
 
 Pkg.activate("..")
+Pkg.instantiate()
+Pkg.precompile()
 
 projectdir_static = dirname(Base.active_project())
 
