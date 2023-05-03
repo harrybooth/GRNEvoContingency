@@ -16,6 +16,18 @@ function DefaultGRNSolver()
     DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-8,1e-6),maxiters = 1e3, verbose = false, save_everystep = false))
 end
 
+function TimeStampedGRNSolver(save_at)
+    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,maxiters = 1e3, verbose = false, saveat = save_at))
+end
+
+function TimeStampedGRNSolver(save_at,save_id)
+    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,maxiters = 1e3, verbose = false, saveat = save_at,save_idxs = save_id))
+end
+
+function DenseGRNSolver(save_id)
+    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,maxiters = 1e3, verbose = false, dense = true,save_idxs = save_id))
+end
+
 # Model parameters
 
 struct GRNParameters
@@ -48,6 +60,18 @@ function Individual(start_network::Matrix{Float64},grn_parameters::GRNParameters
     
     Individual(genotype,phenotype)
 end
+
+
+function Individual(start_network::Matrix{Float64},t2s::Float64,grn_parameters::GRNParameters,development::DESystemSolver)
+
+    p = (start_network,grn_parameters.degradation)
+
+    genotype = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,t2s+eps()),p)
+    phenotype  = solve(genotype,development.alg;development.kwargs...)
+    
+    Individual(genotype,phenotype)
+end
+
 
 mutable struct Population{T}
     dominant_individual::Individual
@@ -229,7 +253,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
-        if mutant.phenotype.retcode == :Terminated
+        if mutant.phenotype.retcode == ReturnCode.Terminated
             strong_selection!(population,mutant,β,fitness_function)
         end
 
@@ -263,7 +287,7 @@ function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β:
 
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
-        if mutant.phenotype.retcode == :Terminated
+        if mutant.phenotype.retcode == ReturnCode.Terminated
             strong_selection!(population,mutant,β,fitness_function)
         end
 
