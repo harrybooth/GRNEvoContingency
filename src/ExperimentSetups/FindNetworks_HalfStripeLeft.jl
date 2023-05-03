@@ -17,7 +17,7 @@ morph(x) = m0*exp(-x/λm)
 
 σ(I) = 1/(1+exp(θ-θ*I))  # σ(0.) > 0 ?
 
-include(srcdir("TissueModel_ND.jl"))
+include(srcdirx("TissueModel_ND.jl"))
 
 ######### GRN Topology setup ######### 
 

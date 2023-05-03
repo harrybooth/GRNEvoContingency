@@ -3,18 +3,19 @@ using Distributed
 using ClusterManagers
 using Pkg
 
+Pkg.activate("..")
+
+projectdir_static = dirname(Base.active_project())
+
 cluster_calc = true
 
 if !cluster_calc
     @quickactivate "GRNEvoContingency"
 end
 
-Pkg.activate("..")
-Pkg.instantiate()
-Pkg.precompile()
-
 using Distributed
 using ClusterManagers
+
 
 # http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
 # 
@@ -41,14 +42,24 @@ end
     using Base.Threads: @spawn
 end
 
-@everywhere include(srcdir("Evolution.jl"))
-@everywhere include(srcdir("FitnessFunctions.jl"))
+
+@everywhere projectdirx(args...) = joinpath($projectdir_static, args...)
+
+for dir_type ∈ ("data", "src", "plots", "scripts", "papers")
+    function_name = Symbol(dir_type * "dirx")
+    @everywhere @eval begin
+        $function_name(args...) = projectdirx($dir_type, args...)
+    end
+end
+
+@everywhere include(srcdirx("Evolution.jl"))
+@everywhere include(srcdirx("FitnessFunctions.jl"))
 
 @everywhere all_experiments = ["FindNetworks_CentreStripe"]
 
 for exp_name in all_experiments
 
-    @everywhere include(srcdir("ExperimentSetups/" * $exp_name * ".jl"))
+    @everywhere include(srcdirx("ExperimentSetups/" * $exp_name * ".jl"))
 
     fulld = Dict{String, Any}()
 
@@ -103,11 +114,11 @@ for exp_name in all_experiments
 
         @tag!(summaryd)
 
-        safesave(datadir("exp_summaries",exp_name * "_" * network_topology * "_Summary.jld2"), summaryd)
+        safesave(datadirx("exp_summaries",exp_name * "_" * network_topology * "_Summary.jld2"), summaryd)
     end
 
     @tag!(fulld)
 
-    safesave(datadir("exp_raw",exp_name * "_RawData.jld2"), fulld)
+    safesave(datadirx("exp_raw",exp_name * "_RawData.jld2"), fulld)
 
 end
