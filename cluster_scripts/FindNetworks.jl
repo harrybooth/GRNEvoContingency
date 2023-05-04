@@ -1,11 +1,12 @@
-using DrWatson
-using Distributed
-using ClusterManagers
 using Pkg
 
 Pkg.activate("..")
 Pkg.instantiate()
 Pkg.precompile()
+
+using DrWatson
+using Distributed
+using ClusterManagers
 
 projectdir_static = dirname(Base.active_project())
 
@@ -14,10 +15,6 @@ cluster_calc = true
 if !cluster_calc
     @quickactivate "GRNEvoContingency"
 end
-
-using Distributed
-using ClusterManagers
-
 
 # http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
 # 
