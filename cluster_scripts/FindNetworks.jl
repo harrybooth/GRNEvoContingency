@@ -41,7 +41,6 @@ end
     using Base.Threads: @spawn
 end
 
-
 @everywhere projectdirx(args...) = joinpath($projectdir_static, args...)
 
 for dir_type ∈ ("data", "src", "plots", "scripts", "papers")
@@ -109,7 +108,7 @@ for exp_name in all_experiments
         summaryd["Total traj converged"] = n_networks_required
         summaryd["ConvergenceRate"] = n_networks_required/n_trials
         summaryd["N unique workers"] = length(unique(map(et->et.worker_id,sim)))
-        summaryd["Average N non-terminated"] = mean(map(et->count(x->x!=:Terminated,et.retcodes) / length(et.retcodes),sim))
+        summaryd["Average N non-terminated"] = mean(map(et->count(x->x!=ReturnCode.Terminated,et.retcodes) / length(et.retcodes),sim))
 
         @tag!(summaryd)
 

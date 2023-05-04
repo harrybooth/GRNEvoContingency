@@ -10,4 +10,4 @@
 
 # Initialise Julia
 ml Julia/1.8.2-linux-x86_64
-julia RepeatedEvolution.jl
+julia RepeatedEvolution_Dyn.jl
