@@ -48,7 +48,7 @@ end
 @everywhere include(srcdirx("Evolution.jl"))
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 
-@everywhere all_experiments = ["FindNetworks_CentreStripe"]
+@everywhere all_experiments = ["FindNetworks_HalfStripeLeft"]
 
 for exp_name in all_experiments
 
