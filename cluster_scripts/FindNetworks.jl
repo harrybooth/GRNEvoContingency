@@ -63,6 +63,8 @@ for exp_name in all_experiments
 
     for network_topology in networks_to_search
 
+        print(network_topology)
+
         summaryd = Dict{String, Any}()
 
         @everywhere begin
