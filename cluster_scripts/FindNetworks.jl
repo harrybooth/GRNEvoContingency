@@ -11,11 +11,6 @@ using ClusterManagers
 projectdir_static = dirname(Base.active_project())
 
 cluster_calc = true
-
-if !cluster_calc
-    @quickactivate "GRNEvoContingency"
-end
-
 # http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
 # 
 # This code is expected to be run from an sbatch script after a module load julia command has been run.

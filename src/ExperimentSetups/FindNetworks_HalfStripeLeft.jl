@@ -25,9 +25,9 @@ include(srcdirx("TissueModel_ND.jl"))
 
 w_feed_forward = [0 0 0 1 ; 1 0 0 0 ; 1 -1 1 0];
 w_mutual_inh = [0 0 0 1 ; 1 0 -1 0 ; 1 -1 0 0];
-w_frozen_osc = [1 -1 -1 1 ; 0 1 0 0 ; 1 -1 0 0];
+w_frozen_osc = [1 0 0 0; -1 0 1 0; -1 -1 1 1];
 w_overlap_dom = [0 0 -1 1 ; 1 0 0 0 ; -1 1 0 0];
-w_bistable = [0 0 0 1 ; -1 0 1 0 ; 0 -1 1 0];
+w_bistable = [0 0 0 1; 0 1 -1 0; -1 1 0 0];
 w_classical = [0 0 0 1 ; -1 1 0 0 ; -1 -1 1 0];
 
 network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutual_inh,"frozen_osc"=>w_frozen_osc,"overlap_dom"=>w_overlap_dom,"bistable"=>w_bistable,"classical"=>w_classical)
