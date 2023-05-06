@@ -1,3 +1,8 @@
+# http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
+# 
+# This code is expected to be run from an sbatch script after a module load julia command has been run.
+# It starts the remote processes with srun within an allocation specified in the sbatch script.
+
 using Pkg
 
 Pkg.activate("..")
@@ -11,13 +16,6 @@ using ClusterManagers
 projectdir_static = dirname(Base.active_project())
 
 cluster_calc = true
-# http://jpfairbanks.com/2017/12/27/running-julia-on-slurm-cluster/
-# 
-# This code is expected to be run from an sbatch script after a module load julia command has been run.
-# It starts the remote processes with srun within an allocation specified in the sbatch script.
-
-# https://github.com/JuliaLang/julia/pull/30174
-# https://github.com/JuliaLang/julia/issues/31953
 
 if cluster_calc
     n_tasks = parse(Int, ENV["SLURM_NTASKS"])

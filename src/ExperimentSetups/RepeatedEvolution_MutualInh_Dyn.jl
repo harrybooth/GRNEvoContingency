@@ -53,7 +53,7 @@ n_stripe = 1
 
 fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
 
-tolerance = 0.95
+tolerance = 0.9
 
 viable_mutations = Int64.(start_network .!= 0)
 
@@ -70,7 +70,7 @@ mutate_function = i -> noise(i,mutation_op);
 save_id = [CartesianIndex(1,25),CartesianIndex(2,25),CartesianIndex(3,25),CartesianIndex(1,50),CartesianIndex(2,50),CartesianIndex(3,50),CartesianIndex(1,100),CartesianIndex(2,100),CartesianIndex(3,100)]
 n_steps = 5
 
-d_metric = SqEuclidean()
+d_metric = Euclidean()
 relative_dyn = true
 
 fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_RawData.jld2"));
