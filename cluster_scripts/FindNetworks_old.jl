@@ -79,21 +79,20 @@ for exp_name in all_experiments
 
         evo_trace.converged = false
 
-        sim = []
+        sim = fill(evo_trace,n_networks_required)
+
+        sim_id = findall(x->!x.converged,sim)
 
         n_trials =  0
 
-        while length(sim) != n_networks_required
+        while length(sim_id) != 0
 
-            sim_temp = pmap(worker-> SSWM_Evolution((0.9995 .^ rand(0:10000,Ng,Ng+1)) .* max_w .* rand(Ng,Ng+1) .* start_top,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_tasks])
+            n_trials += length(sim_id)
 
-            sim_temp_id = findall(x->x.converged,sim_temp)
+            sim = pmap(sim_i -> sim_i.converged ? sim_i : SSWM_Evolution((0.9995 .^ rand(0:10000,Ng,Ng+1)) .* max_w .* rand(Ng,Ng+1) .* start_top,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),sim)
 
-            for id in sim_temp_id
-                if length(sim) < n_networks_required
-                    push!(sim,sim_temp[id])
-                end
-            end
+            sim_id = findall(x->!x.converged,sim)
+
         end
 
         fulld[network_topology * "_networks"] = map(et->et.traversed_networks[end],sim);
