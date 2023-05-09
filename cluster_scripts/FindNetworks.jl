@@ -24,7 +24,14 @@ if cluster_calc
     @everywhere Pkg.activate("..")
     @everywhere Pkg.instantiate()
     @everywhere Pkg.precompile()
+else
+    addprocs(19)
+    @everywhere using Pkg
+    @everywhere Pkg.activate("..")
+    @everywhere Pkg.instantiate()
+    @everywhere Pkg.precompile()
 end
+
 
 @everywhere begin
     using DrWatson
@@ -75,10 +82,6 @@ for exp_name in all_experiments
             mutate_function = i -> noise_no_additions(i,mutation_op);
         end
 
-        evo_trace = SSWM_Evolution((0.9995 .^ rand(0:10000,Ng,Ng+1)) .* max_w .* rand(Ng,Ng+1) .* start_top,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
-
-        evo_trace.converged = false
-
         sim = []
 
         n_trials =  0
@@ -86,6 +89,8 @@ for exp_name in all_experiments
         while length(sim) != n_networks_required
 
             sim_temp = pmap(worker-> SSWM_Evolution((0.9995 .^ rand(0:10000,Ng,Ng+1)) .* max_w .* rand(Ng,Ng+1) .* start_top,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_tasks])
+
+            n_trials += n_tasks
 
             sim_temp_id = findall(x->x.converged,sim_temp)
 
