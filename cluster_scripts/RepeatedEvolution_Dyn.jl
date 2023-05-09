@@ -55,24 +55,23 @@ for exp_name in all_experiments
 
     @everywhere include(srcdirx("ExperimentSetups/" * $exp_name * ".jl"))
 
-    evo_trace = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function)
-
-    evo_trace.converged = false
-
-    sim = fill(evo_trace,n_traj)
-
-    sim_id = findall(x->!x.converged,sim)
+    sim = []
 
     n_trials =  0
 
-    while length(sim_id) != 0
+    while length(sim) != n_traj
 
-        n_trials += length(sim_id)
+        sim_temp = pmap(worker-> SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_tasks])
 
-        sim = pmap(sim_i -> sim_i.converged ? sim_i : SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),sim)
+        n_trials += n_tasks
 
-        sim_id = findall(x->!x.converged,sim)
+        sim_temp_id = findall(x->x.converged,sim_temp)
 
+        for id in sim_temp_id
+            if length(sim) < n_traj
+                push!(sim,sim_temp[id])
+            end
+        end
     end
 
     summaryd = Dict{String, Any}()
@@ -106,6 +105,8 @@ for exp_name in all_experiments
 
     fund_X = reduce(hcat,fundamental_networks_dyn_v)
 
+    fund_m = pairwise(d_metric,fund_X,dims = 2)
+
     fund_dmat_m = pairwise(d_metric,end_X,fund_X,dims = 2)
 
     ########################################
@@ -117,6 +118,7 @@ for exp_name in all_experiments
     fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
     fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)
     fulld["dmat"] = dmat_m
+    fulld["fund"] = fund_m
     fulld["fund_dmat"] = fund_dmat_m
  
     @tag!(fulld)

@@ -27,11 +27,11 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_networks_dict = load(datadirx("networks/FindNetworks_HalfStripeLeft_RawData.jld2"));
+start_networks_dict =  load(datadirx("networks/FindNetworks_HalfStripeLeft_RawData.jld2"));
 
 topology_choice = "mutual_inh"
 
-start_network = networks[topology_choice * "_networks"][1]
+start_network = networks[topology_choice * "_networks"][5]
 
 ########## Evolutionary Setup ######### 
 
@@ -68,14 +68,14 @@ mutate_function = i -> noise(i,mutation_op);
 ########## Dyn Setup ######### 
 
 save_id = [CartesianIndex(1,25),CartesianIndex(2,25),CartesianIndex(3,25),CartesianIndex(1,50),CartesianIndex(2,50),CartesianIndex(3,50),CartesianIndex(1,100),CartesianIndex(2,100),CartesianIndex(3,100)]
-n_steps = 5
+n_steps = 10
 
-d_metric = Euclidean()
+d_metric = CosineDist()
 relative_dyn = true
 
 fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_RawData.jld2"));
 
-fundamental_topologies = keys(fundamental_networks_dict) |> collect
+fundamental_topologies =  ["feed_forward","mutual_inh","frozen_osc","overlap_dom","bistable","classical"]
 
 fundamental_networks = reduce(vcat,[networks[top_choice * "_networks"] for top_choice in fundamental_topologies])
 fundamental_networks_t2s = reduce(vcat,[networks[top_choice * "_t2s"] for top_choice in fundamental_topologies])
