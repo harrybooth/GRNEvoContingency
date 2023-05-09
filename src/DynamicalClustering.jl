@@ -48,6 +48,14 @@ function get_rel_dyn_vector(n1,t1,n_steps,save_id)
 
 end
 
+function get_av_dyn_vector(n1,t1,n_steps,n_segments)
+
+    w_ind = Individual(n1,t1,grn_parameters,TimeStampedGRNSolver(LinRange(0,t1,n_steps)))
+
+    return reduce(vcat,map(x->vec(reduce(hcat,[mean(x[:,t:t+Int(Nc/n_segments)-1],dims = 2) for t in 1:Int(Nc/n_segments):Nc])),w_ind.phenotype.u[2:end-1]))
+
+end
+
 function get_dense_dyn_sol(n1,t1,save_id)
 
     w_ind = Individual(n1,t1,grn_parameters,DenseGRNSolver(save_id));

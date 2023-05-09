@@ -67,10 +67,11 @@ mutate_function = i -> noise(i,mutation_op);
 
 ########## Dyn Setup ######### 
 
-save_id = [CartesianIndex(1,25),CartesianIndex(2,25),CartesianIndex(3,25),CartesianIndex(1,50),CartesianIndex(2,50),CartesianIndex(3,50),CartesianIndex(1,100),CartesianIndex(2,100),CartesianIndex(3,100)]
+# save_id = [CartesianIndex(1,25),CartesianIndex(2,25),CartesianIndex(3,25),CartesianIndex(1,50),CartesianIndex(2,50),CartesianIndex(3,50),CartesianIndex(1,100),CartesianIndex(2,100),CartesianIndex(3,100)]
+n_segments = 4
 n_steps = 10
 
-d_metric = CosineDist()
+d_metric = Euclidean()
 relative_dyn = true
 
 fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_RawData.jld2"));

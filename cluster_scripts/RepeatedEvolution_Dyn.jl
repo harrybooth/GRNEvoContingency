@@ -93,7 +93,9 @@ for exp_name in all_experiments
 
     n_networks = length(end_networks)
 
-    end_networks_dyn_v = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(end_networks,end_networks_t2s));
+    # end_networks_dyn_v = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(end_networks,end_networks_t2s));
+    
+    end_networks_dyn_v = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(end_networks,end_networks_t2s));
 
     end_X = reduce(hcat,end_networks_dyn_v)
 
@@ -101,7 +103,9 @@ for exp_name in all_experiments
 
     ########################################
 
-    fundamental_networks_dyn_v = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(fundamental_networks,fundamental_networks_t2s));
+    # fundamental_networks_dyn_v = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(fundamental_networks,fundamental_networks_t2s));
+
+    fundamental_networks_dyn_v = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(fundamental_networks,fundamental_networks_t2s));
 
     fund_X = reduce(hcat,fundamental_networks_dyn_v)
 
