@@ -24,8 +24,8 @@ if cluster_calc
     addprocs(SlurmManager(n_tasks))
     @everywhere using Pkg
     @everywhere Pkg.activate("..")
-    @everywhere Pkg.instantiate()
-    @everywhere Pkg.precompile()
+    # @everywhere Pkg.instantiate()
+    # @everywhere Pkg.precompile()
 end
 
 @everywhere begin
