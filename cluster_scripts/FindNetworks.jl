@@ -48,7 +48,7 @@ end
 @everywhere include(srcdirx("Evolution.jl"))
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 
-@everywhere all_experiments = ["FindNetworks_CentreStripe"]
+@everywhere all_experiments = ["FindNetworks_CentreStripe_Full"]
 
 for exp_name in all_experiments
 
@@ -87,7 +87,11 @@ for exp_name in all_experiments
 
             n_trials += n_tasks
 
-            sim_temp_id = findall(x->x.converged & x.full_weights,sim_temp)
+            if full_networks_req
+                sim_temp_id = findall(x->x.converged & x.full_weights,sim_temp)
+            else
+                sim_temp_id = findall(x->x.converged,sim_temp)
+            end
 
             for id in sim_temp_id
                 if length(sim) < n_networks_required
