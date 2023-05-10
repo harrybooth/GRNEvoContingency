@@ -78,9 +78,9 @@ fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_Ra
 
 fundamental_topologies =  ["feed_forward","mutual_inh","frozen_osc","overlap_dom","bistable","classical"]
 
-fundamental_networks = reduce(vcat,[networks[top_choice * "_networks"] for top_choice in fundamental_topologies])
-fundamental_networks_t2s = reduce(vcat,[networks[top_choice * "_t2s"] for top_choice in fundamental_topologies])
-fundamental_labels = reduce(vcat,[[top_choice for _ in 1:length(networks[top_choice * "_networks"])] for top_choice in fundamental_topologies])
+fundamental_networks = reduce(vcat,[fundamental_networks_dict[top_choice * "_networks"] for top_choice in fundamental_topologies])
+fundamental_networks_t2s = reduce(vcat,[fundamental_networks_dict[top_choice * "_t2s"] for top_choice in fundamental_topologies])
+fundamental_labels = reduce(vcat,[[top_choice for _ in 1:length(fundamental_networks_dict[top_choice * "_networks"])] for top_choice in fundamental_topologies])
 
 n_fundamental_networks = length(fundamental_networks)
 
