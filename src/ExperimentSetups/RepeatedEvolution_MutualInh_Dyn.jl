@@ -84,6 +84,10 @@ fundamental_labels = reduce(vcat,[[top_choice for _ in 1:length(fundamental_netw
 
 n_fundamental_networks = length(fundamental_networks)
 
+########## LMC Setup ######### 
+
+N_interp_points = 10.
+
 ######### Simulation setup ######### 
 
 n_traj = 3000
