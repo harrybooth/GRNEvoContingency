@@ -122,7 +122,9 @@ for exp_name in all_experiments
     fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
     fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)
     fulld["dmat"] = dmat_m
+    fulld["dmat_X"] = end_X
     fulld["fund"] = fund_m
+    fulld["fund_X"] = fund_X
     fulld["fund_dmat"] = fund_dmat_m
  
     @tag!(fulld)
