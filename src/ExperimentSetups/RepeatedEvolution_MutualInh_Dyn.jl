@@ -86,5 +86,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_traj = 50
+n_traj = 3000
 max_gen = 40000
