@@ -34,6 +34,7 @@ end
     using Printf
     using Base.Threads
     using Base.Threads: @spawn
+    using ParallelDataTransfer
 end
 
 @everywhere projectdirx(args...) = joinpath($projectdir_static, args...)
@@ -88,8 +89,11 @@ for exp_name in all_experiments
 
     ########################################
 
-    @everywhere end_networks = map(et->et.traversed_networks[end],sim);
-    @everywhere end_networks_t2s = map(et->et.traversed_t2s[end],sim);
+    end_networks = map(et->et.traversed_networks[end],sim);
+    end_networks_t2s = map(et->et.traversed_t2s[end],sim);
+
+    sendto(workers(), end_networks=end_networks)
+    sendto(workers(), end_networks_t2s=end_networks_t2s)
 
     n_networks = length(end_networks)
 
