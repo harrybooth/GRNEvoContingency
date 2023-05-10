@@ -22,16 +22,11 @@ if cluster_calc
     addprocs(SlurmManager(n_tasks))
     @everywhere using Pkg
     @everywhere Pkg.activate("..")
-    @everywhere Pkg.instantiate()
-    @everywhere Pkg.precompile()
 else
     addprocs(19)
     @everywhere using Pkg
     @everywhere Pkg.activate("..")
-    @everywhere Pkg.instantiate()
-    @everywhere Pkg.precompile()
 end
-
 
 @everywhere begin
     using DrWatson
@@ -92,7 +87,7 @@ for exp_name in all_experiments
 
             n_trials += n_tasks
 
-            sim_temp_id = findall(x->x.converged,sim_temp)
+            sim_temp_id = findall(x->x.converged & x.full_weights,sim_temp)
 
             for id in sim_temp_id
                 if length(sim) < n_networks_required

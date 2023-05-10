@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=FindNetworks
-#SBATCH --ntasks=250
+#SBATCH --ntasks=1000
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4G
 #SBATCH --time=06:00:00

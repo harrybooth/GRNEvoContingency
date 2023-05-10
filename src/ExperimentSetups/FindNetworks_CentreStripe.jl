@@ -32,7 +32,9 @@ w_classical = [0 0 0 1 ; -1 1 0 0 ; -1 -1 1 0];
 
 network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutual_inh,"frozen_osc"=>w_frozen_osc,"overlap_dom"=>w_overlap_dom,"bistable"=>w_bistable,"classical"=>w_classical)
 
-networks_to_search = ["feed_forward","mutual_inh","frozen_osc","overlap_dom","bistable","classical"]
+# networks_to_search = ["feed_forward","mutual_inh","frozen_osc","overlap_dom","bistable","classical"]
+
+networks_to_search = ["feed_forward","mutual_inh","frozen_osc","bistable","classical"]
 
 ########## Evolutionary Setup ######### 
 
