@@ -31,7 +31,9 @@ start_networks_dict =  load(datadirx("networks/FindNetworks_HalfStripeLeft_RawDa
 
 topology_choice = "mutual_inh"
 
-start_network = start_networks_dict[topology_choice * "_networks"][5]
+choice = 5 # full
+
+start_network = start_networks_dict[topology_choice * "_networks"][choice]
 
 ########## Evolutionary Setup ######### 
 
