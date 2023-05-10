@@ -55,7 +55,7 @@ fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_
 
 tolerance = 0.9
 
-viable_mutations = Int64.(start_network .!= 0)
+viable_mutations = ones(Int,Ng,Ng+1)
 
 mutation_weights = findall(viable_mutations .> 0)
 
