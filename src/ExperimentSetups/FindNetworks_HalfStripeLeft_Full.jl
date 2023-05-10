@@ -73,3 +73,5 @@ n_networks_required = 50
 max_gen = 10000
 
 full_networks_req = true
+
+param_N = 1

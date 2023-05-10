@@ -78,3 +78,5 @@ max_gen = 10000
 
 full_networks_req = false
 
+param_N = 10000
+

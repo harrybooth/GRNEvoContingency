@@ -83,7 +83,7 @@ for exp_name in all_experiments
 
         while length(sim) != n_networks_required
 
-            sim_temp = pmap(worker-> SSWM_Evolution((0.9995 .^ rand(0:10000,Ng,Ng+1)) .* max_w .* rand(Ng,Ng+1) .* start_top,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_tasks])
+            sim_temp = pmap(worker-> SSWM_Evolution((0.9995 .^ rand(0:param_N,Ng,Ng+1)) .* max_w .* rand(Ng,Ng+1) .* start_top,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_tasks])
 
             n_trials += n_tasks
 
