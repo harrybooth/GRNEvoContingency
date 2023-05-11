@@ -31,7 +31,7 @@ start_networks_dict =  load(datadirx("networks/FindNetworks_HalfStripeLeft_RawDa
 
 topology_choice = "mutual_inh"
 
-choice = 5 # full
+choice = 44 # full
 
 start_network = start_networks_dict[topology_choice * "_networks"][choice]
 
@@ -59,6 +59,9 @@ tolerance = 0.9
 
 viable_mutations = ones(Int,Ng,Ng+1)
 
+viable_mutations[2,4] = 0
+viable_mutations[3,4] = 0
+
 mutation_weights = findall(viable_mutations .> 0)
 
 n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
@@ -69,16 +72,16 @@ mutate_function = i -> noise(i,mutation_op);
 
 ########## Dyn Setup ######### 
 
-# save_id = [CartesianIndex(1,25),CartesianIndex(2,25),CartesianIndex(3,25),CartesianIndex(1,50),CartesianIndex(2,50),CartesianIndex(3,50),CartesianIndex(1,100),CartesianIndex(2,100),CartesianIndex(3,100)]
+save_id = [CartesianIndex(1,25),CartesianIndex(2,25),CartesianIndex(3,25),CartesianIndex(1,50),CartesianIndex(2,50),CartesianIndex(3,50),CartesianIndex(1,100),CartesianIndex(2,100),CartesianIndex(3,100)]
 n_segments = 4
 n_steps = 10
 
 d_metric = Euclidean()
 relative_dyn = true
 
-fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_RawData.jld2"));
+fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_Full_RawData.jld2"));
 
-fundamental_topologies =  ["feed_forward","mutual_inh","frozen_osc","overlap_dom","bistable","classical"]
+fundamental_topologies =  ["feed_forward","mutual_inh","frozen_osc","bistable","classical"]
 
 fundamental_networks = reduce(vcat,[fundamental_networks_dict[top_choice * "_networks"] for top_choice in fundamental_topologies])
 fundamental_networks_t2s = reduce(vcat,[fundamental_networks_dict[top_choice * "_t2s"] for top_choice in fundamental_topologies])

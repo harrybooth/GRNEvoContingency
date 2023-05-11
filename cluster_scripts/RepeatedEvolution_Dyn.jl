@@ -24,8 +24,6 @@ if cluster_calc
     addprocs(SlurmManager(n_tasks))
     @everywhere using Pkg
     @everywhere Pkg.activate("..")
-    # @everywhere Pkg.instantiate()
-    # @everywhere Pkg.precompile()
 end
 
 @everywhere begin
@@ -97,25 +95,28 @@ for exp_name in all_experiments
 
     n_networks = length(end_networks)
 
-    # end_networks_dyn_v = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(end_networks,end_networks_t2s));
-    
-    end_networks_dyn_v = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(end_networks,end_networks_t2s));
+    end_networks_dyn_cell = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(end_networks,end_networks_t2s));
+    end_networks_dyn_av = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(end_networks,end_networks_t2s));
 
-    end_X = reduce(hcat,end_networks_dyn_v)
+    end_X_cell = reduce(hcat,end_networks_dyn_cell)
+    end_X_av = reduce(hcat,end_networks_dyn_av)
 
-    dmat_m = pairwise(d_metric,end_X,dims = 2)
+    dmat_m_cell = pairwise(d_metric,end_X_cell,dims = 2)
+    dmat_m_av = pairwise(d_metric,end_X_av,dims = 2)
 
     ########################################
 
-    # fundamental_networks_dyn_v = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(fundamental_networks,fundamental_networks_t2s));
+    fundamental_networks_dyn_cell = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(fundamental_networks,fundamental_networks_t2s));
+    fundamental_networks_dyn_av = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(fundamental_networks,fundamental_networks_t2s));
 
-    fundamental_networks_dyn_v = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(fundamental_networks,fundamental_networks_t2s));
+    fund_X_cell = reduce(hcat,fundamental_networks_dyn_cell)
+    fund_X_av = reduce(hcat,fundamental_networks_dyn_av)
 
-    fund_X = reduce(hcat,fundamental_networks_dyn_v)
+    fund_m_cell = pairwise(d_metric,fund_X_cell,dims = 2)
+    fund_m_av = pairwise(d_metric,fund_X_av,dims = 2)
 
-    fund_m = pairwise(d_metric,fund_X,dims = 2)
-
-    fund_dmat_m = pairwise(d_metric,end_X,fund_X,dims = 2)
+    fund_dmat_m_cell = pairwise(d_metric,end_X_cell,fund_X_cell,dims = 2)
+    fund_dmat_m_av = pairwise(d_metric,end_X_av,fund_X_av,dims = 2)
 
     ########################################
 
@@ -125,11 +126,18 @@ for exp_name in all_experiments
     fulld["t2s_traj"] = map(et->et.traversed_t2s,sim)
     fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
     fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)
-    fulld["dmat"] = dmat_m
-    fulld["dmat_X"] = end_X
-    fulld["fund"] = fund_m
-    fulld["fund_X"] = fund_X
-    fulld["fund_dmat"] = fund_dmat_m
+
+    fulld["dmat_cell"] = dmat_m_cell
+    fulld["dmat_X_cell"] = end_X_cell
+    fulld["fund_cell"] = fund_m_cell
+    fulld["fund_X_cell"] = fund_X_cell
+    fulld["fund_dmat_cell"] = fund_dmat_m_cell
+
+    fulld["dmat_av"] = dmat_m_av
+    fulld["dmat_X_av"] = end_X_av
+    fulld["fund_av"] = fund_m_av
+    fulld["fund_X_av"] = fund_X_av
+    fulld["fund_dmat_av"] = fund_dmat_m_av
  
     @tag!(fulld)
 
