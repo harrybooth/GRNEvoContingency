@@ -52,6 +52,8 @@ end
 
 for exp_name in all_experiments
 
+    @everywhere include(srcdirx("ExperimentSetups/" * $exp_name * ".jl"))
+
     exp_data = load(datadirx("exp_raw",exp_name * "_RawData.jld2"))
 
     end_networks = map(v->v[:,end],exp_data["geno_traj"])
