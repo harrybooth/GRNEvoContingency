@@ -97,5 +97,5 @@ development = DefaultGRNSolver()
 
 ######### Simulation setup ######### 
 
-n_traj = 3000
+n_traj = 20000
 max_gen = 40000
