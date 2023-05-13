@@ -48,7 +48,7 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("FitnessLandscapes.jl"))
 
-@everywhere all_experiments = ["RepeatedEvolution_Bistable_Dyn"]
+@everywhere all_experiments = ["RepeatedEvolution_MutualInh_Dyn"]
 
 for exp_name in all_experiments
 
