@@ -91,7 +91,7 @@ n_fundamental_networks = length(fundamental_networks)
 
 ########## LMC Setup ######### 
 
-N_interp_points = 10.
+N_interp_points = 10
 
 development = DefaultGRNSolver()
 
