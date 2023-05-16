@@ -52,7 +52,7 @@ end
 
 for exp_name in all_experiments
 
-    @everywhere include(srcdirx("ExperimentSetups/" * $exp_name * ".jl"))
+    @everywhere include(srcdirx("ExperimentSetups/RepeatedEvolution/" * $exp_name * ".jl"))
 
     sim = []
 

@@ -35,6 +35,19 @@ choice = 17 # full
 
 start_network = start_networks_dict[topology_choice * "_networks"][choice]
 
+########## Topologies ###########
+
+# These are taken from: Cotterell, J., & Sharpe, J. (2010). An atlas of gene regulatory networks reveals multiple three‐gene mechanisms for interpreting morphogen gradients. Molecular systems biology, 6(1), 425.
+
+w_feed_forward = [0 0 0 1 ; 1 0 0 0 ; 1 -1 1 0];
+w_mutual_inh = [0 0 0 1 ; 1 0 -1 0 ; 1 -1 0 0];
+w_frozen_osc = [1 0 0 0; -1 0 1 0; -1 -1 1 1];
+w_overlap_dom = [0 0 -1 1 ; 1 0 0 0 ; -1 1 0 0];
+w_bistable = [0 0 0 1; 0 1 -1 0; -1 1 0 0];
+w_classical = [0 0 0 1 ; -1 1 0 0 ; -1 -1 1 0];
+
+network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutual_inh,"frozen_osc"=>w_frozen_osc,"overlap_dom"=>w_overlap_dom,"bistable"=>w_bistable,"classical"=>w_classical)
+
 ########## Evolutionary Setup ######### 
 
 β = 1.
