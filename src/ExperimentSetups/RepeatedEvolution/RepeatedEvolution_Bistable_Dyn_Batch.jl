@@ -106,6 +106,6 @@ development = DefaultGRNSolver()
 
 ######### Simulation setup ######### 
 
-n_test_networks = 5
+n_test_networks = 3
 n_traj = 3000
 max_gen = 40000
