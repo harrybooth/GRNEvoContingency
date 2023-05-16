@@ -22,7 +22,7 @@ using DataInterpolations
 
 #     origin = Individual(genotype,phenotype)
 
-#     origin_fitness,origin_pheno_class = fitness_function(origin.phenotype) 
+#     origin_fitness = fitness_function(origin.phenotype) 
     
 #     LocalLandscape(origin,origin_fitness,nothing,nothing,nothing,nothing,nothing)
 
@@ -32,7 +32,7 @@ using DataInterpolations
 
 #     mutant = create_mutant(founder,x->increment_weight(entry,step,x,noise_application),development)
 
-#     mutant_fitness,mutant_pheno_class = fitness_function(mutant.phenotype)
+#     mutant_fitness= fitness_function(mutant.phenotype)
 
 #     return mutant_fitness
 
