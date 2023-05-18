@@ -72,7 +72,7 @@ function calculate_fitness_increase_probability(fitness_slice::Vector{Float64},c
     dx = step(sample_points)
 
     for i in 1:length(sample_points)
-        Δf = fitness_slice[i] - current_fitness 
+        Δf = max(fitness_slice[i] - current_fitness,0) 
         mass+= (cdf(mutation_op.noise_distribution,sample_points[i] + dx/2) - cdf(mutation_op.noise_distribution,sample_points[i] - dx/2))*fixation_probability(Δf,β)
     end
 
