@@ -1,6 +1,7 @@
 using DataInterpolations
 using Memoization
 using SparseArrays
+using Distributed
 
 mutable struct LocalLandscape
     origin :: Individual    
@@ -44,6 +45,27 @@ function increment_weight(entry::Tuple{Int,Int},step::Float64,w::Matrix{Float64}
     return new_w
 end
 
+# function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::Int64,development::DESystemSolver,mutation_op::MutationOperator,fitness_function,noise_application)
+
+#     start_stop = quantile.(mutation_op.noise_distribution, [1-range_percentile, range_percentile])
+
+#     sample_points = range(start_stop[1],start_stop[2],length = N_sample)
+
+#     slice_fitnesses = fill(0.,(size(LL.origin.genotype.p[1])...,N_sample))
+    
+#     @sync for i in 1:size(LL.origin.genotype.p[1],1)
+#         for j in 1:size(LL.origin.genotype.p[1],2) 
+#             for s in 1:N_sample
+#                 @spawn slice_fitnesses[i,j,s] = create_mutant_get_pheno(LL.origin,development,(i,j),sample_points[s],fitness_function,noise_application)
+#             end
+#         end
+#     end
+
+#     LL.sample_points = sample_points
+#     LL.slice_fitnesses = slice_fitnesses
+
+# end
+
 function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::Int64,development::DESystemSolver,mutation_op::MutationOperator,fitness_function,noise_application)
 
     start_stop = quantile.(mutation_op.noise_distribution, [1-range_percentile, range_percentile])
@@ -52,11 +74,9 @@ function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::
 
     slice_fitnesses = fill(0.,(size(LL.origin.genotype.p[1])...,N_sample))
     
-    @sync for i in 1:size(LL.origin.genotype.p[1],1)
+    for i in 1:size(LL.origin.genotype.p[1],1)
         for j in 1:size(LL.origin.genotype.p[1],2) 
-            for s in 1:N_sample
-                @spawn slice_fitnesses[i,j,s] = create_mutant_get_pheno(LL.origin,development,(i,j),sample_points[s],fitness_function,noise_application)
-            end
+            slice_fitnesses[i,j,:] = pmap(sp->create_mutant_get_pheno(LL.origin,development,(i,j),sp,fitness_function,noise_application),sample_points)
         end
     end
 
@@ -64,6 +84,7 @@ function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::
     LL.slice_fitnesses = slice_fitnesses
 
 end
+
 
 function calculate_fitness_increase_probability(fitness_slice::Vector{Float64},current_fitness::Float64,sample_points::StepRangeLen,mutation_op::MutationOperator,β::Float64)
 
