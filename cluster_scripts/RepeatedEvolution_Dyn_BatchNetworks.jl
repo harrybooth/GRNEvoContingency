@@ -48,7 +48,7 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 
-@everywhere all_experiments = ["RepeatedEvolution_MutualInh_Dyn_Batch"]
+@everywhere all_experiments = ["RepeatedEvolution_FrozenOsc_Dyn_Batch"]
 
 for exp_name in all_experiments
 
