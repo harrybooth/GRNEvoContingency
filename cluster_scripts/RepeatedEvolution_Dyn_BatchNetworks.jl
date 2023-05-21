@@ -48,13 +48,15 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 
-@everywhere all_experiments = ["RepeatedEvolution_FrozenOsc_Dyn_Batch"]
+@everywhere all_experiments = ["RepeatedEvolution_FeedForward_Dyn_Batch"]
 
 for exp_name in all_experiments
 
     @everywhere include(srcdirx("ExperimentSetups/RepeatedEvolution/" * $exp_name * ".jl"))
 
-    for choice in 1:n_test_networks
+    shift = 3
+
+    for choice in 1+shift:n_test_networks+shift
 
         start_network = start_networks_dict[topology_choice * "_networks"][choice]
 
