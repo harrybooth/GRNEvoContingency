@@ -54,7 +54,7 @@ for exp_name in all_experiments
 
     @everywhere include(srcdirx("ExperimentSetups/RepeatedEvolution/" * $exp_name * ".jl"))
 
-    shift = 3
+    shift = 4
 
     for choice in 1+shift:n_test_networks+shift
 
