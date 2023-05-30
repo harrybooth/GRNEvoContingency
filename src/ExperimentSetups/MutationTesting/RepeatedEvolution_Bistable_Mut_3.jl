@@ -27,11 +27,11 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_networks_dict =  load(datadirx("networks/FindNetworks_HalfStripeLeft_RawData.jld2"));
+start_networks_dict =  load(datadirx("networks/FindNetworks_HalfStripeLeft_Full_RawData.jld2"));
 
 topology_choice = "bistable"
 
-choice = 17 # full
+choice = 1 # full
 
 start_network = start_networks_dict[topology_choice * "_networks"][choice]
 
