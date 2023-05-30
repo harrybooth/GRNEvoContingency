@@ -6,7 +6,7 @@ using Distributed
 mutable struct LocalLandscape
     origin :: Individual    
     origin_fitness :: Union{Float64,Nothing}
-    sample_points :: Union{StepRangeLen,Nothing}
+    sample_points :: Any
     slice_fitnesses :: Union{Array{Float64, 3},Nothing}
     slice_phenotypes :: Union{Array{Tuple{Float64,Float64}, 3},Nothing}
     transition_prob :: Union{Array{Float64, 2},Nothing}
@@ -29,6 +29,13 @@ function LocalLandscape(start_network::Matrix{Float64},grn_parameters::GRNParame
 
 end
 
+
+function increment_weight(entry::Tuple{Int,Int},step::Float64,w::Matrix{Float64},noise_application)
+    new_w = copy(w)
+    new_w[entry...] = noise_application(new_w[entry...],step)
+    return new_w
+end
+
 function create_mutant_get_pheno(founder::Individual,development::DESystemSolver,entry::Tuple{Int,Int},step::Float64,fitness_function,noise_application)
 
     mutant = create_mutant(founder,x->increment_weight(entry,step,x,noise_application),development)
@@ -37,12 +44,6 @@ function create_mutant_get_pheno(founder::Individual,development::DESystemSolver
 
     return mutant_fitness
 
-end
-
-function increment_weight(entry::Tuple{Int,Int},step::Float64,w::Matrix{Float64},noise_application)
-    new_w = copy(w)
-    new_w[entry...] = noise_application(new_w[entry...],step)
-    return new_w
 end
 
 # function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::Int64,development::DESystemSolver,mutation_op::MutationOperator,fitness_function,noise_application)
@@ -70,7 +71,13 @@ function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::
 
     start_stop = quantile.(mutation_op.noise_distribution, [1-range_percentile, range_percentile])
 
-    sample_points = range(start_stop[1],start_stop[2],length = N_sample)
+    # sample_points = range(start_stop[1],start_stop[2],length = N_sample)
+
+    sample_points_1 = range(start_stop[1],0,length = Int(ceil(N_sample/2))) |> collect
+
+    sample_points_2 = range(0,start_stop[2],length = Int(floor(N_sample/2))) |> collect
+
+    sample_points = vcat(sample_points_1,sample_points_2)
 
     slice_fitnesses = fill(0.,(size(LL.origin.genotype.p[1])...,N_sample))
     
@@ -86,11 +93,11 @@ function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::
 end
 
 
-function calculate_fitness_increase_probability(fitness_slice::Vector{Float64},current_fitness::Float64,sample_points::StepRangeLen,mutation_op::MutationOperator,β::Float64)
+function calculate_fitness_increase_probability(fitness_slice::Vector{Float64},current_fitness::Float64,sample_points,mutation_op::MutationOperator,β::Float64)
 
     mass = 0.
 
-    dx = step(sample_points)
+    dx = mean(sample_points[2:end] .- sample_points[1:end-1])
 
     for i in 1:length(sample_points)
         Δf = max(fitness_slice[i] - current_fitness,0) 
