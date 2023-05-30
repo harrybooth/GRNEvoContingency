@@ -50,11 +50,11 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 ########## Evolutionary Setup ######### 
 
-β = 1.
+β = 0.1
 
 noise_cv = 1.
 
-mut_prob = 0.2
+mut_prob = 0.1
 
 deletion_prob = 0.
 

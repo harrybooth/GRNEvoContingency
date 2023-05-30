@@ -48,30 +48,15 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 
-@everywhere all_experiments = ["RepeatedEvolution_Bistable_Mut_1","RepeatedEvolution_Bistable_Mut_2","RepeatedEvolution_Bistable_Mut_3","RepeatedEvolution_Bistable_Mut_4","RepeatedEvolution_Bistable_Mut_5","RepeatedEvolution_Bistable_Mut_6","RepeatedEvolution_Bistable_Mut_7"]
+@everywhere all_experiments = ["RepeatedEvolution_Bistable_Mut_1","RepeatedEvolution_Bistable_Mut_2","RepeatedEvolution_Bistable_Mut_3","RepeatedEvolution_Bistable_Mut_4","RepeatedEvolution_Bistable_Mut_5","RepeatedEvolution_Bistable_Mut_6","RepeatedEvolution_Bistable_Mut_7","RepeatedEvolution_Bistable_Mut_8"]
 
 for exp_name in all_experiments
 
     @everywhere include(srcdirx("ExperimentSetups/MutationTesting/" * $exp_name * ".jl"))
 
-    sim = []
+    sim = pmap(worker-> SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_trials])
 
-    n_trials =  0
-
-    while length(sim) != n_traj
-
-        sim_temp = pmap(worker-> SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_tasks])
-
-        n_trials += n_tasks
-
-        sim_temp_id = findall(x->x.converged,sim_temp)
-
-        for id in sim_temp_id
-            if length(sim) < n_traj
-                push!(sim,sim_temp[id])
-            end
-        end
-    end
+    n_traj = length(findall(x->x.converged,sim))
 
     summaryd = Dict{String, Any}()
 
@@ -122,6 +107,7 @@ for exp_name in all_experiments
 
     fulld = Dict{String, Any}()
 
+    fulld["converged"] = map(x->x.converged,sim)
     fulld["fitness_traj"] = map(et->et.fitness_trajectory,sim)
     fulld["t2s_traj"] = map(et->et.traversed_t2s,sim)
     fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
