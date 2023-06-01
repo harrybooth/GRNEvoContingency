@@ -111,4 +111,4 @@ development = DefaultGRNSolver()
 ######### Simulation setup ######### 
 
 n_trials = 2500
-max_gen = 40000
+max_gen = 150000
