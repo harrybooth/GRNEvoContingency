@@ -50,7 +50,7 @@ end
 
 # @everywhere all_experiments = ["RepeatedEvolution_Bistable_Mut_1","RepeatedEvolution_Bistable_Mut_2","RepeatedEvolution_Bistable_Mut_3","RepeatedEvolution_Bistable_Mut_4","RepeatedEvolution_Bistable_Mut_5","RepeatedEvolution_Bistable_Mut_6","RepeatedEvolution_Bistable_Mut_7","RepeatedEvolution_Bistable_Mut_8"]
 
-@everywhere all_experiments = ["RepeatedEvolution_FeedForward_Mut_1","RepeatedEvolution_FeedForward_Mut_2","RepeatedEvolution_FeedForward_Mut_3","RepeatedEvolution_FeedForward_Mut_4","RepeatedEvolution_FeedForward_Mut_5","RepeatedEvolution_FeedForward_Mut_6","RepeatedEvolution_FeedForward_Mut_7","RepeatedEvolution_FeedForward_Mut_8"]
+@everywhere all_experiments = ["RepeatedEvolution_FeedForward_Mut_4","RepeatedEvolution_FeedForward_Mut_5","RepeatedEvolution_FeedForward_Mut_6","RepeatedEvolution_FeedForward_Mut_7","RepeatedEvolution_FeedForward_Mut_8"]
 
 for exp_name in all_experiments
 
