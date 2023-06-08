@@ -48,7 +48,7 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 
-@everywhere all_experiments = ["RepeatedEvolution_Bistable_Mut_1","RepeatedEvolution_Bistable_Mut_2","RepeatedEvolution_Bistable_Mut_3","RepeatedEvolution_Bistable_Mut_4","RepeatedEvolution_Bistable_Mut_5","RepeatedEvolution_Bistable_Mut_6","RepeatedEvolution_Bistable_Mut_7","RepeatedEvolution_Bistable_Mut_8"]
+@everywhere all_experiments = ["RepeatedEvolution_Bistable_Mut_6","RepeatedEvolution_Bistable_Mut_7","RepeatedEvolution_Bistable_Mut_8"]
 
 # @everywhere all_experiments = ["RepeatedEvolution_FeedForward_Mut_4","RepeatedEvolution_FeedForward_Mut_5","RepeatedEvolution_FeedForward_Mut_6","RepeatedEvolution_FeedForward_Mut_7","RepeatedEvolution_FeedForward_Mut_8"]
 
