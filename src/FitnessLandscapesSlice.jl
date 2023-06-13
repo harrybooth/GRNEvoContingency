@@ -52,26 +52,16 @@ function create_mutant_get_pheno(founder::Individual,development::DESystemSolver
 
 end
 
-# function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::Int64,development::DESystemSolver,mutation_op::MutationOperator,fitness_function,noise_application)
+function create_mutant_get_pheno_scan(founder::Individual,development::DESystemSolver,entry::Tuple{Int,Int},step::Float64,fitness_function,noise_application)
 
-#     start_stop = quantile.(mutation_op.noise_distribution, [1-range_percentile, range_percentile])
+    mutant = create_mutant(founder,x->set_weight(entry,step,x),development)
 
-#     sample_points = range(start_stop[1],start_stop[2],length = N_sample)
+    mutant_fitness= fitness_function(mutant.phenotype)
 
-#     slice_fitnesses = fill(0.,(size(LL.origin.genotype.p[1])...,N_sample))
-    
-#     @sync for i in 1:size(LL.origin.genotype.p[1],1)
-#         for j in 1:size(LL.origin.genotype.p[1],2) 
-#             for s in 1:N_sample
-#                 @spawn slice_fitnesses[i,j,s] = create_mutant_get_pheno(LL.origin,development,(i,j),sample_points[s],fitness_function,noise_application)
-#             end
-#         end
-#     end
+    return mutant_fitness
 
-#     LL.sample_points = sample_points
-#     LL.slice_fitnesses = slice_fitnesses
+end
 
-# end
 
 function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::Int64,development::DESystemSolver,mutation_op::MutationOperator,fitness_function,noise_application)
 
@@ -98,30 +88,31 @@ function compute_slices!(LL::LocalLandscape,range_percentile::Float64,N_sample::
 
 end
 
-# function compute_slices!(LL::LocalLandscape,N_sample::Int64,development::DESystemSolver,fitness_function)
+function compute_slices!(LL::LocalLandscape,N_sample::Int64,development::DESystemSolver,fitness_function)
 
-#     start_stop = quantile.(mutation_op.noise_distribution, [1-range_percentile, range_percentile])
+    start_stop = [-10.,10.]
 
-#     # sample_points = range(start_stop[1],start_stop[2],length = N_sample)
+    # sample_points = range(start_stop[1],start_stop[2],length = N_sample)
 
-#     sample_points_1 = range(start_stop[1],0,length = Int(ceil(N_sample/2))) |> collect
-
-#     sample_points_2 = range(0,start_stop[2],length = Int(floor(N_sample/2))) |> collect
-
-#     sample_points = vcat(sample_points_1,sample_points_2)
-
-#     slice_fitnesses = fill(0.,(size(LL.origin.genotype.p[1])...,N_sample))
+    slice_fitnesses = fill(0.,(size(LL.origin.genotype.p[1])...,N_sample))
     
-#     for i in 1:size(LL.origin.genotype.p[1],1)
-#         for j in 1:size(LL.origin.genotype.p[1],2) 
-#             slice_fitnesses[i,j,:] = pmap(sp->create_mutant_get_pheno(LL.origin,development,(i,j),sp,fitness_function,noise_application),sample_points)
-#         end
-#     end
+    for i in 1:size(LL.origin.genotype.p[1],1)
+        for j in 1:size(LL.origin.genotype.p[1],2) 
 
-#     LL.sample_points = sample_points
-#     LL.slice_fitnesses = slice_fitnesses
+            sample_points_1 = range(start_stop[1],LL.origin[i,j],length = Int(ceil(N_sample/2))) |> collect
 
-# end
+            sample_points_2 = range(LL.origin[i,j],start_stop[2],length = Int(floor(N_sample/2))) |> collect
+
+            sample_points = vcat(sample_points_1,sample_points_2)
+            
+            slice_fitnesses[i,j,:] = pmap(sp->create_mutant_get_pheno_scan(LL.origin,development,(i,j),sp,fitness_function,noise_application),sample_points)
+        end
+    end
+
+    LL.sample_points = sample_points
+    LL.slice_fitnesses = slice_fitnesses
+
+end
 
 
 function calculate_fitness_increase_probability(fitness_slice::Vector{Float64},current_fitness::Float64,sample_points,mutation_op::MutationOperator,β::Float64)
@@ -172,6 +163,18 @@ function LocalLandscape_mass(start_network::Matrix{Float64},range_percentile::Fl
     LL = LocalLandscape(start_network,grn_parameters,development)
 
     compute_slices!(LL,range_percentile,N_sample,development,mutation_op,fitness_function,noise_application)
+
+    calculate_transition_probabilities!(LL,mutation_op,β)
+
+    LL
+
+end
+
+function LocalLandscapeScan(start_network::Matrix{Float64},N_sample::Int,grn_parameters::GRNParameters,development::DESystemSolver,mutation_op::MutationOperator,β::Float64,fitness_function)
+
+    LL = LocalLandscape(start_network,grn_parameters,development)
+
+    compute_slices!(LL,N_sample,development,fitness_function)
 
     calculate_transition_probabilities!(LL,mutation_op,β)
 
