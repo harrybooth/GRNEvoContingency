@@ -50,7 +50,7 @@ end
 
 # @everywhere all_experiments = ["RepeatedEvolution_Bistable_Mut_8"]
 
-@everywhere all_experiments = ["RepeatedEvolution_FeedForward_Mut_8"]
+@everywhere all_experiments = ["RightHanded/RepeatedEvolution_FeedForward_Mut_1_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_2_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_3_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_4_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_5_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_6_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_7_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_8_RH"]
 
 for exp_name in all_experiments
 

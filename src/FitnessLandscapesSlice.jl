@@ -52,7 +52,7 @@ function create_mutant_get_pheno(founder::Individual,development::DESystemSolver
 
 end
 
-function create_mutant_get_pheno_scan(founder::Individual,development::DESystemSolver,entry::Tuple{Int,Int},step::Float64,fitness_function,noise_application)
+function create_mutant_get_pheno_scan(founder::Individual,development::DESystemSolver,entry::Tuple{Int,Int},step::Float64,fitness_function)
 
     mutant = create_mutant(founder,x->set_weight(entry,step,x),development)
 
@@ -95,21 +95,24 @@ function compute_slices!(LL::LocalLandscape,N_sample::Int64,development::DESyste
     # sample_points = range(start_stop[1],start_stop[2],length = N_sample)
 
     slice_fitnesses = fill(0.,(size(LL.origin.genotype.p[1])...,N_sample))
+    sample_points_all = fill(0.,(size(LL.origin.genotype.p[1])...,N_sample))
     
     for i in 1:size(LL.origin.genotype.p[1],1)
         for j in 1:size(LL.origin.genotype.p[1],2) 
 
-            sample_points_1 = range(start_stop[1],LL.origin[i,j],length = Int(ceil(N_sample/2))) |> collect
+            sample_points_1 = range(start_stop[1],LL.origin.genotype.p[1][i,j],length = Int(ceil(N_sample/2))) |> collect
 
-            sample_points_2 = range(LL.origin[i,j],start_stop[2],length = Int(floor(N_sample/2))) |> collect
+            sample_points_2 = range(LL.origin.genotype.p[1][i,j],start_stop[2],length = Int(floor(N_sample/2))) |> collect
 
             sample_points = vcat(sample_points_1,sample_points_2)
             
-            slice_fitnesses[i,j,:] = pmap(sp->create_mutant_get_pheno_scan(LL.origin,development,(i,j),sp,fitness_function,noise_application),sample_points)
+            slice_fitnesses[i,j,:] = pmap(sp->create_mutant_get_pheno_scan(LL.origin,development,(i,j),sp,fitness_function),sample_points)
+
+            sample_points_all[i,j,:] = sample_points
         end
     end
 
-    LL.sample_points = sample_points
+    LL.sample_points = sample_points_all
     LL.slice_fitnesses = slice_fitnesses
 
 end
@@ -176,7 +179,7 @@ function LocalLandscapeScan(start_network::Matrix{Float64},N_sample::Int,grn_par
 
     compute_slices!(LL,N_sample,development,fitness_function)
 
-    calculate_transition_probabilities!(LL,mutation_op,β)
+    # calculate_transition_probabilities!(LL,mutation_op,β)
 
     LL
 
