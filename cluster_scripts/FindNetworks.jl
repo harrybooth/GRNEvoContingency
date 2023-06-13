@@ -114,6 +114,8 @@ for exp_name in all_experiments
         @tag!(summaryd)
 
         safesave(datadirx("exp_summaries",exp_name * "_" * network_topology * "_Summary.jld2"), summaryd)
+
+        safesave(datadirx("exp_raw",exp_name * "_" * network_topology * "_RawData.jld2"), fulld)
     end
 
     @tag!(fulld)
