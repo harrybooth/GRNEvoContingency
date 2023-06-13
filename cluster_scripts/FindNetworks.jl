@@ -17,13 +17,13 @@ projectdir_static = dirname(Base.active_project())
 
 cluster_calc = true
 
+if !cluster_calc
+    @quickactivate "GRNEvoContingency"
+end
+
 if cluster_calc
     n_tasks = parse(Int, ENV["SLURM_NTASKS"])
     addprocs(SlurmManager(n_tasks))
-    @everywhere using Pkg
-    @everywhere Pkg.activate("..")
-else
-    addprocs(19)
     @everywhere using Pkg
     @everywhere Pkg.activate("..")
 end
@@ -34,6 +34,7 @@ end
     using Printf
     using Base.Threads
     using Base.Threads: @spawn
+    using ParallelDataTransfer
 end
 
 @everywhere projectdirx(args...) = joinpath($projectdir_static, args...)
@@ -48,7 +49,7 @@ end
 @everywhere include(srcdirx("Evolution.jl"))
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 
-@everywhere all_experiments = ["FindNetworks_HalfStripeLeft_Full"]
+@everywhere all_experiments = ["FindNetworks_HalfStripeRight_Full"]
 
 for exp_name in all_experiments
 
