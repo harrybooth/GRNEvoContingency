@@ -135,6 +135,39 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator)
     return new_w
 end
 
+function noise_runiform(w::Matrix{Float64},mut_op::MutationOperator,p_uniform)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sample(mut_op.mutation_weights,n_mut,replace = false)
+
+    for index in choices
+        if rand() < p_uniform
+            new_w[index] = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+        else
+            if new_w[index] == 0
+                proposal = new_w[index] + rand(mut_op.noise_distribution)
+                new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
+            else
+                if rand() < mut_op.deletion_p
+                    new_w[index] = 0.
+                else
+                    proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
+                    ç= abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
+                end
+            end
+        end
+    end
+
+    return new_w
+end
+
 function noise_no_additions(w::Matrix{Float64},mut_op::MutationOperator)
 
     new_w = copy(w)
@@ -167,6 +200,10 @@ function fixation_probability(Δf,β)
     1 - exp(-2*β*Δf) 
 end
 
+function fixation_probability(Δf1,Δf2,β)
+    Δf1 != 0 ? 1 - exp(-2*β*Δf1) : 1 - exp(-2*β*Δf2)
+end
+
 function fixation_probability_kim(Δf,β,N)
     (1 - exp(-2*β*Δf)) / (1 - exp(-2*β*N*Δf))
 end
@@ -194,6 +231,19 @@ function strong_selection!(population::Population{Float64},mutant::Individual,β
         population.dominant_individual = mutant
         population.fitness = mutant_fitness
         has_fixed = true
+    end
+end
+
+function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Float64,fitness_function)
+
+    mutant_fitness = fitness_function(mutant.phenotype)
+
+    population.has_fixed = false
+
+    if rand() < fixation_probability(mutant_fitness[1] - population.fitness[1],mutant_fitness[2] - population.fitness[2],β)
+        population.dominant_individual = mutant
+        population.fitness = mutant_fitness
+        population.has_fixed = true
     end
 end
 
@@ -229,6 +279,10 @@ end
 
 function has_not_converged(population::Population{Float64},tolerance::Float64)
     population.fitness < tolerance
+end
+
+function has_not_converged(population::Population{Tuple{Float64,Float64}},tolerance::Float64)
+    (population.fitness[1] != 0.) || (population.fitness[2] < tolerance)
 end
 
 function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
@@ -273,7 +327,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     end
 
-    if population.fitness >= tolerance
+    if !has_not_converged(population,tolerance)
         evo_trace.converged = true
         final_network = copy(evo_trace.traversed_networks[end])
         if minimum(abs.(final_network[final_network .!= 0.])) > 0.1*maximum(abs.(final_network))  

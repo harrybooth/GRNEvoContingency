@@ -48,9 +48,10 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 
-# @everywhere all_experiments = ["RepeatedEvolution_Bistable_Mut_8"]
+@everywhere all_experiments = ["LeftHanded/RepeatedEvolution_Bistable_Mut_9","LeftHanded/RepeatedEvolution_Bistable_Mut_10","LeftHanded/RepeatedEvolution_Bistable_Mut_11","LeftHanded/RepeatedEvolution_Bistable_Mut_12"]
 
-@everywhere all_experiments = ["RightHanded/RepeatedEvolution_FeedForward_Mut_1_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_2_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_3_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_4_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_5_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_6_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_7_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_8_RH"]
+# @everywhere all_experiments = ["RightHanded/RepeatedEvolution_Bistable_Mut_1_RH","RightHanded/RepeatedEvolution_Bistable_Mut_2_RH","RightHanded/RepeatedEvolution_Bistable_Mut_3_RH","RightHanded/RepeatedEvolution_Bistable_Mut_4_RH","RightHanded/RepeatedEvolution_Bistable_Mut_5_RH","RightHanded/RepeatedEvolution_Bistable_Mut_6_RH","RightHanded/RepeatedEvolution_Bistable_Mut_7_RH","RightHanded/RepeatedEvolution_Bistable_Mut_8_RH"]
+# @everywhere all_experiments = ["RightHanded/RepeatedEvolution_FeedForward_Mut_1_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_2_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_3_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_4_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_5_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_6_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_7_RH","RightHanded/RepeatedEvolution_FeedForward_Mut_8_RH"]
 
 for exp_name in all_experiments
 
