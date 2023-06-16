@@ -194,6 +194,27 @@ function noise_no_additions(w::Matrix{Float64},mut_op::MutationOperator)
     return new_w
 end
 
+function noise_add(w::Matrix{Float64},mut_op::MutationOperator)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sample(mut_op.mutation_weights,n_mut,replace = false)
+
+    for index in choices
+        proposal = new_w[index] + rand(mut_op.noise_distribution)
+        new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
+    end
+
+    return new_w
+end
+
+
 # Selection 
 
 function fixation_probability(Δf,β)
