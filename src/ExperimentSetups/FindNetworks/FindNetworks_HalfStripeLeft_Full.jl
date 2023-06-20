@@ -50,7 +50,13 @@ max_w = 10.
 
 output_gene = 3
 
-fitness_function = s -> fitness_evaluation(s,x->malt_fitness_left(x),output_gene);
+min_width = 1.
+
+lower_bound = 5.
+
+upper_bound = 10.
+
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,0,min_width,lower_bound,upper_bound),malt_fitness_left(x)),output_gene);
 
 tolerance = 0.95
 
@@ -68,7 +74,7 @@ tolerance = 0.95
 
 ########## Simulation Setup ######### 
 
-n_networks_required = 10
+n_networks_required = 50
 
 max_gen = 10000
 

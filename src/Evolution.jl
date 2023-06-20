@@ -293,9 +293,13 @@ mutable struct EvolutionaryTrace
     traversed_t2s ::Any
     fitness_trajectory :: Any
     retcodes :: Any
-    converged :: Bool
-    full_weights :: Bool
+    converged :: Union{Bool, Vector{Bool}}
+    full_weights :: Union{Bool, Vector{Bool}}
     worker_id :: Any
+    fitness_transition_times :: Any
+    network_transition_times :: Any
+    final_networks :: Any
+    final_t2s :: Any
 end
 
 function has_not_converged(population::Population{Float64},tolerance::Float64)
@@ -326,7 +330,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     full_weights = false
 
-    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()))
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]])
 
     while has_not_converged(population,tolerance) && gen < max_gen
 
@@ -377,7 +381,7 @@ function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β:
         push!(evo_trace.fitness_trajectory,population.fitness)
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
 
-        if has_fixed
+        if population.has_fixed
             push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
             push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
         end
@@ -386,9 +390,111 @@ function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β:
 
     end
 
-    if population.fitness >= tolerance
+    if !has_not_converged(population,tolerance)
         evo_trace.converged = true
+        final_network = copy(evo_trace.traversed_networks[end])
+        if minimum(abs.(final_network[final_network .!= 0.])) > 0.1*maximum(abs.(final_network))  
+            evo_trace.full_weights = true
+        end
     end
 
+end
+
+function SSWM_Evolution!(start_network::Matrix{Float64},evo_trace::EvolutionaryTrace,grn_parameters::GRNParameters,β::Float64,max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
+
+    p = (start_network,grn_parameters.degradation)
+    
+    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+
+    development = DefaultGRNSolver()
+    
+    founder = Individual(grn,development)
+
+    founder_fitness = fitness_function(founder.phenotype)
+
+    population = Population(founder,founder_fitness,false)
+
+    gen = 0
+
+    evo_trace.converged = false
+
+    while has_not_converged(population,tolerance) && gen < max_gen
+
+        mutant = create_mutant(population.dominant_individual,mutate_function,development)
+
+        if mutant.phenotype.retcode == ReturnCode.Terminated
+            strong_selection!(population,mutant,β,fitness_function)
+        end
+
+        push!(evo_trace.fitness_trajectory,population.fitness)
+        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
+        if population.has_fixed
+            push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
+        end
+
+        gen += 1
+
+    end
+
+    if !has_not_converged(population,tolerance)
+        evo_trace.converged = true
+        final_network = copy(evo_trace.traversed_networks[end])
+        if minimum(abs.(final_network[final_network .!= 0.])) > 0.1*maximum(abs.(final_network))  
+            evo_trace.full_weights = true
+        end
+    end
+
+end
+
+function SSWM_MSelection(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerances::Vector{Float64},fitness_functions::Vector{Function},mutate_function)
+
+    fitness_transition_times = [1]
+    network_transition_times = [1]
+
+    final_networks = [start_network]
+
+    converged_status = [true]
+
+    evo_trace = SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerances[1],fitness_functions[1],mutate_function)
+
+    push!(converged_status,evo_trace.converged)
+
+    push!(fitness_transition_times,fitness_transition_times[end] + length(evo_trace.fitness_trajectory))
+    push!(network_transition_times,network_transition_times[end] + length(evo_trace.traversed_networks))
+
+    push!(final_networks,evo_trace.traversed_networks[end])
+
+    final_t2s =  []
+
+    push!(final_t2s,evo_trace.traversed_t2s[1])
+    push!(final_t2s,evo_trace.traversed_t2s[end])
+
+    for (tol,ff) in zip(tolerances[2:end],fitness_functions[2:end])
+        if evo_trace.converged
+            SSWM_Evolution!(evo_trace.traversed_networks[end],evo_trace,grn_parameters,β,max_gen,tol,ff,mutate_function)
+            push!(converged_status,evo_trace.converged)
+            push!(fitness_transition_times,fitness_transition_times[end] + length(evo_trace.fitness_trajectory))
+            push!(network_transition_times,network_transition_times[end] + length(evo_trace.traversed_networks))
+            push!(final_networks,evo_trace.traversed_networks[end])
+            push!(final_t2s,evo_trace.traversed_t2s[end])
+        else
+            push!(converged_status,evo_trace.converged)
+            push!(fitness_transition_times,fitness_transition_times[end] + length(evo_trace.fitness_trajectory))
+            push!(network_transition_times,network_transition_times[end] + length(evo_trace.traversed_networks))
+            push!(final_networks,evo_trace.traversed_networks[end])
+            push!(final_t2s,evo_trace.traversed_t2s[end])
+            break
+        end
+    end
+
+    evo_trace.converged = converged_status
+    evo_trace.fitness_transition_times = fitness_transition_times
+    evo_trace.network_transition_times = network_transition_times
+    evo_trace.final_networks = final_networks
+    evo_trace.final_t2s = final_t2s
+
+    return evo_trace
 end
 

@@ -49,7 +49,7 @@ end
 @everywhere include(srcdirx("Evolution.jl"))
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 
-@everywhere all_experiments = ["FindNetworks_HalfStripeRight_Full"]
+@everywhere all_experiments = ["FindNetworks_HalfStripeLeft_Full"]
 
 for exp_name in all_experiments
 
@@ -116,6 +116,7 @@ for exp_name in all_experiments
         safesave(datadirx("exp_summaries",exp_name * "_" * network_topology * "_Summary.jld2"), summaryd)
 
         safesave(datadirx("exp_raw",exp_name * "_" * network_topology * "_RawData.jld2"), fulld)
+
     end
 
     @tag!(fulld)
