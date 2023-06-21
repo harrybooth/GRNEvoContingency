@@ -338,6 +338,8 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
         if mutant.phenotype.retcode == ReturnCode.Terminated
             strong_selection!(population,mutant,β,fitness_function)
+        else
+            population.has_fixed = false
         end
 
         push!(evo_trace.fitness_trajectory,population.fitness)
@@ -376,6 +378,8 @@ function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β:
 
         if mutant.phenotype.retcode == ReturnCode.Terminated
             strong_selection!(population,mutant,β,fitness_function)
+        else
+            population.has_fixed = false
         end
 
         push!(evo_trace.fitness_trajectory,population.fitness)
@@ -424,6 +428,8 @@ function SSWM_Evolution!(start_network::Matrix{Float64},evo_trace::EvolutionaryT
 
         if mutant.phenotype.retcode == ReturnCode.Terminated
             strong_selection!(population,mutant,β,fitness_function)
+        else
+            population.has_fixed = false
         end
 
         push!(evo_trace.fitness_trajectory,population.fitness)
