@@ -52,7 +52,7 @@ w_classical = [0 0 0 1 ; -1 1 0 0 ; -1 -1 1 0];
 
 noise_cv = 1.
 
-mut_prob = 0.1
+mut_prob = 0.2
 
 deletion_prob = 0.
 
@@ -128,5 +128,5 @@ development = DefaultGRNSolver()
 
 ######### Simulation setup ######### 
 
-n_trials = 100
+n_trials = 2500
 max_gen = 75000

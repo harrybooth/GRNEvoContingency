@@ -124,7 +124,11 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator)
             new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
         else
             if rand() < mut_op.deletion_p
-                new_w[index] = 0.
+                del_index = sample(mut_op.mutation_weights,1)[1]
+                new_w[del_index] = 0.
+
+                proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
+                new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
             else
                 proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
                 new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal

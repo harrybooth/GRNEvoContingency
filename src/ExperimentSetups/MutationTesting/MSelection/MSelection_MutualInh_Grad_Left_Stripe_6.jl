@@ -54,7 +54,7 @@ noise_cv = 1.
 
 mut_prob = 0.1
 
-deletion_prob = 0.
+deletion_prob = 0.1
 
 grn_parameters = DefaultGRNParameters();
 
@@ -128,5 +128,5 @@ development = DefaultGRNSolver()
 
 ######### Simulation setup ######### 
 
-n_trials = 100
+n_trials = 2500
 max_gen = 75000
