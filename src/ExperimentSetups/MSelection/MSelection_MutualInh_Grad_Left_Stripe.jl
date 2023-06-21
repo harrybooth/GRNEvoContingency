@@ -27,13 +27,13 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_networks_dict =  load(datadirx("networks/FindNetworks_HalfStripeRight_Full_RawData.jld2"));
+# start_networks_dict =  load(datadirx("networks/FindNetworks_HalfStripeRight_Full_RawData.jld2"));
 
-topology_choice = "bistable"
+# topology_choice = "bistable"
 
-choice = 1 # full
+# choice = 1 # full
 
-start_network = start_networks_dict[topology_choice * "_networks"][choice]
+start_network = [0.0 0.0 0.0 0.07073458757269772; 0.6889253020855619 0.0 -1.042136950503097 0.0; 4.172293675117961 -2.684028190193488 0.0 0.0] # mutual_inhibition gradient
 
 ########## Topologies ###########
 
@@ -45,8 +45,6 @@ w_frozen_osc = [1 0 0 0; -1 0 1 0; -1 -1 1 1];
 w_overlap_dom = [0 0 -1 1 ; 1 0 0 0 ; -1 1 0 0];
 w_bistable = [0 0 0 1; 0 1 -1 0; -1 1 0 0];
 w_classical = [0 0 0 1 ; -1 1 0 0 ; -1 -1 1 0];
-
-mi_gradient = [0.0 0.0 0.0 0.07073458757269772; 0.6889253020855619 0.0 -1.042136950503097 0.0; 4.172293675117961 -2.684028190193488 0.0 0.0] # mutual_inhibition gradient
 
 ########## Evolutionary Setup ######### 
  
@@ -66,7 +64,7 @@ output_gene = 3
 
 n_stripe = 1
 
-min_width = 5.
+min_width = 2.
 
 lower_bound = 5.
 
@@ -78,7 +76,7 @@ fitness_function_stripe = s -> fitness_evaluation(s,x->(nstripe_fitness(x,1,min_
 
 fitness_function_list = [fitness_function_left,fitness_function_stripe]
 
-tolerances = [0.8,0.8]
+tolerance_list = [0.9,0.8]
 
 viable_mutations = ones(Int,Ng,Ng+1)
 
@@ -102,15 +100,25 @@ n_steps = 10
 d_metric = Euclidean()
 relative_dyn = true
 
-fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_Full_RawData.jld2"));
-
 fundamental_topologies =  ["feed_forward","mutual_inh","frozen_osc","bistable","classical"]
 
-fundamental_networks = reduce(vcat,[fundamental_networks_dict[top_choice * "_networks"] for top_choice in fundamental_topologies])
-fundamental_networks_t2s = reduce(vcat,[fundamental_networks_dict[top_choice * "_t2s"] for top_choice in fundamental_topologies])
-fundamental_labels = reduce(vcat,[[top_choice for _ in 1:length(fundamental_networks_dict[top_choice * "_networks"])] for top_choice in fundamental_topologies])
+fundamental_networks_dict_1 = load(datadirx("networks/FindNetworks_HalfStripeLeft_Full_RawData.jld2"));
 
-n_fundamental_networks = length(fundamental_networks)
+fundamental_networks_1 = reduce(vcat,[fundamental_networks_dict_1[top_choice * "_networks"] for top_choice in fundamental_topologies])
+fundamental_networks_t2s_1 = reduce(vcat,[fundamental_networks_dict_1[top_choice * "_t2s"] for top_choice in fundamental_topologies])
+fundamental_labels_1 = reduce(vcat,[[top_choice for _ in 1:length(fundamental_networks_dict_1[top_choice * "_networks"])] for top_choice in fundamental_topologies])
+
+fundamental_networks_dict_2 = load(datadirx("networks/FindNetworks_CentreStripe_Full_RawData.jld2"));
+
+fundamental_networks_2 = reduce(vcat,[fundamental_networks_dict_2[top_choice * "_networks"] for top_choice in fundamental_topologies])
+fundamental_networks_t2s_2 = reduce(vcat,[fundamental_networks_dict_2[top_choice * "_t2s"] for top_choice in fundamental_topologies])
+fundamental_labels_2 = reduce(vcat,[[top_choice for _ in 1:length(fundamental_networks_dict_2[top_choice * "_networks"])] for top_choice in fundamental_topologies])
+
+fundamental_networks_list = [fundamental_networks_1,fundamental_networks_2]
+fundamental_networks_t2s_list = [fundamental_networks_t2s_1,fundamental_networks_t2s_2]
+fundamental_networks_labels_list = [fundamental_networks_labels_1,fundamental_networks_labels_2]
+
+n_fundamental_network_list = [length(fundamental_networks_1),length(fundamental_networks_2)]
 
 ########## LMC Setup ######### 
 
@@ -120,5 +128,5 @@ development = DefaultGRNSolver()
 
 ######### Simulation setup ######### 
 
-n_trials = 2500
-max_gen = 150000
+n_trials = 100
+max_gen = 50000

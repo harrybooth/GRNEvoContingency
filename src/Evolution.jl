@@ -467,8 +467,8 @@ function SSWM_MSelection(start_network::Matrix{Float64},grn_parameters::GRNParam
 
     push!(converged_status,evo_trace.converged)
 
-    push!(fitness_transition_times,fitness_transition_times[end] + length(evo_trace.fitness_trajectory))
-    push!(network_transition_times,network_transition_times[end] + length(evo_trace.traversed_networks))
+    push!(fitness_transition_times,length(evo_trace.fitness_trajectory))
+    push!(network_transition_times,length(evo_trace.traversed_networks))
 
     push!(final_networks,evo_trace.traversed_networks[end])
 
@@ -481,14 +481,14 @@ function SSWM_MSelection(start_network::Matrix{Float64},grn_parameters::GRNParam
         if evo_trace.converged
             SSWM_Evolution!(evo_trace.traversed_networks[end],evo_trace,grn_parameters,β,max_gen,tol,ff,mutate_function)
             push!(converged_status,evo_trace.converged)
-            push!(fitness_transition_times,fitness_transition_times[end] + length(evo_trace.fitness_trajectory))
-            push!(network_transition_times,network_transition_times[end] + length(evo_trace.traversed_networks))
+            push!(fitness_transition_times,length(evo_trace.fitness_trajectory))
+            push!(network_transition_times,length(evo_trace.traversed_networks))
             push!(final_networks,evo_trace.traversed_networks[end])
             push!(final_t2s,evo_trace.traversed_t2s[end])
         else
             push!(converged_status,evo_trace.converged)
-            push!(fitness_transition_times,fitness_transition_times[end] + length(evo_trace.fitness_trajectory))
-            push!(network_transition_times,network_transition_times[end] + length(evo_trace.traversed_networks))
+            push!(fitness_transition_times,length(evo_trace.fitness_trajectory))
+            push!(network_transition_times,length(evo_trace.traversed_networks))
             push!(final_networks,evo_trace.traversed_networks[end])
             push!(final_t2s,evo_trace.traversed_t2s[end])
             break

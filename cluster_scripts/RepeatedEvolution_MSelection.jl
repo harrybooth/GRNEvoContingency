@@ -48,13 +48,13 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 
-@everywhere all_experiments = ["RepeatedEvolution_Bistable_Dyn"]
+@everywhere all_experiments = ["MSelection_MutualInh_Grad_Left_Stripe"]
 
 for exp_name in all_experiments
 
-    @everywhere include(srcdirx("ExperimentSetups/RepeatedEvolution/" * $exp_name * ".jl"))
+    @everywhere include(srcdirx("ExperimentSetups/MSelection/" * $exp_name * ".jl"))
 
-    sim = pmap(worker-> SSWM_MSelection(start_network,grn_parameters,β,max_gen,tolerance_list,fitness_function_list,mutate_function),[worker for worker in 1:n_trials])
+    sim = pmap(worker->SSWM_MSelection(start_network,grn_parameters,β,max_gen,tolerance_list,fitness_function_list,mutate_function),[worker for worker in 1:n_trials])
 
     n_traj = length(findall(x->all(x.converged),sim))
 
@@ -72,21 +72,30 @@ for exp_name in all_experiments
 
     ########################################
 
-    fundamental_networks_dyn_cell = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(fundamental_networks,fundamental_networks_t2s));
-    fundamental_networks_dyn_av = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(fundamental_networks,fundamental_networks_t2s));
+    fulld = Dict{String, Any}()
 
-    fund_X_cell = reduce(hcat,fundamental_networks_dyn_cell)
-    fund_X_av = reduce(hcat,fundamental_networks_dyn_av)
+    fulld["dmat_cell"] = []
+    fulld["dmat_X_cell"] = []
+    fulld["fund_cell"] = []
+    fulld["fund_X_cell"] = []
+    fulld["fund_dmat_cell"] = []
 
-    fund_m_cell = pairwise(d_metric,fund_X_cell,dims = 2)
-    fund_m_av = pairwise(d_metric,fund_X_av,dims = 2)
-
-    dmat_m_cell_v = []
-    dmat_m_av_v = []
-    fund_dmat_m_cell_v = []
-    fund_dmat_m_av_v = []
+    fulld["dmat_av"] = []
+    fulld["dmat_X_av"] = []
+    fulld["fund_av"] = []
+    fulld["fund_X_av"] = []
+    fulld["fund_dmat_av"] = []
 
     for (n,i) in enumerate(fitness_function_list)
+
+        fundamental_networks_dyn_cell = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(fundamental_networks_list[n],fundamental_networks_t2s_list[n]));
+        fundamental_networks_dyn_av = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(fundamental_networks_list[n],fundamental_networks_t2s_list[n]));
+
+        fund_X_cell = reduce(hcat,fundamental_networks_dyn_cell)
+        fund_X_av = reduce(hcat,fundamental_networks_dyn_av)
+
+        fund_m_cell = pairwise(d_metric,fund_X_cell,dims = 2)
+        fund_m_av = pairwise(d_metric,fund_X_av,dims = 2)
 
         end_networks = map(et->et.final_networks[n+1],sim);
         end_networks_t2s = map(et->et.final_t2s[n+1],sim);
@@ -110,30 +119,33 @@ for exp_name in all_experiments
         fund_dmat_m_cell = pairwise(d_metric,end_X_cell,fund_X_cell,dims = 2)
         fund_dmat_m_av = pairwise(d_metric,end_X_av,fund_X_av,dims = 2)
 
-        push!(dmat_m_cell_v,dmat_m_cell)
-        push!(dmat_m_av_v,dmat_m_av)
-        push!(fund_dmat_m_cell_v,fund_dmat_m_cell)
-        push!(fund_dmat_m_av_v,fund_dmat_m_av)
+        push!(fulld["dmat_cell"],dmat_m_cell)
+        push!(fulld["dmat_X_cell"],end_X_cell)
+        push!(fulld["fund_cell"],fund_m_cell)
+        push!(fulld["fund_X_cell"],fund_X_cell)
+        push!(fulld["fund_dmat_cell"],fund_dmat_m_cell)
+    
+        push!(fulld["dmat_av"],dmat_m_av)
+        push!(fulld["dmat_X_av"],end_X_av)
+        push!(fulld["fund_av"],fund_m_av)
+        push!(fulld["fund_X_av"],fund_X_av)
+        push!(fulld["fund_dmat_av"],fund_dmat_m_av)
     end
-
-    fulld = Dict{String, Any}()
 
     fulld["fitness_traj"] = map(et->et.fitness_trajectory,sim)
     fulld["t2s_traj"] = map(et->et.traversed_t2s,sim)
     fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
+
+    fulld["final_networks"] = map(x->x.final_networks,sim)
+    fulld["final_t2s"] = map(x->x.final_t2s,sim)
+
     fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)
 
-    fulld["dmat_cell"] = dmat_m_cell
-    fulld["dmat_X_cell"] = end_X_cell
-    fulld["fund_cell"] = fund_m_cell
-    fulld["fund_X_cell"] = fund_X_cell
-    fulld["fund_dmat_cell"] = fund_dmat_m_cell
+    fulld["converged"]  = map(x->x.converged,sim)
+    fulld["all_converged"] = findall(x->all(x.converged),sim)
 
-    fulld["dmat_av"] = dmat_m_av
-    fulld["dmat_X_av"] = end_X_av
-    fulld["fund_av"] = fund_m_av
-    fulld["fund_X_av"] = fund_X_av
-    fulld["fund_dmat_av"] = fund_dmat_m_av
+    fulld["network_transition_times"] = map(x->x.network_transition_times,sim)
+    fulld["fitness_transition_times"] = map(x->x.fitness_transition_times,sim)
  
     @tag!(fulld)
 
