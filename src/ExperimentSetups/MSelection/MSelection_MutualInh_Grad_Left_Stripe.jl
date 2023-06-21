@@ -70,7 +70,7 @@ lower_bound = 5.
 
 upper_bound = 10.
 
-fitness_function_left = s -> fitness_evaluation(s,x->(nstripe_fitness(x,0,min_width,lower_bound,upper_bound),malt_left(x)),output_gene);
+fitness_function_left = s -> fitness_evaluation(s,x->(nstripe_fitness(x,0,min_width,lower_bound,upper_bound),malt_fitness_left(x)),output_gene);
 
 fitness_function_stripe = s -> fitness_evaluation(s,x->(nstripe_fitness(x,1,min_width,lower_bound,upper_bound),malt_fitness(x,1)),output_gene);
 
