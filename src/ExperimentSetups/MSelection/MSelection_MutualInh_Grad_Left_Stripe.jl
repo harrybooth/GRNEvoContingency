@@ -116,7 +116,7 @@ fundamental_labels_2 = reduce(vcat,[[top_choice for _ in 1:length(fundamental_ne
 
 fundamental_networks_list = [fundamental_networks_1,fundamental_networks_2]
 fundamental_networks_t2s_list = [fundamental_networks_t2s_1,fundamental_networks_t2s_2]
-fundamental_networks_labels_list = [fundamental_networks_labels_1,fundamental_networks_labels_2]
+fundamental_labels_list = [fundamental_labels_1,fundamental_labels_2]
 
 n_fundamental_network_list = [length(fundamental_networks_1),length(fundamental_networks_2)]
 
