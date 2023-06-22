@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=FindNetworks
+#SBATCH --job-name=MSelection
 #SBATCH --ntasks=250
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=4G

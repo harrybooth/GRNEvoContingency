@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=RepeatedEvolution
+#SBATCH --job-name=MutationTesting
 #SBATCH --ntasks=250
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
