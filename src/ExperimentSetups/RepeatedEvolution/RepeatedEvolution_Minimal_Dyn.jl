@@ -36,7 +36,7 @@ topology_choice = "minimal"
 # start_network[1,4] = rand()
 # start_network[3,1] = rand()
 
-start_network = [0.0 0.0 0.0 0.6102532119300469; 0.0 0.0 0.0 0.0; 0.40646142786690864 0.0 0.0 0.0]
+start_network = [0.0 0.0 0.0 0.5229853833248287; 0.0 0.0 0.0 0.0; 0.5890383581592245 0.0 0.0 0.0]
 
 ########## Topologies ###########
 
@@ -69,7 +69,13 @@ output_gene = 3
 
 n_stripe = 1
 
-fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,1,min_width,lower_bound,upper_bound),malt_fitness(x,1)),output_gene);
+min_width = 2.
+
+lower_bound = 5.
+
+upper_bound = 10.
+
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
 
 tolerance = 0.9
 
