@@ -87,9 +87,41 @@ function malt_fitness_left(conc)
 
 end
 
-function gradient_fitness(conc,profile)
-    return -sum((conc .- profile).^2) 
+function gradient_fitness_l(y)
+
+    X = hcat(ones(length(tissue)),collect(tissue))
+
+    βh = inv(transpose(X) * X) * transpose(X) * log.(y)
+
+    loss = dot(log.(y) .- X*βh,log.(y) .- X*βh)
+
+    return loss, exp(βh[1]), βh[2]
+
 end
+
+
+function gradient_fitness_r(y)
+
+    lbw1 = 5.
+    lbw2 = -20.
+
+    ubw1 = 20.
+    ubw2 = -2.
+
+    X = hcat(ones(length(tissue)),collect(tissue))
+
+    βh = inv(transpose(X) * X) * transpose(X) * log.(y)
+
+    loss = dot(log.(y) .- X*βh,log.(y) .- X*βh)
+
+    if (exp(βh[1]) > lbw1) && (exp(βh[1]) < ubw1) && (βh[2] > lbw2) && (βh[2] < ubw2)
+        return -loss
+    else
+        return -Inf
+    end
+
+end
+
 
 function nstripe_fitness(conc,n_stripe::Int64,min_stripe_width,lower_bound,upper_bound)
 
