@@ -56,7 +56,7 @@ noise_cv = 1.
 
 mut_prob = 0.1
 
-deletion_prob = 0.0
+deletion_prob = 0.01
 
 grn_parameters = DefaultGRNParameters();
 
@@ -66,13 +66,14 @@ output_gene = 3
 
 n_stripe = 1
 
-fitness_function = s -> fitness_evaluation(s,x->gradient_fitness_r(x),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
 
-tolerance = -1.
+tolerance = 0.9
 
-start_top = network_topology_dict[topology_choice]
-            
-viable_mutations = Int64.(start_top .!= 0)
+viable_mutations = ones(Int,Ng,Ng+1)
+
+viable_mutations[2,4] = 0
+viable_mutations[3,4] = 0
 
 mutation_weights = findall(viable_mutations .> 0)
 
@@ -80,7 +81,7 @@ n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
 mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
 
-mutate_function = i -> noise_no_additions(i,mutation_op);
+mutate_function = i -> noise(i,mutation_op);
 
 ########## Dyn Setup ######### 
 
@@ -91,9 +92,9 @@ n_steps = 10
 d_metric = Euclidean()
 relative_dyn = true
 
-fundamental_networks_dict = load(datadirx("networks/FindNetworks_Gradients_Full_RawData.jld2"));
+fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_Full_RawData.jld2"));
 
-fundamental_topologies =  ["feed_forward","mutual_inh"]
+fundamental_topologies =  ["feed_forward","mutual_inh","frozen_osc","bistable","classical"]
 
 fundamental_networks = reduce(vcat,[fundamental_networks_dict[top_choice * "_networks"] for top_choice in fundamental_topologies])
 fundamental_networks_t2s = reduce(vcat,[fundamental_networks_dict[top_choice * "_t2s"] for top_choice in fundamental_topologies])

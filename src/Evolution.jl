@@ -218,7 +218,6 @@ function noise_add(w::Matrix{Float64},mut_op::MutationOperator)
     return new_w
 end
 
-
 # Selection 
 
 function fixation_probability(Δf,β)
