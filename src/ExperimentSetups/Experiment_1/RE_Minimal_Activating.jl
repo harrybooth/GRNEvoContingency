@@ -27,13 +27,7 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_networks_dict =  load(datadirx("networks/FindNetworks_CentreStripe_Full_RawData.jld2"));
-
-topology_choice = "bistable"
-
-choice = 1 # full
-
-start_network = start_networks_dict[topology_choice * "_networks"][choice]
+start_network = [0.0 0.0 0.0 3.9649053955386115; 0.0 0.0 0.0 0.0; 1.1656242264108596 0.0 0.0 0.0]
 
 ########## Topologies ###########
 
@@ -104,5 +98,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_traj = 20000
-max_gen = 40000
+n_trials = 5000
+max_gen = 75000
