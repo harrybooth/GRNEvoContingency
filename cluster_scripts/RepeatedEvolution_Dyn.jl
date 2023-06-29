@@ -48,30 +48,15 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 
-@everywhere all_experiments = ["RepeatedEvolution_Bistable_Dyn"]
+@everywhere all_experiments = ["Experiment_1/RE_Minimal_Activating.jl"]
 
 for exp_name in all_experiments
 
-    @everywhere include(srcdirx("ExperimentSetups/RepeatedEvolution/" * $exp_name * ".jl"))
+    @everywhere include(srcdirx("ExperimentSetups/" * $exp_name * ".jl"))
 
-    sim = []
+    sim = pmap(worker-> SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_trials])
 
-    n_trials =  0
-
-    while length(sim) != n_traj
-
-        sim_temp = pmap(worker-> SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_tasks])
-
-        n_trials += n_tasks
-
-        sim_temp_id = findall(x->x.converged,sim_temp)
-
-        for id in sim_temp_id
-            if length(sim) < n_traj
-                push!(sim,sim_temp[id])
-            end
-        end
-    end
+    n_traj = length(findall(x->all(x.converged),sim))
 
     summaryd = Dict{String, Any}()
 
@@ -79,7 +64,7 @@ for exp_name in all_experiments
     summaryd["Total traj converged"] = n_traj
     summaryd["ConvergenceRate"] = n_traj/n_trials
     summaryd["N unique workers"] = length(unique(map(et->et.worker_id,sim)))
-    summaryd["Average N non-terminated"] = mean(map(et->count(x->x!=ReturnCode.Terminated ,et.retcodes) / length(et.retcodes),sim))
+    summaryd["Average N non-terminated"] = mean(map(et->count(x->x!=ReturnCode.Terminated,et.retcodes) / length(et.retcodes),sim))
 
     @tag!(summaryd)
 
@@ -138,6 +123,8 @@ for exp_name in all_experiments
     fulld["fund_av"] = fund_m_av
     fulld["fund_X_av"] = fund_X_av
     fulld["fund_dmat_av"] = fund_dmat_m_av
+
+    fulld["converged"]  = map(x->x.converged,sim)
  
     @tag!(fulld)
 
