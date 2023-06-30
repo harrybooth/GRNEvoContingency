@@ -93,7 +93,7 @@ function gradient_fitness_l(y)
 
     βh = inv(transpose(X) * X) * transpose(X) * log.(y)
 
-    loss = dot(log.(y) .- X*βh,log.(y) .- X*βh)
+    loss = sum((log.(y) .- X*βh).*(log.(y) .- X*βh))
 
     return loss, exp(βh[1]), βh[2]
 
@@ -112,7 +112,7 @@ function gradient_fitness_r(y)
 
     βh = inv(transpose(X) * X) * transpose(X) * log.(y)
 
-    loss = dot(log.(y) .- X*βh,log.(y) .- X*βh)
+    loss = sum((log.(y) .- X*βh).*(log.(y) .- X*βh))
 
     if (exp(βh[1]) > lbw1) && (exp(βh[1]) < ubw1) && (βh[2] > lbw2) && (βh[2] < ubw2)
         return -loss
