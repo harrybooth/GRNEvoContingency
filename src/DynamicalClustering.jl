@@ -71,3 +71,59 @@ end
 
 #     return cost
 # end
+
+##### Assignment tools
+
+function test_inclusion(net_v,top_v)
+
+    n1 = sign.(net_v)
+    incl = 1
+
+    for (n,w) in enumerate(top_v)
+
+        if w != 0
+
+            if n1[n] != w
+                incl = 0
+            end
+        end
+    end
+
+    return incl
+end
+
+function assign_class(row)
+    if all(row.==0)
+        return "no assignment"
+    else
+        return fundamental_topologies[findall(x->x==1,row)]
+    end
+end
+
+function determine_class(en_top,dyn_top)
+
+    r = zeros(Int,size(en_top,1))
+
+    for i in 1:size(en_top,1)
+        id =  findall(x->x==1,en_top[i,:])
+        if length(id) == 0
+            r[i] = 0
+        elseif length(id) == 1
+            r[i] = id[1]
+        else
+            comb = en_top[i,:] .& dyn_top[i,:]
+
+            if all(comb.==0)
+                r[i] = 0
+            else
+                r[i] = findall(x->x==1,comb)[1]
+            end
+        end
+    end
+
+    return r
+end
+
+function entropy(v)
+    -sum(v[v .!= 0] .* log.(v[v .!= 0])) / log(length(v))
+end

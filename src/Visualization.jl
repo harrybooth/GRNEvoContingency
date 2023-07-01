@@ -346,3 +346,73 @@ end
 
 #     return fig
 # end
+
+function draw_fitness_slices(ll)
+    fig = CairoMakie.Figure(resolution = (2000,1800),fontsize = 30.)
+
+    color_scheme = palette(:tab20)
+
+    weight_indices = Tuple.(findall(viable_mutations .> 0));
+
+    vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
+
+    weight_names = [string(vertex_names[last(t)]) * "=>" * string(vertex_names[first(t)]) for t in weight_indices]
+        
+    ax_list = []
+
+    for wi in 1:length(weight_indices)
+
+        ax1  = Axis(fig[weight_indices[wi]...], backgroundcolor = "white", xlabel="Mutation size", ylabel="Fitness", title = weight_names[wi]) 
+
+        # CairoMakie.scatter!(ax1,phate_pheno_all,markersize = 3.5,color = map(x->x == wi ? color_scheme[wi] : :grey,traj_fm_class_v[choice_full_v]))
+
+        CairoMakie.lines!(ax1,ll.sample_points,ll.slice_fitnesses[weight_indices[wi]...,:],color = color_scheme[wi])
+
+        CairoMakie.scatter!(ax1,[(0.,ll.origin_fitness)],color = color_scheme[wi],markersize = 15.)
+
+        push!(ax_list,ax1)
+
+    end
+
+    linkxaxes!(ax_list...)
+    linkyaxes!(ax_list...)
+
+    # CairoMakie.lines(ll.sample_points,ll.slice_fitnesses[(1,3)...,:])
+
+    return fig
+end
+
+function draw_fitness_slices_scan(ll)
+    fig = CairoMakie.Figure(resolution = (2000,1800),fontsize = 30.)
+
+    color_scheme = palette(:tab20)
+
+    weight_indices = Tuple.(findall(viable_mutations .> 0));
+
+    vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
+
+    weight_names = [string(vertex_names[last(t)]) * "=>" * string(vertex_names[first(t)]) for t in weight_indices]
+        
+    ax_list = []
+
+    for wi in 1:length(weight_indices)
+
+        ax1  = Axis(fig[weight_indices[wi]...], backgroundcolor = "white", xlabel="Weight Value", ylabel="Fitness", title = weight_names[wi]) 
+
+        # CairoMakie.scatter!(ax1,phate_pheno_all,markersize = 3.5,color = map(x->x == wi ? color_scheme[wi] : :grey,traj_fm_class_v[choice_full_v]))
+
+        CairoMakie.lines!(ax1,ll.sample_points[weight_indices[wi]...,:],ll.slice_fitnesses[weight_indices[wi]...,:],color = color_scheme[wi])
+
+        CairoMakie.scatter!(ax1,[(Float64(ll.origin.genotype.p[1][weight_indices[wi]...]),ll.origin_fitness)],color = color_scheme[wi],markersize = 15.)
+
+        push!(ax_list,ax1)
+
+    end
+
+    linkxaxes!(ax_list...)
+    linkyaxes!(ax_list...)
+
+    # CairoMakie.lines(ll.sample_points,ll.slice_fitnesses[(1,3)...,:])
+
+    return fig
+end

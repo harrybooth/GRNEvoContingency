@@ -60,9 +60,9 @@ output_gene = 3
 
 n_stripe = 1
 
-fitness_function = s -> fitness_evaluation(s,x->gradient_fitness_r(x),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
 
-tolerance = -1.
+tolerance = 0.9
 
 viable_mutations = ones(Int,Ng,Ng+1)
 
