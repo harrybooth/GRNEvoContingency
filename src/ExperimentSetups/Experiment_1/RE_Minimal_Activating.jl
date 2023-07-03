@@ -61,7 +61,13 @@ output_gene = 3
 
 n_stripe = 1
 
-fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+min_width = 5.
+
+lower_bound = 5.
+
+upper_bound = 10.
+
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
 
 tolerance = 0.9
 
