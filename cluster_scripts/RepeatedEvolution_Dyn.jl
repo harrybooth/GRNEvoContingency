@@ -111,11 +111,14 @@ for exp_name in all_experiments
     fulld["t2s_traj"] = map(et->et.traversed_t2s,sim)
     fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
     fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)
+    fulld["mut_choices"] = map(et->et.mut_choices,sim)
+    fulld["mut_type"] = map(et->et.mut_type,sim)
 
     fulld["dmat_cell"] = dmat_m_cell
     fulld["dmat_X_cell"] = end_X_cell
     fulld["fund_cell"] = fund_m_cell
     fulld["fund_X_cell"] = fund_X_cell
+    
     fulld["fund_dmat_cell"] = fund_dmat_m_cell
 
     fulld["dmat_av"] = dmat_m_av

@@ -82,7 +82,7 @@ n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
 mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
 
-mutate_function = i -> noise(i,mutation_op);
+mutate_function = i -> noise_mtype(i,mutation_op)
 
 ########## Dyn Setup ######### 
 

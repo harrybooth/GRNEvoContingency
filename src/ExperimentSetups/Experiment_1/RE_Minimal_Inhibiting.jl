@@ -60,7 +60,7 @@ output_gene = 3
 
 n_stripe = 1
 
-fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
 
 tolerance = 0.9
 
@@ -75,7 +75,7 @@ n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
 mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
 
-mutate_function = i -> noise(i,mutation_op);
+mutate_function = i -> noise_mtype(i,mutation_op)
 
 ########## Dyn Setup ######### 
 
