@@ -56,7 +56,7 @@ n_stripe = 1
 
 fitness_function = s -> fitness_evaluation(s,x->gradient_fitness_r(x),output_gene);
 
-tolerance = -1.
+tolerance = -5.
 
 ########## To define in script ######### 
 
