@@ -61,6 +61,8 @@ for exp_name in all_experiments
 
     conv_rate_list = []
 
+    conv_rate = 0.0
+
     while conv_rate <= conv_rate_required
 
         random_network = (0.9995 .^ rand(0:param_N,Ng,Ng+1)) .* max_w .* rand(Ng,Ng+1) .* start_top

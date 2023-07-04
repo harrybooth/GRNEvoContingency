@@ -111,7 +111,7 @@ max_gen = 100000
 
 ######### Search setup ######### 
 
-n_trials_search = 1000
+n_trials_search = 500
 max_gen_search = 20000
 param_N = 1
 conv_rate_required = 0.8
