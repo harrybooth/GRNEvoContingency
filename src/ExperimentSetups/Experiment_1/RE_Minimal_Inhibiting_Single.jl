@@ -29,6 +29,8 @@ include(srcdirx("TissueModel_ND.jl"))
 
 start_network = [0.0 0.0 0.0 1.2490335893436255; 0.0 0.0 0.0 0.0; -0.21577059555519695 0.0 0.0 0.0]
 
+start_top = [0 0 0 1; 0 0 0 0; -1 0 0 0]
+
 ########## Topologies ###########
 
 # These are taken from: Cotterell, J., & Sharpe, J. (2010). An atlas of gene regulatory networks reveals multiple three‐gene mechanisms for interpreting morphogen gradients. Molecular systems biology, 6(1), 425.
@@ -44,7 +46,7 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 ########## Evolutionary Setup ######### 
 
-β = 1.
+β = Inf
 
 noise_cv = 1.
 
@@ -60,7 +62,7 @@ output_gene = 3
 
 n_stripe = 1
 
-fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
 
 tolerance = 0.9
 
@@ -100,3 +102,10 @@ n_fundamental_networks = length(fundamental_networks)
 
 n_trials = 5000
 max_gen = 100000
+
+######### Search setup ######### 
+
+n_trials_search = 1000
+max_gen_search = 20000
+param_N = 1
+conv_rate_required = 0.8
