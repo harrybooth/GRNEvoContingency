@@ -27,9 +27,7 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_network = [0.0 0.0 0.0 1.2490335893436255; 0.0 0.0 0.0 0.0; -0.21577059555519695 0.0 0.0 0.0]
-
-start_top = [0 0 0 1; 0 0 0 0; -1 0 0 0]
+start_network = [0.0 0.0 0.0 3.9649053955386115; 0.0 0.0 0.0 0.0; 1.1656242264108596 0.0 0.0 0.0] 
 
 ########## Topologies ###########
 
@@ -62,9 +60,13 @@ output_gene = 3
 
 n_stripe = 1
 
-# fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
+min_width = 5.
 
-fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+lower_bound = 5.
+
+upper_bound = 10.
+
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
 
 tolerance = 0.9
 
@@ -103,4 +105,4 @@ n_fundamental_networks = length(fundamental_networks)
 ######### Simulation setup ######### 
 
 n_trials = 5000
-max_gen = 100000
+max_gen = 75000

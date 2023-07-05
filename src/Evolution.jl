@@ -103,6 +103,11 @@ function create_mutant(ind::Individual,mutate_function,development)
     Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),m_choices,m_type
 end
 
+function create_mutant(ind::Individual,mutate_function_fm,development,fm_id)
+    new_w, m_choices,m_type = mutate_function_fm(ind.genotype.p[1],fm_id)
+    Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),m_choices,m_type
+end
+
 function create_mutant(ind::Individual,new_w::Matrix{Float64},development)
     Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),nothing, nothing
 end
@@ -167,6 +172,28 @@ function noise_mtype(w::Matrix{Float64},mut_op::MutationOperator)
                 new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
                 push!(mtype,:existing)
             end
+        end
+    end
+
+    return new_w, choices, mtype
+end
+
+function noise_mtype_fm(w::Matrix{Float64},mut_op::MutationOperator,index)
+
+    new_w = copy(w)
+
+    if new_w[index] == 0
+        # proposal = new_w[index] + rand(mut_op.noise_distribution)
+        new_w[index] = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+        push!(mtype,:new)
+    else
+        if rand() < mut_op.deletion_p
+            new_w[index] = 0.
+            push!(mtype,:del)
+        else
+            proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
+            new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
+            push!(mtype,:existing)
         end
     end
 
@@ -370,6 +397,92 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
     full_weights = false
 
     evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[])
+
+    while has_not_converged(population,tolerance) && gen < max_gen
+
+        mutant,m_choices,m_type = create_mutant(population.dominant_individual,mutate_function,development)
+
+        if mutant.phenotype.retcode == ReturnCode.Terminated
+            strong_selection!(population,mutant,β,fitness_function)
+        else
+            population.has_fixed = false
+        end
+
+        push!(evo_trace.fitness_trajectory,population.fitness)
+        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
+        if population.has_fixed
+            push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
+            if !isnothing(m_choices)
+                push!(evo_trace.mut_choices,m_choices)
+                push!(evo_trace.mut_type,m_type)
+            end
+        end
+
+        gen += 1
+
+    end
+
+    if !has_not_converged(population,tolerance)
+        evo_trace.converged = true
+        final_network = copy(evo_trace.traversed_networks[end])
+        if minimum(abs.(final_network[final_network .!= 0.])) > 0.1*maximum(abs.(final_network))  
+            evo_trace.full_weights = true
+        end
+    end
+
+    return evo_trace
+
+end
+
+function SSWM_Evolution_FM(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function,mutate_function_fm)
+
+    p = (start_network,grn_parameters.degradation)
+    
+    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+
+    development = DefaultGRNSolver()
+    
+    founder = Individual(grn,development)
+
+    founder_fitness = fitness_function(founder.phenotype)
+
+    population = Population(founder,founder_fitness,false)
+
+    gen = 0
+
+    converged = false
+
+    full_weights = false
+
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[])
+
+    while (!population.has_fixed) && (gen < max_gen)
+
+        mutant,m_choices,m_type = create_mutant(population.dominant_individual,mutate_function_fm,development)
+
+        if mutant.phenotype.retcode == ReturnCode.Terminated
+            strong_selection!(population,mutant,β,fitness_function)
+        else
+            population.has_fixed = false
+        end
+
+        gen+=1
+
+    end
+
+    push!(evo_trace.fitness_trajectory,population.fitness)
+    push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
+    push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+    push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
+    if !isnothing(m_choices)
+        push!(evo_trace.mut_choices,m_choices)
+        push!(evo_trace.mut_type,m_type)
+    end
+
+    gen += 1
 
     while has_not_converged(population,tolerance) && gen < max_gen
 

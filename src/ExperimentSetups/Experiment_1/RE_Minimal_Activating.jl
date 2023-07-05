@@ -27,8 +27,9 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-# start_network = [0.0 0.0 0.0 3.9649053955386115; 0.0 0.0 0.0 0.0; 1.1656242264108596 0.0 0.0 0.0] 1.
-start_network = [0.0 0.0 0.0 0.0045384793662972545; 0.0 0.0 0.0 0.0; 8.90281708521195 0.0 0.0 0.0]
+start_network = [0.0 0.0 0.0 3.9649053955386115; 0.0 0.0 0.0 0.0; 1.1656242264108596 0.0 0.0 0.0] 
+
+start_top = [0 0 0 1; 0 0 0 0; -1 0 0 0]
 
 ########## Topologies ###########
 
@@ -45,7 +46,7 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 ########## Evolutionary Setup ######### 
 
-β = 1.
+β = Inf
 
 noise_cv = 1.
 

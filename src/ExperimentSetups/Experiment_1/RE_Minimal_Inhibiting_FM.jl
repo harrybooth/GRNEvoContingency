@@ -29,8 +29,6 @@ include(srcdirx("TissueModel_ND.jl"))
 
 start_network = [0.0 0.0 0.0 1.2490335893436255; 0.0 0.0 0.0 0.0; -0.21577059555519695 0.0 0.0 0.0]
 
-start_top = [0 0 0 1; 0 0 0 0; -1 0 0 0]
-
 ########## Topologies ###########
 
 # These are taken from: Cotterell, J., & Sharpe, J. (2010). An atlas of gene regulatory networks reveals multiple three‐gene mechanisms for interpreting morphogen gradients. Molecular systems biology, 6(1), 425.
@@ -62,9 +60,7 @@ output_gene = 3
 
 n_stripe = 1
 
-# fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
-
-fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
 
 tolerance = 0.9
 
@@ -80,6 +76,10 @@ n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
 
 mutate_function = i -> noise_mtype(i,mutation_op)
+
+fm_id = (1,2)
+
+mutate_function_fm = i -> noise_mtype_fm(i,mutation_op,fm_id)
 
 ########## Dyn Setup ######### 
 
@@ -103,4 +103,4 @@ n_fundamental_networks = length(fundamental_networks)
 ######### Simulation setup ######### 
 
 n_trials = 5000
-max_gen = 100000
+max_gen = 75000
