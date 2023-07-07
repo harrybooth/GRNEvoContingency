@@ -62,9 +62,15 @@ output_gene = 3
 
 n_stripe = 1
 
-# fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
+min_width = 5.
 
-fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+lower_bound = 5.
+
+upper_bound = 10.
+
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
+
+# fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
 
 tolerance = 0.9
 
@@ -103,4 +109,4 @@ n_fundamental_networks = length(fundamental_networks)
 ######### Simulation setup ######### 
 
 n_trials = 5000
-max_gen = 100000
+max_gen = 75000

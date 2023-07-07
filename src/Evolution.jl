@@ -79,11 +79,6 @@ mutable struct Population{T}
     has_fixed :: Bool
 end
 
-# function Population(founder::Individual,fitness::Float64)
-#     # fitness = fitness_function(founder.phenotype)
-#     Population(founder,fitness)
-# end
-
 # Mutation
 
 struct MutationOperator 
@@ -99,17 +94,17 @@ function MutationOperator(noise_distribution,noise_kwargs,n_sample_func,deletion
 end
 
 function create_mutant(ind::Individual,mutate_function,development)
-    new_w, m_choices,m_type = mutate_function(ind.genotype.p[1])
-    Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),m_choices,m_type
+    new_w, m_choices,m_type,m_sizes,valid = mutate_function(ind.genotype.p[1])
+    Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),m_choices,m_type,m_sizes,valid
 end
 
 function create_mutant(ind::Individual,mutate_function_fm,development,fm_id)
-    new_w, m_choices,m_type = mutate_function_fm(ind.genotype.p[1],fm_id)
-    Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),m_choices,m_type
+    new_w, m_choices,m_type,m_sizes,valid = mutate_function_fm(ind.genotype.p[1],fm_id)
+    Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),m_choices,m_type,m_sizes,valid
 end
 
 function create_mutant(ind::Individual,new_w::Matrix{Float64},development)
-    Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),nothing, nothing
+    Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development),nothing,nothing,nothing,nothing
 end
 
 function noise(w::Matrix{Float64},mut_op::MutationOperator)
@@ -142,7 +137,9 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator)
         end
     end
 
-    return new_w,nothing,nothing
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w,nothing,nothing,nothing, valid
 end
 
 function noise_mtype(w::Matrix{Float64},mut_op::MutationOperator)
@@ -155,49 +152,66 @@ function noise_mtype(w::Matrix{Float64},mut_op::MutationOperator)
         n_mut = mut_op.n_sample_func()
     end
 
-    choices = sample(mut_op.mutation_weights,n_mut,replace = false)
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
     mtype = []
+    sizes = []
 
     for index in choices
         if new_w[index] == 0
-            # proposal = new_w[index] + rand(mut_op.noise_distribution)
-            new_w[index] = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+            n = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+            new_w[index] = n
             push!(mtype,:new)
+            push!(sizes,n)
         else
             if rand() < mut_op.deletion_p
+                push!(sizes,- new_w[index])
                 new_w[index] = 0.
                 push!(mtype,:del)
             else
-                proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
-                new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
+                n = rand(mut_op.noise_distribution)
+                new_w[index] = new_w[index] + n*new_w[index]
                 push!(mtype,:existing)
+                push!(sizes,n)
             end
         end
     end
 
-    return new_w, choices, mtype
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w, choices, mtype, sizes, valid
 end
 
 function noise_mtype_fm(w::Matrix{Float64},mut_op::MutationOperator,index)
 
     new_w = copy(w)
 
-    if new_w[index] == 0
-        # proposal = new_w[index] + rand(mut_op.noise_distribution)
-        new_w[index] = rand(Uniform(-mut_op.max_w,mut_op.max_w))
-        push!(mtype,:new)
-    else
-        if rand() < mut_op.deletion_p
-            new_w[index] = 0.
-            push!(mtype,:del)
+    choices = [CartesianIndex(index)]
+    mtype = []
+    sizes = []
+
+    for index in choices
+        if new_w[index] == 0
+            n = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+            new_w[index] = n
+            push!(mtype,:new)
+            push!(sizes,n)
         else
-            proposal = new_w[index] + rand(mut_op.noise_distribution)*new_w[index]
-            new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
-            push!(mtype,:existing)
+            if rand() < mut_op.deletion_p
+                push!(sizes,- new_w[index])
+                new_w[index] = 0.
+                push!(mtype,:del)
+            else
+                n = rand(mut_op.noise_distribution)
+                new_w[index] = new_w[index] + n*new_w[index]
+                push!(mtype,:existing)
+                push!(sizes,n)
+            end
         end
     end
 
-    return new_w, choices, mtype
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w, choices, mtype, sizes, valid
 end
 
 function noise_runiform(w::Matrix{Float64},mut_op::MutationOperator,p_uniform)
@@ -230,7 +244,9 @@ function noise_runiform(w::Matrix{Float64},mut_op::MutationOperator,p_uniform)
         end
     end
 
-    return new_w, nothing, nothing
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w,nothing,nothing,nothing, valid
 end
 
 function noise_no_additions(w::Matrix{Float64},mut_op::MutationOperator)
@@ -256,7 +272,9 @@ function noise_no_additions(w::Matrix{Float64},mut_op::MutationOperator)
         new_w[index] = proposal
     end
 
-    return new_w, nothing, nothing
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w,nothing,nothing,nothing, valid
 end
 
 function noise_add(w::Matrix{Float64},mut_op::MutationOperator)
@@ -276,7 +294,9 @@ function noise_add(w::Matrix{Float64},mut_op::MutationOperator)
         new_w[index] = abs(proposal) > mut_op.max_w ? mut_op.max_w*sign(proposal) : proposal
     end
 
-    return new_w, nothing, nothing
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w,nothing,nothing,nothing, valid
 end
 
 # Selection 
@@ -366,6 +386,7 @@ mutable struct EvolutionaryTrace
     final_t2s :: Any
     mut_type ::Any
     mut_choices :: Any
+    mut_sizes :: Any
 end
 
 function has_not_converged(population::Population{Float64},tolerance::Float64)
@@ -396,13 +417,13 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     full_weights = false
 
-    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[])
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
 
     while has_not_converged(population,tolerance) && gen < max_gen
 
-        mutant,m_choices,m_type = create_mutant(population.dominant_individual,mutate_function,development)
+        mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(population.dominant_individual,mutate_function,development)
 
-        if mutant.phenotype.retcode == ReturnCode.Terminated
+        if m_valid && mutant.phenotype.retcode == ReturnCode.Terminated
             strong_selection!(population,mutant,β,fitness_function)
         else
             population.has_fixed = false
@@ -417,6 +438,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
             if !isnothing(m_choices)
                 push!(evo_trace.mut_choices,m_choices)
                 push!(evo_trace.mut_type,m_type)
+                push!(evo_trace.mut_sizes,m_sizes)
             end
         end
 
@@ -456,39 +478,49 @@ function SSWM_Evolution_FM(start_network::Matrix{Float64},grn_parameters::GRNPar
 
     full_weights = false
 
-    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[])
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
+
+    m_choices_temp = []
+    m_type_temp = []
+    m_sizes_temp = []
 
     while (!population.has_fixed) && (gen < max_gen)
 
-        mutant,m_choices,m_type = create_mutant(population.dominant_individual,mutate_function_fm,development)
+        mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(population.dominant_individual,mutate_function_fm,development)
 
-        if mutant.phenotype.retcode == ReturnCode.Terminated
+        if m_valid && mutant.phenotype.retcode == ReturnCode.Terminated
             strong_selection!(population,mutant,β,fitness_function)
         else
             population.has_fixed = false
         end
+
+        push!(m_choices_temp,m_choices)
+        push!(m_type_temp,m_type)
+        push!(m_sizes_temp,m_sizes)
 
         gen+=1
 
     end
 
     push!(evo_trace.fitness_trajectory,population.fitness)
-    push!(evo_trace.retcodes,mutant.phenotype.retcode)
+    push!(evo_trace.retcodes,ReturnCode.Terminated)
 
     push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
     push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
-    if !isnothing(m_choices)
-        push!(evo_trace.mut_choices,m_choices)
-        push!(evo_trace.mut_type,m_type)
+
+    if !isnothing(m_choices_temp[end])
+        push!(evo_trace.mut_choices,m_choices_temp[end])
+        push!(evo_trace.mut_type,m_type_temp[end])
+        push!(evo_trace.mut_sizes,m_sizes_temp[end])
     end
 
-    gen += 1
+    
 
     while has_not_converged(population,tolerance) && gen < max_gen
 
-        mutant,m_choices,m_type = create_mutant(population.dominant_individual,mutate_function,development)
+        mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(population.dominant_individual,mutate_function,development)
 
-        if mutant.phenotype.retcode == ReturnCode.Terminated
+        if m_valid && mutant.phenotype.retcode == ReturnCode.Terminated
             strong_selection!(population,mutant,β,fitness_function)
         else
             population.has_fixed = false
@@ -503,6 +535,7 @@ function SSWM_Evolution_FM(start_network::Matrix{Float64},grn_parameters::GRNPar
             if !isnothing(m_choices)
                 push!(evo_trace.mut_choices,m_choices)
                 push!(evo_trace.mut_type,m_type)
+                push!(evo_trace.mut_sizes,m_sizes)
             end
         end
 

@@ -60,6 +60,12 @@ output_gene = 3
 
 n_stripe = 1
 
+min_width = 5.
+
+lower_bound = 5.
+
+upper_bound = 10.
+
 fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
 
 tolerance = 0.9
@@ -77,7 +83,7 @@ mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,del
 
 mutate_function = i -> noise_mtype(i,mutation_op)
 
-fm_id = (1,2)
+fm_id =  (1, 1)
 
 mutate_function_fm = i -> noise_mtype_fm(i,mutation_op,fm_id)
 
