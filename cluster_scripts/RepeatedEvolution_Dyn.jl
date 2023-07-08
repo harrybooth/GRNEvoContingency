@@ -48,7 +48,7 @@ end
 @everywhere include(srcdirx("FitnessFunctions.jl"))
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 
-@everywhere all_experiments = ["Experiment_1/RE_Minimal_Inhibiting","Experiment_1/RE_Minimal_Single","Experiment_1/RE_Minimal_FM"]
+@everywhere all_experiments = ["Experiment_1/RE_Minimal_FM"]
 
 # "Experiment_1/RE_Minimal_Inhibiting_Single"
 
