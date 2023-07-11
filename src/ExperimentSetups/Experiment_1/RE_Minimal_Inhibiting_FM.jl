@@ -83,7 +83,7 @@ mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,del
 
 mutate_function = i -> noise_mtype(i,mutation_op)
 
-fm_id =  (1, 1)
+fm_id =  (3, 3)
 
 mutate_function_fm = i -> noise_mtype_fm(i,mutation_op,fm_id)
 

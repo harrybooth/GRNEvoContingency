@@ -115,6 +115,7 @@ for exp_name in all_experiments
     fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)
     fulld["mut_choices"] = map(et->et.mut_choices,sim)
     fulld["mut_type"] = map(et->et.mut_type,sim)
+    fulld["mut_sizes"] = map(et->et.mut_sizes,sim)
 
     fulld["dmat_cell"] = dmat_m_cell
     fulld["dmat_X_cell"] = end_X_cell
