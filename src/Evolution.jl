@@ -142,8 +142,7 @@ function noise(w::Matrix{Float64},mut_op::MutationOperator)
     return new_w,nothing,nothing,nothing, valid
 end
 
-function noise_specified(w::Vector{Float64},mut_id,mut_size,mut_type)
-
+function noise_specified(w::Vector{Float64},mut_id::Int64,mut_size::Float64,mut_type::Symbol)
     new_w = copy(w)
 
     if mut_type == :new
@@ -158,6 +157,26 @@ function noise_specified(w::Vector{Float64},mut_id,mut_size,mut_type)
 
     return new_w
 end
+
+function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vector{Float64},mut_type::Vector{Any})
+
+    new_w = copy(w)
+
+    for n in 1:length(mut_id)
+        if mut_type[n] == :new
+            new_w[mut_id[n]] = mut_size[n]
+        elseif mut_type[n] == :existing
+            new_w[mut_id[n]] = new_w[mut_id[n]] + mut_size[n]*new_w[mut_id[n]]
+        elseif mut_type[n] == :del
+            new_w[mut_id[n]] = 0
+        else
+            new_w[mut_id[n]] = NaN
+        end
+    end
+
+    return new_w
+end
+
 
 function noise_mtype(w::Matrix{Float64},mut_op::MutationOperator)
 
