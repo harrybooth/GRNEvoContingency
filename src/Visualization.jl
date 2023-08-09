@@ -416,3 +416,99 @@ function draw_fitness_slices_scan(ll)
 
     return fig
 end
+
+function create_bar_from_tuples!(ax,data,color_dict,numeric_x = true)
+    cat = unique(first.(data))
+
+    if numeric_x
+        all_values = sort(unique(last.(data)))
+    else
+        all_values = unique(last.(data))
+    end
+
+    chart_data = []
+    color_data = []
+
+    for (n,c) in enumerate(cat)
+        n_cat = length(filter(x->first(x) == c,data))
+        for v in all_values
+            n_val = length(filter(x->(first(x) == c) & (last(x) == v) ,data))
+            push!(chart_data, [n,v,n_val/n_cat])
+            push!(color_data, color_dict[c])
+        end
+    end
+
+    cd = reduce(hcat,chart_data) 
+
+    CairoMakie.barplot!(ax,cd[2,:],cd[3,:], dodge = Int.(cd[1,:]),color = color_data)
+
+    if numeric_x
+        ax.xticks = (1:length(all_values),string.(all_values))
+    end
+
+end
+
+function pairplot_makie_ass(X,ass,colorscheme)
+
+    fig = CairoMakie.Figure(resolution = (5000,5000),fontsize = 40.)
+
+    vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
+
+    weight_indices = Tuple.(findall(ones(3,4) .> 0));
+
+    weight_names = [string(vertex_names[last(t)]) * "=>" * string(vertex_names[first(t)]) for t in weight_indices]
+
+    color_scheme = palette(:tab10)
+
+    n_weight = 10
+
+    grid_entries = Tuple.(findall(x->x > 0, ones(n_weight,n_weight)))
+
+    ax_list = []
+
+    for entry in grid_entries
+
+        # if (entry[1] <= 12) && (entry[2] <= 12)
+        if entry[1] == entry[2]
+            ax = Axis(fig[entry...], xlabel = weight_names[entry[2]],ylabel = weight_names[entry[1]])
+            CairoMakie.density!(ax,X[entry[2],:])
+
+            if entry[2] != 1
+                hideydecorations!(ax)
+            end
+        
+            if (entry[1] != n_weight)
+                hidexdecorations!(ax)
+            end
+
+            push!(ax_list,ax)
+
+        elseif entry[1] >= entry[2]
+            ax = Axis(fig[entry...], xlabel = weight_names[entry[2]],ylabel = weight_names[entry[1]])
+            CairoMakie.scatter!(ax,X[[entry[2],entry[1]],:],color = ass,colormap  = colorscheme)
+
+            if entry[2] != 1
+                hideydecorations!(ax)
+            end
+        
+            if (entry[1] != n_weight)
+                hidexdecorations!(ax)
+            end
+
+            push!(ax_list,ax)
+            
+        else
+            nothing
+        end
+
+    end
+
+    rowgap!(fig.layout, 2.)
+    colgap!(fig.layout, 4.)
+
+    linkyaxes!(ax_list...)
+    linkxaxes!(ax_list...)
+
+    return fig
+
+end
