@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=RepeatedEvolution
-#SBATCH --ntasks=350
+#SBATCH --ntasks=500
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
 #SBATCH --time=24:00:00
