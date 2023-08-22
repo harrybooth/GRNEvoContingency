@@ -512,3 +512,49 @@ function pairplot_makie_ass(X,ass,colorscheme)
     return fig
 
 end
+
+function pairplot_shapley(shap_int,X,weight_names)
+
+    fig = CairoMakie.Figure(resolution = (5000,5000),fontsize =30.)
+
+    n_feature = size(shap_int,2) - 1
+
+    grid_entries = Tuple.(findall(ones(n_feature,n_feature) .> 0));
+
+    ax_list = []
+
+    for entry in grid_entries
+
+        id1 = entry[2]
+        id2 = entry[1]
+
+        if id2 > id1
+            ax = Axis(fig[entry...], xlabel = weight_names[id1],ylabel = weight_names[id2])
+
+            CairoMakie.scatter!(ax,X[:,id1],X[:,id2],color = shap_int[:,id1,id2],markersize = 8.)
+
+            if entry[2] != 1
+                hideydecorations!(ax)
+            end
+        
+            if (entry[1] != n_feature)
+                hidexdecorations!(ax)
+            end
+
+            push!(ax_list,ax)
+            
+        else
+            nothing
+        end
+
+    end
+
+    rowgap!(fig.layout, 2.)
+    colgap!(fig.layout, 4.)
+
+    linkyaxes!(ax_list...)
+    linkxaxes!(ax_list...)
+
+    return fig
+
+end
