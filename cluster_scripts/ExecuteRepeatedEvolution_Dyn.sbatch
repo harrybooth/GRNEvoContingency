@@ -2,7 +2,7 @@
 #SBATCH --job-name=RepeatedEvolution
 #SBATCH --ntasks=500
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=6G
+#SBATCH --mem-per-cpu=8G
 #SBATCH --time=12:00:00
 #SBATCH --partition=cpu
 #SBATCH --mail-user=harry.booth@crick.ac.uk
