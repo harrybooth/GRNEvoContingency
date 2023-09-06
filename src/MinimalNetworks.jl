@@ -30,6 +30,30 @@
 #     return top[findall(top_sizes .== min_top)]
 # end
 
+function mask(network,topology)
+
+    new_network = copy(network)
+
+    z0 = findall(x->x == 0,topology)
+
+    new_network[z0] .= 0.
+
+    return new_network
+
+end
+
+function mask_bool(network,mask)
+
+    new_network = copy(network)
+
+    z0 = findall(x->!x,mask)
+
+    new_network[z0] .= 0.
+
+    return new_network
+
+end
+
 function find_minimal_network(network,grn_parameters,development,fitness_function)
 
     size_S = length(network)
