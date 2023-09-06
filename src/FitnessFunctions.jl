@@ -125,38 +125,45 @@ end
 
 function nstripe_fitness(conc,n_stripe::Int64,min_stripe_width,lower_bound,upper_bound)
 
-    low_segments = []
-    high_segments = []
-    current_low_width = 0.
-    current_upper_width = 0.
+    if all((conc[1:min_stripe_width] .< lower_bound)) & all(conc[end-min_stripe_width:end] .< lower_bound)
 
-    for c in conc
-        if c < lower_bound
-            push!(high_segments,current_upper_width)
-            current_low_width += 1.
-            current_upper_width = 0.
-        elseif c > upper_bound
-            push!(low_segments,current_low_width)
-            current_low_width = 0.
-            current_upper_width += 1.
+        low_segments = []
+        high_segments = []
+        current_low_width = 0.
+        current_upper_width = 0.
+
+        for c in conc
+            if c < lower_bound
+                push!(high_segments,current_upper_width)
+                current_low_width += 1.
+                current_upper_width = 0.
+            elseif c > upper_bound
+                push!(low_segments,current_low_width)
+                current_low_width = 0.
+                current_upper_width += 1.
+            end
         end
-    end
 
-    push!(high_segments,current_upper_width)
-    push!(low_segments,current_low_width)
+        push!(high_segments,current_upper_width)
+        push!(low_segments,current_low_width)
 
-    valid_low = filter(x->x>=min_stripe_width,low_segments)
-    valid_high = filter(x->x>=min_stripe_width,high_segments)
+        valid_low = filter(x->x>=min_stripe_width,low_segments)
+        valid_high = filter(x->x>=min_stripe_width,high_segments)
 
-    valid_pattern = (length(valid_low)) == (length(valid_high)+1)
+        valid_pattern = (length(valid_low)) == (length(valid_high)+1)
 
-    if valid_pattern
-        n_stripe_found = (length(valid_low) + length(valid_high) - 1)/2
+        if valid_pattern
+            n_stripe_found = (length(valid_low) + length(valid_high) - 1)/2
+        else
+            n_stripe_found = 0
+        end
+
     else
         n_stripe_found = 0
     end
-
+    
     return Float64(-1*abs(n_stripe - n_stripe_found))
+
 end
 
 function nstripe_fitness_comp(conc,n_stripe::Int64,low_targets, high_targets,min_stripe_width,lower_bound,upper_bound)
