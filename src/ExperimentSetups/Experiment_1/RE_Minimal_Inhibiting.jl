@@ -62,7 +62,7 @@ output_gene = 3
 
 n_stripe = 1
 
-min_width = 5.
+min_width = 5
 
 lower_bound = 5.
 
