@@ -12,13 +12,13 @@ struct DESystemSolver{A <: DEAlgorithm}
     kwargs :: NamedTuple
 end
 
-# function DefaultGRNSolver()
-#     DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-8,1e-6),maxiters = 1e3, verbose = false, save_everystep = false))
-# end
-
 function DefaultGRNSolver()
-    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-7,abstol = 1e-9,callback = TerminateSteadyState(1e-8,1e-6),maxiters = 1e3, verbose = false, save_everystep = false))
+    DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-8,1e-6),maxiters = 1e3, verbose = false, save_everystep = false))
 end
+
+# function DefaultGRNSolver()
+#     DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-7,abstol = 1e-9,callback = TerminateSteadyState(1e-8,1e-6),maxiters = 1e3, verbose = false, save_everystep = false))
+# end
 
 function TimeStampedGRNSolver(save_at)
     DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,maxiters = 1e3, verbose = false, saveat = save_at))
@@ -56,6 +56,26 @@ function Individual(genotype::DEProblem,development::DESystemSolver)
 end
 
 function Individual(start_network::Matrix{Float64},grn_parameters::GRNParameters,development::DESystemSolver)
+
+    p = (start_network,grn_parameters.degradation)
+
+    genotype = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+    phenotype  = solve(genotype,development.alg;development.kwargs...)
+    
+    Individual(genotype,phenotype)
+end
+
+function Individual(start_network::Matrix{Float32},grn_parameters::GRNParameters,development::DESystemSolver)
+
+    p = (start_network,grn_parameters.degradation)
+
+    genotype = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+    phenotype  = solve(genotype,development.alg;development.kwargs...)
+    
+    Individual(genotype,phenotype)
+end
+
+function Individual(start_network::Matrix{Float16},grn_parameters::GRNParameters,development::DESystemSolver)
 
     p = (start_network,grn_parameters.degradation)
 
@@ -463,7 +483,7 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
         mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(population.dominant_individual,mutate_function,development)
 
-        if m_valid && mutant.phenotype.retcode == ReturnCode.Terminated
+        if m_valid && SciMLBase.successful_retcode(mutant.phenotype.retcode)
             strong_selection!(population,mutant,β,fitness_function)
         else
             population.has_fixed = false
@@ -528,7 +548,7 @@ function SSWM_Evolution_FM(start_network::Matrix{Float64},grn_parameters::GRNPar
 
         mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(population.dominant_individual,mutate_function_fm,development)
 
-        if m_valid && mutant.phenotype.retcode == ReturnCode.Terminated
+        if m_valid && SciMLBase.successful_retcode(mutant.phenotype.retcode)
             strong_selection!(population,mutant,β,fitness_function)
         else
             population.has_fixed = false
@@ -605,7 +625,7 @@ function SSWM_Evolution!(population::Population,evo_trace::EvolutionaryTrace,β:
 
         mutant = create_mutant(population.dominant_individual,mutate_function,development)
 
-        if mutant.phenotype.retcode == ReturnCode.Terminated
+        if SciMLBase.successful_retcode(mutant.phenotype.retcode)
             strong_selection!(population,mutant,β,fitness_function)
         else
             population.has_fixed = false
