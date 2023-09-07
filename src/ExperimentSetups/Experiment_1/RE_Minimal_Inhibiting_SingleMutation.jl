@@ -81,7 +81,7 @@ viable_mutations[3,4] = 0
 
 mutation_weights = findall(viable_mutations .> 0)
 
-n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
+n_sample_func() = 1
 
 mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
 
@@ -108,5 +108,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_trials = 20000
+n_trials = 5000
 max_gen = 250000
