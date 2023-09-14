@@ -125,5 +125,5 @@ function determine_class(en_top,dyn_top)
 end
 
 function entropy(v)
-    -sum(v[v .!= 0] .* log.(v[v .!= 0])) / log(length(v))
+    length(v) != 1 ? -sum(v[v .!= 0] .* log.(v[v .!= 0])) / log(length(v)) : -sum(v[v .!= 0] .* log.(v[v .!= 0]))
 end
