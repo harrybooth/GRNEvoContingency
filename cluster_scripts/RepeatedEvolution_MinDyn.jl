@@ -111,11 +111,11 @@ for exp_name in all_experiments
 
     ########################################
 
-    single_mutant_jump = [et .- vec(start_network) for et in end_networks]
+    single_mutant_jump = [vec(et) .- vec(start_network) for et in end_networks]
 
     sendto(workers(), single_mutant_jump=single_mutant_jump)
 
-    shapley_fitness = pmap(smj->evaluate_smj_shapley(smj,start_network,grn_parameters,DefaultGRNSolver(),fitness_function),single_mutant_jump)
+    shapley_fitness = pmap(smj->evaluate_smj_shapley(smj,vec(start_network),grn_parameters,DefaultGRNSolver(),fitness_function),single_mutant_jump)
 
     ########################################
 
