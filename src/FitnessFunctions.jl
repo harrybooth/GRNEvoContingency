@@ -230,3 +230,7 @@ function perfect_malt_conc!(conc::Vector{Float64},n_stripe::Int64,max_conc::Floa
     end
 end
 
+function add_fitness(tuple_f)
+    return tuple_f[1] + ((tuple_f[2]+1)/2) + 1
+end
+
