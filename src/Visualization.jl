@@ -144,7 +144,7 @@ function draw_grn_cn!(ax,network)
     hidedecorations!(ax); hidespines!(ax)
 end
 
-function draw_grn_cn_th!(ax,network)
+function draw_grn_cn_th!(ax,network,edge_width,vertex_size,arrow_size,arrow_shift,sw,vertex_label = true)
 
     weight_indices = Tuple.(findall(ones(size(network)) .> 0));
 
@@ -167,7 +167,42 @@ function draw_grn_cn_th!(ax,network)
                 [0.03, -0.06],
                 [0.03, -0.06]]
 
-    graphplot!(ax,ng,layout = fixed_layout, node_color = [:red,:blue,:green,:orange], node_size = 30.,nlabels = vertex_names,edge_color = :black,edge_width = 10.,arrow_size = 50.,arrow_shift = 0.1, arrow_attr = (; marker = [select_marker(edge_values[i]) for i in 1:ne(ng)]),selfedge_size = 0.25, nlabels_offset = offsets, elabels_rotation = Dict(i => edge_indices[i] == (1,4) ? 0.0 : Makie.automatic for i in 1:ne(ng)))
+    if vertex_label
+        graphplot!(ax,ng,layout = fixed_layout, node_color = [:red,:blue,:green,:orange], node_size = vertex_size,node_attr=(; strokewidth = sw, strokecolor = :white),nlabels = vertex_names,edge_color = :black,edge_width = edge_width,arrow_size = arrow_size,arrow_shift = arrow_shift, arrow_attr = (; marker = [select_marker(edge_values[i]) for i in 1:ne(ng)]),selfedge_size = 0.25, nlabels_offset = offsets, elabels_rotation = Dict(i => edge_indices[i] == (1,4) ? 0.0 : Makie.automatic for i in 1:ne(ng)))
+    else
+        graphplot!(ax,ng,layout = fixed_layout, node_color = [:red,:blue,:green,:orange], node_size = vertex_size,node_attr=(; strokewidth = sw, strokecolor = :white),edge_color = :black,edge_width = edge_width,arrow_size = arrow_size,arrow_shift = arrow_shift, arrow_attr = (; marker = [select_marker(edge_values[i]) for i in 1:ne(ng)]),selfedge_size = 0.25, elabels_rotation = Dict(i => edge_indices[i] == (1,4) ? 0.0 : Makie.automatic for i in 1:ne(ng)))
+    end
+
+    autolimits!(ax)
+    hidedecorations!(ax); hidespines!(ax)
+end
+
+function draw_grn_layout!(ax,network,edge_width,vertex_size,arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,vertex_label = true)
+
+    weight_indices = Tuple.(findall(ones(size(network)) .> 0));
+
+    adjacency_matrix = vcat(network,zeros(1,4))
+
+    ng = SimpleDiGraph(adjacency_matrix)
+
+    edge_indices = [(src(i),dst(i)) for i in edges(ng)]
+
+    edge_values = [round(adjacency_matrix[id...],digits = 3) for id in edge_indices]
+
+    vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
+
+    vertex_names = [vertex_names[i] for i in vertices(ng)]
+
+    offsets = [[0.03, 0.0],
+                [-0.06, -0.06],
+                [0.03, -0.06],
+                [0.03, -0.06]]
+
+    if vertex_label
+        graphplot!(ax,ng,layout = fixed_layout, node_color = [:red,:blue,:green,:orange],selfedge_size = selfedge_size, node_size = vertex_size,node_attr=(; strokewidth = sw, strokecolor = :white),nlabels = vertex_names,edge_color = :black,edge_width = edge_width,arrow_size = arrow_size,arrow_shift = arrow_shift, arrow_attr = (; marker = [select_marker(edge_values[i]) for i in 1:ne(ng)]), nlabels_offset = offsets, elabels_rotation = Dict(i => edge_indices[i] == (1,4) ? 0.0 : Makie.automatic for i in 1:ne(ng)))
+    else
+        graphplot!(ax,ng,layout = fixed_layout, node_color = [:red,:blue,:green,:orange],selfedge_size = selfedge_size, node_size = vertex_size,node_attr=(; strokewidth = sw, strokecolor = :white),edge_color = :black,edge_width = edge_width,arrow_size = arrow_size,arrow_shift = arrow_shift, arrow_attr = (; marker = [select_marker(edge_values[i]) for i in 1:ne(ng)]), elabels_rotation = Dict(i => edge_indices[i] == (1,4) ? 0.0 : Makie.automatic for i in 1:ne(ng)))
+    end
 
     autolimits!(ax)
     hidedecorations!(ax); hidespines!(ax)
