@@ -76,7 +76,7 @@ function find_minimal_network(network,grn_parameters,development,fitness_functio
         mutant_fitness = fitness_function(mutant.phenotype)
         
         if SciMLBase.successful_retcode(mutant.phenotype.retcode) && (abs(mutant_fitness[1]) == 0)
-            push!(top,(size_Q,new_network))
+            push!(top,(size_Q,mutant_fitness[2],new_network))
             push!(top_sizes,size_Q)
         end
     end

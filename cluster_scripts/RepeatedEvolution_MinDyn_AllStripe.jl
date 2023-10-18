@@ -82,7 +82,7 @@ for exp_name in all_experiments
     stripe_achieved = map(x->findall(x->x[1] == 0.,unique(x)),fitness_traj_conv);
 
     all_stripe_networks = reduce(vcat,[et.traversed_networks[id] for (et,id) in zip(sim[conv],stripe_achieved)]);
-    all_stripe_networks_t2s = reduce(vcat,[et.end_networks_t2s[id] for (et,id) in zip(sim[conv],stripe_achieved)]);
+    all_stripe_networks_t2s = reduce(vcat,[et.traversed_t2s[id] for (et,id) in zip(sim[conv],stripe_achieved)]);
 
     all_stripe_network_dict = Dict(network=>n for (n,network) in enumerate(all_stripe_networks))
 
