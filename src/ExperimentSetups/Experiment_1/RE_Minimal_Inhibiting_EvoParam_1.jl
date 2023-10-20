@@ -27,13 +27,9 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_networks_dict =  load(datadirx("networks/FindNetworks_HalfStripeRight_Full_RawData.jld2"));
+start_network = [0.0 0.0 0.0 1.2490335893436255; 0.0 0.0 0.0 0.0; -0.21577059555519695 0.0 0.0 0.0]
 
-topology_choice = "bistable"
-
-choice = 1 # full
-
-start_network = start_networks_dict[topology_choice * "_networks"][choice]
+start_top = [0 0 0 1; 0 0 0 0; -1 0 0 0]
 
 ########## Topologies ###########
 
@@ -54,9 +50,9 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 noise_cv = 1.
 
-mut_prob = 0.5
+mut_prob = 0.1
 
-deletion_prob = 0.
+deletion_prob = 0.01
 
 grn_parameters = DefaultGRNParameters();
 
@@ -66,7 +62,15 @@ output_gene = 3
 
 n_stripe = 1
 
-fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+min_width = 5
+
+lower_bound = 5.
+
+upper_bound = 10.
+
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
+
+# fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
 
 tolerance = 0.9
 
@@ -81,7 +85,7 @@ n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
 mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
 
-mutate_function = i -> noise(i,mutation_op);
+mutate_function = i -> noise_mtype(i,mutation_op)
 
 ########## Dyn Setup ######### 
 
@@ -102,13 +106,7 @@ fundamental_labels = reduce(vcat,[[top_choice for _ in 1:length(fundamental_netw
 
 n_fundamental_networks = length(fundamental_networks)
 
-########## LMC Setup ######### 
-
-N_interp_points = 10
-
-development = DefaultGRNSolver()
-
 ######### Simulation setup ######### 
 
-n_trials = 2500
-max_gen = 150000
+n_trials = 20000
+max_gen = 250000
