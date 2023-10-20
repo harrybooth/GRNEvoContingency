@@ -46,7 +46,7 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 ########## Evolutionary Setup ######### 
 
-β = 1.
+β = 10.
 
 noise_cv = 1.
 
@@ -68,9 +68,7 @@ lower_bound = 5.
 
 upper_bound = 10.
 
-fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness(x,n_stripe)),output_gene);
-
-# fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
 
 tolerance = 0.9
 
@@ -108,5 +106,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_trials = 20000
-max_gen = 250000
+n_trials = 1000
+max_gen = 1000000
