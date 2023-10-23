@@ -79,7 +79,7 @@ for exp_name in all_experiments
 
     fitness_traj_conv = map(et->et.fitness_trajectory,sim[conv]);
 
-    stripe_achieved = map(x->findall(x->x[1] == 0.,unique(x)),fitness_traj_conv);
+    stripe_achieved = map(x->minimum(findall(x->x[1] == 0.,unique(x))),fitness_traj_conv);
 
     end_networks = map(et->et.traversed_networks[end],sim[conv]);
     end_networks_t2s = map(et->et.traversed_t2s[end],sim[conv]);
