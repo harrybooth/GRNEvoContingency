@@ -107,4 +107,4 @@ n_fundamental_networks = length(fundamental_networks)
 ######### Simulation setup ######### 
 
 n_trials = 1000
-max_gen = 1000000
+max_gen = 750000
