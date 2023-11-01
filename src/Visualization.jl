@@ -208,6 +208,44 @@ function draw_grn_layout!(ax,network,edge_width,vertex_size,arrow_size,arrow_shi
     hidedecorations!(ax); hidespines!(ax)
 end
 
+function draw_grn_layout_mutant!(ax,network,orig_network,edge_width,vertex_size,arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors)
+
+    weight_indices = Tuple.(findall(ones(size(network)) .> 0));
+
+    adjacency_matrix = vcat(network,zeros(1,4))
+
+    orig_adjacency_matrix = vcat(orig_network,zeros(1,4))
+
+    ng = SimpleDiGraph(adjacency_matrix)
+    ng_orig = SimpleDiGraph(orig_adjacency_matrix)
+
+    edge_indices = [(src(i),dst(i)) for i in edges(ng)]
+
+    edge_values_string = [string(round(adjacency_matrix[id...],digits = 2)) for id in edge_indices]
+    edge_values = [round(adjacency_matrix[id...],digits = 3) for id in edge_indices]
+
+    edge_incl = [i ∈ edges(ng_orig) for i in edges(ng)]
+
+    vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
+
+    vertex_names = [vertex_names[i] for i in vertices(ng)]
+
+    flip_left = [(2,3),(3,2),(3,3)]
+
+    offsets = [[0.03, 0.0],
+                [-0.06, -0.06],
+                [0.03, -0.06],
+                [0.03, -0.06]]
+
+
+    graphplot!(ax,ng,layout = fixed_layout, node_color = node_colors,selfedge_size = selfedge_size, node_size = vertex_size,node_attr=(; strokewidth = sw, strokecolor = :white),
+                    elabels = edge_values_string,edge_color = [i ? :black : :red for i in edge_incl] ,edge_width = edge_width,arrow_size = arrow_size,arrow_shift = arrow_shift, 
+                    arrow_attr = (; marker = [select_marker(edge_values[i]) for i in 1:ne(ng)]), nlabels_offset = offsets,elabels_side = [i in flip_left ? :left : :right for i in edge_indices], elabels_rotation = 0.0)
+
+    autolimits!(ax)
+    hidedecorations!(ax); hidespines!(ax)
+end
+
 
 function draw_grn_and_conc(w_ind,w_network,top_choice)
 
