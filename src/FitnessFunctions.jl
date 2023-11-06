@@ -47,6 +47,52 @@ function malt_fitness(conc,n_stripe::Int64,min_height::Float64)
     return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc)
 end
 
+function malt_fitness_relative(conc,n_stripe::Int64)
+
+    Lt = length(conc)
+
+    N = 2*n_stripe + 1
+
+    id_segments = [Int(floor((k-1)*(Lt/N) + 1)) : Int(floor(k*Lt/N)) for k in 1:N]
+
+    high_sum = 0.
+    low_sum = 0.
+
+    for i in 1:N
+        if i % 2 == 0
+            high_sum += sum(conc[id_segments[i]])
+        else
+            low_sum += sum(conc[id_segments[i]])
+        end
+    end
+
+    max_conc = maximum(conc)
+
+    return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc)
+end
+
+function malt_fitness_absolute(conc,n_stripe::Int64,max_conc::Float64)
+
+    Lt = length(conc)
+
+    N = 2*n_stripe + 1
+
+    id_segments = [Int(floor((k-1)*(Lt/N) + 1)) : Int(floor(k*Lt/N)) for k in 1:N]
+
+    high_sum = 0.
+    low_sum = 0.
+
+    for i in 1:N
+        if i % 2 == 0
+            high_sum += sum(conc[id_segments[i]])
+        else
+            low_sum += sum(conc[id_segments[i]])
+        end
+    end
+
+    return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc)
+end
+
 function malt_fitness_right(conc)
 
     Lt = length(conc)
@@ -138,6 +184,51 @@ function nstripe_fitness(conc,n_stripe::Int64,min_stripe_width,lower_bound,upper
                 current_low_width += 1.
                 current_upper_width = 0.
             elseif c > upper_bound
+                push!(low_segments,current_low_width)
+                current_low_width = 0.
+                current_upper_width += 1.
+            end
+        end
+
+        push!(high_segments,current_upper_width)
+        push!(low_segments,current_low_width)
+
+        valid_low = filter(x->x>=min_stripe_width,low_segments)
+        valid_high = filter(x->x>=min_stripe_width,high_segments)
+
+        valid_pattern = (length(valid_low)) == (length(valid_high)+1)
+
+        if valid_pattern
+            n_stripe_found = (length(valid_low) + length(valid_high) - 1)/2
+        else
+            n_stripe_found = 0
+        end
+
+    else
+        n_stripe_found = 0
+    end
+    
+    return Float64(-1*abs(n_stripe - n_stripe_found))
+
+end
+
+function nstripe_fitness_relative(conc,n_stripe::Int64,min_stripe_width,lower_bound,upper_bound)
+
+    max_conc = maximum(conc)
+
+    if all((conc[1:min_stripe_width] .< lower_bound*max_conc)) & all(conc[end-min_stripe_width:end] .< lower_bound*max_conc)
+
+        low_segments = []
+        high_segments = []
+        current_low_width = 0.
+        current_upper_width = 0.
+
+        for c in conc
+            if c < lower_bound*max_conc
+                push!(high_segments,current_upper_width)
+                current_low_width += 1.
+                current_upper_width = 0.
+            elseif c > upper_bound*max_conc
                 push!(low_segments,current_low_width)
                 current_low_width = 0.
                 current_upper_width += 1.
