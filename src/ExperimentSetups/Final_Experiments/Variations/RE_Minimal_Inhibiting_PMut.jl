@@ -50,7 +50,7 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 noise_cv = 1.
 
-mut_prob = 0.1
+mut_prob = 0.2
 
 deletion_prob = 0.01
 
@@ -110,5 +110,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_trials = 20000
+n_trials = 5000
 max_gen = 250000

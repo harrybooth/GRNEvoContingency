@@ -13,7 +13,7 @@ const L = 1.
 const m0 = 1.
 const λm = 0.2*L
 
-const θ = 5.
+const θ = 2.5
 const deg_rate_g = 0.05
 const init_conc_g = 0.1 
 
@@ -110,5 +110,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_trials = 20000
+n_trials = 5000
 max_gen = 250000

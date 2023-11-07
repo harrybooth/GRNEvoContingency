@@ -64,15 +64,11 @@ n_stripe = 1
 
 min_width = 5
 
-lower_bound = 5.
+lower_bound = 0.25
 
-upper_bound = 10.
+upper_bound = 0.5
 
-max_conc = 20.
-
-fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness_absolute(x,n_stripe,max_conc)),output_gene);
-
-# fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness_relative(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness_relative(x,n_stripe)),output_gene);
 
 tolerance = 0.9
 

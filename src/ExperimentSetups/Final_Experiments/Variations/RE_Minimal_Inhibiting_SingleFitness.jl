@@ -70,7 +70,7 @@ upper_bound = 10.
 
 max_conc = 20.
 
-fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_width,lower_bound,upper_bound),malt_fitness_absolute(x,n_stripe,max_conc)),output_gene);
+fitness_function = s -> fitness_evaluation(s,x->malt_fitness_absolute(x,n_stripe,max_conc),output_gene);
 
 # fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
 
@@ -110,5 +110,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_trials = 20000
+n_trials = 5000
 max_gen = 250000
