@@ -373,6 +373,10 @@ function fixation_probability_kim(Δf,β,N)
     (1 - exp(-2*β*Δf)) / (1 - exp(-2*β*N*Δf))
 end
 
+function fixation_probability_kim(Δf1,Δf2,β,N)
+    Δf1 != 0 ? (1 - exp(-2*β*Δf1)) / (1 - exp(-2*β*N*Δf1)) : (1 - exp(-2*β*Δf2)) / (1 - exp(-2*β*N*Δf2))
+end
+
 function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,fitness_function)
 
     mutant_fitness = fitness_function(mutant.phenotype)
@@ -398,6 +402,20 @@ function strong_selection!(population::Population{Float64},mutant::Individual,β
         has_fixed = true
     end
 end
+
+function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Tuple{Float64,Int64},fitness_function)
+
+    mutant_fitness = fitness_function(mutant.phenotype)
+
+    population.has_fixed = false
+
+    if rand() < fixation_probability_kim(mutant_fitness[1] - population.fitness[1],mutant_fitness[2] - population.fitness[2],β[1],β[2])
+        population.dominant_individual = mutant
+        population.fitness = mutant_fitness
+        population.has_fixed = true
+    end
+end
+
 
 function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Float64,fitness_function)
 
