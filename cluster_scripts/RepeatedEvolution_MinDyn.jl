@@ -82,7 +82,9 @@ for exp_name in all_experiments
     end_networks = map(et->et.traversed_networks[end],sim[conv]);
     end_networks_t2s = map(et->et.traversed_t2s[end],sim[conv]);
 
-    stripe_achieved = map(x->minimum(findall(x->x[1] == 0.,unique(x))),fitness_traj_conv);
+    # stripe_achieved = map(x->minimum(findall(x->x[1] == 0.,unique(x))),fitness_traj_conv);
+
+    stripe_achieved = map(ft->minimum(findall(x->x[1] == 0.,ft)),fitness_traj_conv);
 
     first_stripe_networks = [et.traversed_networks[id] for (et,id) in zip(sim[conv],stripe_achieved)];
 
@@ -122,6 +124,7 @@ for exp_name in all_experiments
     fulld = Dict{String, Any}()
 
     fulld["fitness_traj"] = map(et->et.fitness_trajectory,sim)
+    fulld["wait_times"] = map(et->et.wait_times,sim)
     fulld["t2s_traj"] = map(et->et.traversed_t2s,sim)
     fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
     fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)

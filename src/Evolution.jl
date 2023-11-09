@@ -224,7 +224,7 @@ function noise_mtype(w::Matrix{Float64},mut_op::MutationOperator)
             push!(sizes,n)
         else
             if rand() < mut_op.deletion_p
-                push!(sizes,- new_w[index])
+                push!(sizes,-new_w[index])
                 new_w[index] = 0.
                 push!(mtype,:del)
             else
@@ -454,6 +454,7 @@ mutable struct EvolutionaryTrace
     traversed_networks :: Any
     traversed_t2s ::Any
     fitness_trajectory :: Any
+    wait_times :: Any
     retcodes :: Any
     converged :: Union{Bool, Vector{Bool}}
     full_weights :: Union{Bool, Vector{Bool}}
@@ -490,12 +491,13 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
     population = Population(founder,founder_fitness,false)
 
     gen = 0
+    wait_time = 1
 
     converged = false
 
     full_weights = false
 
-    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
 
     while has_not_converged(population,tolerance) && gen < max_gen
 
@@ -507,21 +509,25 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
             population.has_fixed = false
         end
 
-        push!(evo_trace.fitness_trajectory,population.fitness)
+        # push!(evo_trace.fitness_trajectory,population.fitness)
         push!(evo_trace.retcodes,mutant.phenotype.retcode)
 
         if population.has_fixed
             push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.fitness_trajectory,population.fitness)
+            push!(evo_trace.wait_times,wait_time)
             push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
             if !isnothing(m_choices)
                 push!(evo_trace.mut_choices,m_choices)
                 push!(evo_trace.mut_type,m_type)
                 push!(evo_trace.mut_sizes,m_sizes)
             end
+            wait_time = 0
+        else
+            wait_time += 1
         end
 
         gen += 1
-
     end
 
     if !has_not_converged(population,tolerance)
