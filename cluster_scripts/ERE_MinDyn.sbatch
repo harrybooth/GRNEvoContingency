@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=RepeatedEvolution_Sigma_1
+#SBATCH --job-name=RepeatedEvolution_Sigma_2
 #SBATCH --ntasks=500
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
