@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=RepeatedEvolution_SingleFitness
+#SBATCH --job-name=RepeatedEvolution_Main
 #SBATCH --ntasks=500
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
