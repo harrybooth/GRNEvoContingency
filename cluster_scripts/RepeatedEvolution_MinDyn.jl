@@ -49,7 +49,7 @@ end
 @everywhere include(srcdirx("DynamicalClustering.jl"))
 @everywhere include(srcdirx("MinimalNetworks.jl"))
 
-@everywhere all_experiments = ["Final_Experiments/Variations/RE_Minimal_Inhibiting_SingleFitness"]
+@everywhere all_experiments = ["Final_Experiments/Variations/RE_Minimal_Inhibiting_PMut"]
 
 # "Experiment_1/RE_Minimal_Inhibiting_Single"
 
