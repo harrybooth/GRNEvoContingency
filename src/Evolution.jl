@@ -374,7 +374,7 @@ function fixation_probability_kim(Δf,β,N)
 end
 
 function fixation_probability_kim(Δf1,Δf2,β,N)
-    Δf1 != 0 ? (1 - exp(-2*β*Δf1)) / (1 - exp(-2*β*N*Δf1)) : (1 - exp(-2*β*Δf2)) / (1 - exp(-2*β*N*Δf2))
+    Δf1 != 0 ? (1 - exp(-2*β*Δf1)) / (1 - exp(-2*β*N*Δf1)) : Δf2 != 0 ? (1 - exp(-2*β*Δf2)) / (1 - exp(-2*β*N*Δf2)) : 1/N
 end
 
 function strong_selection!(population::Population{Float64},mutant::Individual,β::Float64,fitness_function)
