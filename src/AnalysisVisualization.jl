@@ -127,7 +127,7 @@ function draw_example_network!(fig,network,show_pheno,draw_config,node_colors,fs
 
 end
 
-function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,uep_position_dict,vertex_top_map,draw_config,example_mst,tr_choice,fontsize)
+function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,end_parents,vertex_top_map,draw_config,example_mst,tr_choice,fontsize)
 
     trajectories_p_d = filter(tr->tr.inc_metagraph_vertices[end] ∈ sorted_uep[1:top_n],trajectories);
 
@@ -219,6 +219,8 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     tr_top_fitness_sc = [(x,tr_fd_refine[x]) for x in tr_top_fitness_id]
 
+    tr_top_stripe_id = [tr_fd_coarse[x] for x in tr_top_fitness_id]
+
     ###################
 
     ax_fitness = Axis(ex1[1:2,1:length(tr_phenotypes)],xlabel = L"\text{Generation}")
@@ -240,7 +242,7 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     for i in 1:length(tr_phenotypes)
 
-        if i >=3
+        if tr_top_stripe_id[i] == 0
             ax_geno = Axis(ex1[3:4,i], backgroundcolor = (color_scheme[example_mst],0.5))
         else
             ax_geno = Axis(ex1[3:4,i], backgroundcolor = RGBf(0.98, 0.98, 0.98))

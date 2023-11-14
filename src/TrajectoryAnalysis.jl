@@ -53,7 +53,7 @@ mutable struct Trajectory
     
 end
 
-function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tuple::Vector{Tuple{Float64, Float64}},wait_times,mut_types::Any)
+function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tuple::Vector{Tuple{Float64, Float64}},wait_times,mut_types::Any,weight_names)
 
     geno_traj = [collect(i) for i in eachcol(geno_traj_m)]
 
