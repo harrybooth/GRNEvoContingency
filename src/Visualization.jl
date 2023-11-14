@@ -240,7 +240,7 @@ function draw_grn_layout_mutant!(ax,network,orig_network,edge_width,vertex_size,
 
     graphplot!(ax,ng,layout = fixed_layout, node_color = node_colors,selfedge_size = selfedge_size, node_size = vertex_size,node_attr=(; strokewidth = sw, strokecolor = :white),
                     elabels = edge_values_string,edge_color = [i ? :black : :red for i in edge_incl] ,edge_width = edge_width,arrow_size = arrow_size,arrow_shift = arrow_shift, 
-                    arrow_attr = (; marker = [select_marker(edge_values[i]) for i in 1:ne(ng)]), nlabels_offset = offsets,elabels_side = [i in flip_left ? :left : :right for i in edge_indices], elabels_rotation = 0.0)
+                    arrow_attr = (; marker = [select_marker(edge_values[i]) for i in 1:ne(ng)]), nlabels_offset = offsets,elabels_side = [i in flip_left ? :top : :right for i in edge_indices], elabels_rotation = 0.0)
 
     autolimits!(ax)
     hidedecorations!(ax); hidespines!(ax)
@@ -394,99 +394,6 @@ function plot_clustered_geno_traj(geno_traj,fitness_traj,initial_fitness,initial
     return fig
 end
 
-# function plot_clustered_geno_traj(gt::GenoTrajectories, cluster_assignments, topology_name::String,n)
-
-#     # cluster_geno_trajectories!(gt,n_clusters,SqEuclidean());
-    
-#     res = 1000
-
-#     n_clusters = length(unique(cluster_assignments))
-
-#     fig = CairoMakie.Figure(resolution = (res + 6.0*res/n_clusters, res),fontsize = 22.)
-
-#     color_scheme = cgrad(:tab20,categorical = true);
-
-#     weight_indices = Tuple.(findall(ones(3,4) .> 0));
-
-#     vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
-
-#     weight_names = [string(vertex_names[last(t)]) * "=>" * string(vertex_names[first(t)]) for t in weight_indices]
-
-#     gl = fig[1,2:4]
-
-#     grid_entries = Tuple.(findall(x-> x> 0,ones(Int64(ceil(sqrt(n_clusters))),Int64(ceil(sqrt(n_clusters))))))
-    
-#     full_fitness_traj = collect(LinRange(gt_mi.initial_fitness,1.,n))
-
-#     ax_list = []
-
-#     full_geno_traj = []
-
-#     for i in 1:length(gt.fitness_traj)
-#         full_weight_traj = zeros(size(gt.geno_traj[i],1),length(LinRange(gt_mi.initial_fitness,1.,n)))
-#         for wi in 1:12
-#             unique_geno_visits = unique(hcat(gt.fitness_traj[i],gt.geno_traj[i][wi,:]), dims = 1)
-#             fitness_timestamps = unique_geno_visits[:,1]
-#             itp_g = DataInterpolations.ConstantInterpolation(unique_geno_visits[:,2],fitness_timestamps);
-#             full_weight_traj[wi,:] = [itp_g(t) for t in LinRange(gt_mi.initial_fitness,1.,n)]
-#         end
-#         push!(full_geno_traj,full_weight_traj)
-#     end
-
-#     # fgt_data = hcat(map(x->vec(x),full_geno_traj)...)
-
-#     for cl in unique(cluster_assignments)
-
-#         ass_cl = full_geno_traj[findall(x->x==cl,cluster_assignments)];
-
-#         all_m = concat_matrices(ass_cl)
-
-#         mt = mean(all_m,dims = 3)[:,:,1]
-#         std_t = std(all_m,dims = 3)[:,:,1]
-
-#         ax1  = Axis(gl[grid_entries[cl]...], backgroundcolor = "white", xlabel = "Fitness", ylabel = "Weight value", title = "Cluster " * string(cl))
-
-#         for i in 1:12
-#             CairoMakie.lines!(ax1,full_fitness_traj,mt[i,:], label = "Weight " * weight_names[i],color = color_scheme[i],linewidth = 5.)
-#         #     CairoMakie.band!(ax1,full_fitness_traj,mt[i,:] .- std_t[i,:],mt[i,:] .+ std_t[i,:],color = (color_scheme[i],0.5))
-#         end
-
-#         push!(ax_list,ax1)
-
-#     end
-
-#     cm = countmap(cluster_assignments)
-
-#     cd = zeros(n_clusters)
-
-#     for cl in unique(cluster_assignments)
-#         cd[cl] = cm[cl] / length(cluster_assignments)
-#     end
-    
-#     gr = fig[1,1]
-
-#     leg = Legend(gr, ax_list[1])
-
-#     # Barplot
-
-#     gbp = fig[1,5]
-
-#     ocd_labels = sortperm(cd)
-
-#     ocd = cd[ocd_labels]
-
-#     ax2  = Axis(gbp[1,1], backgroundcolor = "white", xlabel = "Cluster", ylabel = "Frequency",xticks = (1:length(ocd_labels),string.(ocd_labels)),title = "Cluster association frequency")
-
-#     CairoMakie.barplot!(ax2,ocd)
-
-#     # GRN
-
-#     ax3  = Axis(gbp[2,1], backgroundcolor = "white",title = topology_name * " - start network")
-
-#     draw_grn!(ax3,reshape(gt.initial_genotype,(3,4)),color_scheme)
-
-#     return fig
-# end
 
 function draw_fitness_slices(ll)
     fig = CairoMakie.Figure(resolution = (2000,1800),fontsize = 30.)
