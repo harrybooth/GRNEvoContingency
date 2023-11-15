@@ -532,10 +532,12 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
     if !has_not_converged(population,tolerance)
         evo_trace.converged = true
-        final_network = copy(evo_trace.traversed_networks[end])
-        if minimum(abs.(final_network[final_network .!= 0.])) > 0.1*maximum(abs.(final_network))  
-            evo_trace.full_weights = true
-        end
+        # final_network = copy(evo_trace.traversed_networks[end])
+        # if minimum(abs.(final_network[final_network .!= 0.])) > 0.1*maximum(abs.(final_network))  
+        #     evo_trace.full_weights = true
+        # end
+    else
+        push!(evo_trace.wait_times,wait_time)
     end
 
     return evo_trace

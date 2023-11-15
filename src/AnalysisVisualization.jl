@@ -1,6 +1,6 @@
-function plot_convergence_rate!(ax,conv,conv_time)
+function plot_convergence_rate!(ax,conv,conv_time,n_trials,max_gen)
 
-    cum_conv = [sum(conv_time .< i)/n_trials for i in 1:max_gen];
+    cum_conv = [sum(conv_time[conv] .< i)/n_trials for i in 1:max_gen];
 
     CairoMakie.lines!(ax,cum_conv,color = :blue,linewidth = 4.)
 
@@ -177,17 +177,17 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     #######################
 
-    ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{% of trajectories}")
+    ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{% of trajectories}", xlabel = L"M^{(i)}_{N_i}")
 
     CairoMakie.barplot!(ax_mo,view_sorted_uep_counts ./ sum(view_sorted_uep_counts),color = view_color_sorted_counts_uep)
 
     # CairoMakie.text!(ax,[Point2f(n_norm+0.4,1.2*other/sum(view_sorted_uep_counts))],text = ["# MN-other = " * string(n_other)],fontsize = fontsize)
 
-    ax_mo.xticks = (1:length(view_sorted_uep_counts),"MST " .* axis_label)
+    ax_mo.xticks = (1:length(view_sorted_uep_counts),string.(1:length(view_sorted_uep_counts)))
 
     n_other = sum(.!view_sorted_uep_id)
 
-    ax_mo.xticklabelrotation = 45.
+    # ax_mo.xticklabelrotation = 45.
 
     CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
 
@@ -225,7 +225,7 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     ax_fitness = Axis(ex1[1:2,1:length(tr_phenotypes)],xlabel = L"\text{Generation}")
 
-    ax_fitness_c = Axis(ex1[1:2,1:length(tr_phenotypes)], yticklabelcolor = :blue, yaxisposition = :right, ylabel = L"\mathcal{F}_{C}(g_c)", ylabelcolor = :blue, ylabelrotation = 2pi)
+    ax_fitness_c = Axis(ex1[1:2,1:length(tr_phenotypes)], yticklabelcolor = :blue, yaxisposition = :right, ylabel = L"\mathcal{F}_{C}(g_c)", ylabelcolor = :blue, ylabelrotation = pi/2)
 
     hidespines!(ax_fitness_c)
     hideydecorations!(ax_fitness_c,label = false,ticklabels = false,ticks = false,minorticks = false)
@@ -306,9 +306,9 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     for (label, layout) in zip(["A", "B", "C"], [mo_umap, ex1, rmh0])
         Label(layout[1, 1, TopLeft()], label,
-            fontsize = 22,
+            fontsize = fontsize,
             font = :bold,
-            padding = (0, 5, 5, 0),
+            # padding = (0, 5, 5, 0),
             halign = :right)
     end
 

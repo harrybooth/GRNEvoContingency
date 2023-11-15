@@ -52,7 +52,7 @@ uniqueid(x) = unique(i -> x[i], 1:length(x))
 
 function cond_save(dir,fig,cond)
     if cond
-        CairoMakie.save(dir,fig)
+        CairoMakie.save(dir,fig,pt_per_unit = 1)
     end
 end
 
