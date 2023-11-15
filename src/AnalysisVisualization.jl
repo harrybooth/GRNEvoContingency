@@ -127,20 +127,46 @@ function draw_example_network!(fig,network,show_pheno,draw_config,node_colors,fs
 
 end
 
-function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,end_parents,vertex_top_map,draw_config,example_mst,tr_choice,fontsize)
+mutable struct dynamical_summary_config
+
+    fontsize
+    embed_markersize
+    color_scheme
+    node_colors
+    draw_config
+    fitness_linewidth
+    fitness_markersize
+    pheno_linewidth
+    color_fade
+    caption_padding
+    caption_fontsize
+
+end
+
+# function dynamical_summary_config(fontsize,embed_markersize,color_scheme,node_colors,draw_config,fitness_linewidth,fitness_markersize,pheno_linewidth,color_fade,caption_padding,caption_fontsize)
+#     dynamical_summary_config(fontsize,embed_markersize,color_scheme,node_colors,draw_config,fitness_linewidth,fitness_markersize,pheno_linewidth,color_fade,caption_padding,caption_fontsize)
+# end
+
+
+function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,end_parents,vertex_top_map,example_mst,tr_choice,ds_config)
 
     trajectories_p_d = filter(tr->tr.inc_metagraph_vertices[end] ∈ sorted_uep[1:top_n],trajectories);
 
-    mo_umap = fig[1:4, 1:3] = GridLayout()
+    # mo_umap = fig[1:4, 1:3] = GridLayout()
 
-    ex1 = fig[1:3, 4:7] = GridLayout()
-    rmh0 = fig[4, 4:7] = GridLayout()
+    # ex1 = fig[1:3, 4:7] = GridLayout()
+    # rmh0 = fig[4, 4:7] = GridLayout()
+
+    mo_umap = fig[1:4, 1:4] = GridLayout()
+
+    ex1 = fig[1:3, 5:8] = GridLayout()
+    rmh0 = fig[4, 5:8] = GridLayout()
 
     top_n_dict = Dict(v_id=>pos for (pos,v_id) in enumerate(sorted_uep[1:top_n]))
 
     #### Motif Distribution
 
-    color_sorted_counts_uep = [i <= top_n ? color_scheme[i] : :grey for i in 1:length(sorted_counts_uep)]
+    color_sorted_counts_uep = [i <= top_n ? ds_config.color_scheme[i] : :grey for i in 1:length(sorted_counts_uep)]
 
     view_sorted_uep_id = sorted_counts_uep .> minimal_motif_count
 
@@ -160,19 +186,17 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     ax1 = Axis(mo_umap[1:2,1:top_n],title = "Top " * string(top_n) * " MST : " * string(sum(sorted_counts_uep[1:top_n])) * " trajectories", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
 
-    CairoMakie.scatter!(ax1,embedding, color = [haskey(top_n_dict,i) ? (color_scheme[top_n_dict[i]],0.5) : (:grey,0.5) for i in end_parents],markersize = 8.)
+    CairoMakie.scatter!(ax1,embedding, color = [haskey(top_n_dict,i) ? (ds_config.color_scheme[top_n_dict[i]],0.5) : (:grey,0.5) for i in end_parents],markersize = ds_config.embed_markersize)
 
     hidedecorations!(ax1, label = false)
 
     for i in 1:top_n
 
-        ax_geno = Axis(mo_umap[3,i], backgroundcolor = (color_scheme[i],0.5))
+        ax_geno = Axis(mo_umap[3,i], backgroundcolor = (ds_config.color_scheme[i],ds_config.color_fade))
 
         top = Int.(reshape(vertex_top_map[sorted_uep[i]],(3,4)))
 
-        # draw_grn_layout!(ax_geno,top,e_width,vertex_size,arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors,false)
-
-        draw_grn!(ax_geno,vertex_top_map[sorted_uep[i]],draw_config,node_colors,fontsize,false)
+        draw_grn!(ax_geno,vertex_top_map[sorted_uep[i]],ds_config.draw_config,ds_config.node_colors,ds_config.fontsize,false)
     end
 
     #######################
@@ -181,13 +205,9 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     CairoMakie.barplot!(ax_mo,view_sorted_uep_counts ./ sum(view_sorted_uep_counts),color = view_color_sorted_counts_uep)
 
-    # CairoMakie.text!(ax,[Point2f(n_norm+0.4,1.2*other/sum(view_sorted_uep_counts))],text = ["# MN-other = " * string(n_other)],fontsize = fontsize)
-
     ax_mo.xticks = (1:length(view_sorted_uep_counts),string.(1:length(view_sorted_uep_counts)))
 
     n_other = sum(.!view_sorted_uep_id)
-
-    # ax_mo.xticklabelrotation = 45.
 
     CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
 
@@ -206,18 +226,14 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     tr_phenotypes = [Individual(reshape(net,(3,4)),grn_parameters,development).phenotype.u[end] for net in tr_networks]
 
-    n_unique_top = length(tr_traj)
-
-    # tr_fd = data["fitness_traj"][conv][tr_data_id][tr_choice];
-
     tr_fd = create_full_fitness_traj(tr_data[tr_choice].fitness_traj_tuple,tr_data[tr_choice].wait_times)
 
     tr_top_fitness_id = uniqueid(tr_fd)[tr_traj_id]
 
-    tr_fd_coarse = map(x->x[1],tr_fd)
+    tr_fd_coarse = map(x->x[1]+1,tr_fd)
     tr_fd_refine = map(x->x[2],tr_fd)
 
-    tr_top_fitness_sc = [(x,tr_fd_refine[x]) for x in tr_top_fitness_id]
+    tr_top_fitness_rf = [(x,tr_fd_refine[x]) for x in tr_top_fitness_id]
 
     tr_top_stripe_id = [tr_fd_coarse[x] for x in tr_top_fitness_id]
 
@@ -225,42 +241,34 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     ax_fitness = Axis(ex1[1:2,1:length(tr_phenotypes)],xlabel = L"\text{Generation}")
 
-    ax_fitness_c = Axis(ex1[1:2,1:length(tr_phenotypes)], yticklabelcolor = :blue, yaxisposition = :right, ylabel = L"\mathcal{F}_{C}(g_c)", ylabelcolor = :blue, ylabelrotation = pi/2)
-
-    hidespines!(ax_fitness_c)
-    hideydecorations!(ax_fitness_c,label = false,ticklabels = false,ticks = false,minorticks = false)
-    hidexdecorations!(ax_fitness_c)
-
     hideydecorations!(ax_fitness,label = false,ticklabels = false,ticks = false,minorticks = false)
 
-    CairoMakie.lines!(ax_fitness,tr_fd_refine, color = :grey, linewidth = 3.)
-    CairoMakie.lines!(ax_fitness_c,tr_fd_coarse, linestyle = "--", color = :blue,linewidth = 3.)
+    rline = CairoMakie.lines!(ax_fitness,tr_fd_refine, color = :grey, linewidth = ds_config.fitness_linewidth)
+    cline = CairoMakie.lines!(ax_fitness,tr_fd_coarse, linestyle = "--", color = :blue,linewidth = ds_config.fitness_linewidth)
 
-    CairoMakie.scatter!(ax_fitness,tr_top_fitness_sc, color = [palette(:tab10)[i+1] for i in 1:length(tr_top_fitness_sc)], markersize = 20.)
+    CairoMakie.scatter!(ax_fitness,tr_top_fitness_rf, color = [palette(:tab10)[i+1] for i in 1:length(tr_top_fitness_rf)], markersize = ds_config.fitness_markersize)
 
     ####################
 
+    # ex1.alignmode = Mixed(right = 0)
+
     for i in 1:length(tr_phenotypes)
 
-        if tr_top_stripe_id[i] == 0
-            ax_geno = Axis(ex1[3:4,i], backgroundcolor = (color_scheme[example_mst],0.5))
+        if tr_top_stripe_id[i] == 1
+            ax_geno = Axis(ex1[3:4,i], backgroundcolor = (ds_config.color_scheme[example_mst],ds_config.color_fade))
         else
             ax_geno = Axis(ex1[3:4,i], backgroundcolor = RGBf(0.98, 0.98, 0.98))
         end
 
-        ax_pheno = Axis(ex1[5,i])
+        ax_pheno = Axis(ex1[5,i],alignmode=Mixed(bottom=0))
 
         for g in 1:3
-            CairoMakie.lines!(ax_pheno,tr_phenotypes[i][g,:],linewidth = 4., color = color_scheme[4:6][g])
+            CairoMakie.lines!(ax_pheno,tr_phenotypes[i][g,:],linewidth = ds_config.pheno_linewidth, color = ds_config.node_colors[g])
         end
 
         CairoMakie.hidedecorations!(ax_pheno)
 
-        # top = reshape(tr_traj[i],(3,4))
-
-        # draw_grn_layout!(ax_geno,top,e_width,vertex_size,arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors,false)
-
-        draw_grn!(ax_geno,tr_traj[i],draw_config,node_colors,fontsize,false)
+        draw_grn!(ax_geno,tr_traj[i],ds_config.draw_config,ds_config.node_colors,ds_config.fontsize,false)
 
     end
 
@@ -292,13 +300,13 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     end
 
-    ax_rh0 = Axis(rmh0[1,1])
+    ax_rh0 = Axis(rmh0[1,1],alignmode=Mixed(top=0))
 
     x = reduce(vcat,all_x)
     dodge = reduce(vcat,all_dodge)
     proportions = reduce(vcat,all_prop)
 
-    CairoMakie.barplot!(ax_rh0,x,proportions,color = [color_scheme[n] for n in dodge],dodge = dodge)
+    CairoMakie.barplot!(ax_rh0,x,proportions,color = [ds_config.color_scheme[n] for n in dodge],dodge = dodge)
 
     CairoMakie.hidedecorations!(ax_rh0,label = false,ticklabels = false,ticks = false,minorticks = false)
 
@@ -306,11 +314,26 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     for (label, layout) in zip(["A", "B", "C"], [mo_umap, ex1, rmh0])
         Label(layout[1, 1, TopLeft()], label,
-            fontsize = fontsize,
+            fontsize = ds_config.caption_fontsize,
             font = :bold,
-            # padding = (0, 5, 5, 0),
+            padding = (0,ds_config.caption_padding, ds_config.caption_padding, 0),
             halign = :right)
     end
+    
+    colgap = 5
+    rowgap = 10
+
+    colgap!(mo_umap,colgap)
+    rowgap!(mo_umap, rowgap)
+
+    colgap!(ex1, colgap)
+    rowgap!(ex1, rowgap)
+
+    colgap!(rmh0,colgap)
+    rowgap!(rmh0, rowgap)
+
+    rowgap!(fig.layout, Relative(0.01))
+    colgap!(fig.layout, Relative(0.01))
 
 end
 

@@ -18,11 +18,14 @@ mutable struct DrawGRNConfig
     C_pos
     M_pos
     fixed_layout_scatter
+
+    shift_axis_edge 
+    shift_axis_edge_m
 end
 
-function DrawGRNConfig(l,shift_factor_node,shift_factor_edge,shift_factor_label,arrow_size_act,arrow_size_inh,arrow_attr,self_arc_radius,node_size,A_pos,B_pos,C_pos,M_pos)
+function DrawGRNConfig(l,shift_factor_node,shift_factor_edge,shift_factor_label,arrow_size_act,arrow_size_inh,arrow_attr,self_arc_radius,node_size,A_pos,B_pos,C_pos,M_pos,shift_axis_edge,shift_axis_edge_m)
 
-    DrawGRNConfig(l,shift_factor_node,shift_factor_edge,shift_factor_label,arrow_size_act,arrow_size_inh,arrow_attr,self_arc_radius,node_size,A_pos,B_pos,C_pos,M_pos,[A_pos, B_pos, C_pos,M_pos])
+    DrawGRNConfig(l,shift_factor_node,shift_factor_edge,shift_factor_label,arrow_size_act,arrow_size_inh,arrow_attr,self_arc_radius,node_size,A_pos,B_pos,C_pos,M_pos,[A_pos, B_pos, C_pos,M_pos],shift_axis_edge,shift_axis_edge_m)
 
 end
 
@@ -32,9 +35,9 @@ function fs18_default()
 
     l = fs / 10
 
-    shift_factor_node =  l/18
+    shift_factor_node =  0.8
 
-    shift_factor_edge(x) = x ? 0.5*shift_factor_node : 0.
+    shift_factor_edge(x) = x ? 0.05*l : 0.
 
     shift_factor_label = 2*shift_factor_node
 
@@ -43,7 +46,7 @@ function fs18_default()
 
     arrow_attr = (;linewidth = 3., color = :black)
 
-    self_arc_radius = l/11
+    self_arc_radius = l/7
 
     node_size = 1.8*fs
 
@@ -51,9 +54,42 @@ function fs18_default()
     A_pos = Point2f((-l*cos(pi/3),l*sin(pi/3)))
     C_pos = Point2f((l*cos(pi/3),l*sin(pi/3)))
 
-    M_pos = Point2f((A_pos[1],A_pos[2] + l/3))
+    M_pos = Point2f((A_pos[1],A_pos[2] + l/2))
 
-    DrawGRNConfig(l,shift_factor_node,shift_factor_edge,shift_factor_label,arrow_size_act,arrow_size_inh,arrow_attr,self_arc_radius,node_size,A_pos,B_pos,C_pos,M_pos,[A_pos, B_pos, C_pos,M_pos])
+    DrawGRNConfig(l,shift_factor_node,shift_factor_edge,shift_factor_label,arrow_size_act,arrow_size_inh,arrow_attr,self_arc_radius,node_size,A_pos,B_pos,C_pos,M_pos,[A_pos, B_pos, C_pos,M_pos],l/3,l/5)
+
+end
+
+function fs12_default()
+
+    fs = 12.
+
+    l = fs / 10
+
+    # shift_factor_node =  l/(2.5)
+
+    shift_factor_node = 0.75
+
+    shift_factor_edge(x) = x ? 0.05*l : 0.
+
+    shift_factor_label = 2*shift_factor_node
+
+    arrow_size_act = 0.4*fs
+    arrow_size_inh = 0.8*fs
+
+    arrow_attr = (;linewidth = 1.5, color = :black)
+
+    self_arc_radius = l/7
+
+    node_size = 1.5*fs
+
+    B_pos = Point2f((0.,0.))
+    A_pos = Point2f((-l*cos(pi/3),l*sin(pi/3)))
+    C_pos = Point2f((l*cos(pi/3),l*sin(pi/3)))
+
+    M_pos = Point2f((A_pos[1],A_pos[2] + l))
+
+    DrawGRNConfig(l,shift_factor_node,shift_factor_edge,shift_factor_label,arrow_size_act,arrow_size_inh,arrow_attr,self_arc_radius,node_size,A_pos,B_pos,C_pos,M_pos,[A_pos, B_pos, C_pos,M_pos],l/3,l/3)
 
 end
 
@@ -132,7 +168,7 @@ end
 ##########################
 
 
-function draw_grn!(ax,network,draw_config::DrawGRNConfig,node_colors,fs,annotate = false)
+function draw_grn!(ax,network,draw_config::DrawGRNConfig,node_colors,fs,annotate = false)shift_factor_node
 
     network_m = reshape(network,(3,4))
 
@@ -220,8 +256,8 @@ function draw_grn!(ax,network,draw_config::DrawGRNConfig,node_colors,fs,annotate
 
     end
 
-    CairoMakie.xlims!(ax,draw_config.A_pos[1]-draw_config.l/3,draw_config.C_pos[1]+draw_config.l/3)
-    CairoMakie.ylims!(ax,draw_config.B_pos[2]-draw_config.l/3,draw_config.M_pos[2]+draw_config.l/5)
+    CairoMakie.xlims!(ax,draw_config.A_pos[1]-draw_config.shift_axis_edge,draw_config.C_pos[1]+draw_config.shift_axis_edge)
+    CairoMakie.ylims!(ax,draw_config.B_pos[2]-draw_config.shift_axis_edge,draw_config.M_pos[2]+draw_config.shift_axis_edge_m)
 
     hidedecorations!(ax); hidespines!(ax)
 
