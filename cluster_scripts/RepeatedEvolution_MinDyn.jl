@@ -103,8 +103,8 @@ for exp_name in all_experiments
     end_X_cell = reduce(hcat,end_networks_dyn_cell)
     end_X_av = reduce(hcat,end_networks_dyn_av)
 
-    dmat_m_cell = pairwise(d_metric,end_X_cell,dims = 2)
-    dmat_m_av = pairwise(d_metric,end_X_av,dims = 2)
+    # dmat_m_cell = pairwise(d_metric,end_X_cell,dims = 2)
+    # dmat_m_av = pairwise(d_metric,end_X_av,dims = 2)
 
     ########################################
 
@@ -134,11 +134,10 @@ for exp_name in all_experiments
     fulld["mut_type"] = map(et->et.mut_type,sim)
     fulld["mut_sizes"] = map(et->et.mut_sizes,sim)
 
-    fulld["dmat_cell"] = dmat_m_cell
+    # fulld["dmat_cell"] = dmat_m_cell
     fulld["dmat_X_cell"] = end_X_cell
-    fulld["dmat_av"] = dmat_m_av
-    fulld["dmat_X_av"] = end_X_av
 
+    # fulld["dmat_av"] = dmat_m_av
     fulld["dmat_X_av"] = end_X_av
 
     fulld["min_end_networks"] = min_end_networks

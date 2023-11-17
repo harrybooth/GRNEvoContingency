@@ -148,7 +148,7 @@ end
 # end
 
 
-function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,end_parents,vertex_top_map,example_mst,tr_choice,ds_config)
+function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,mst_conf_int,end_parents,vertex_top_map,example_mst,tr_choice,ds_config)
 
     trajectories_p_d = filter(tr->tr.inc_metagraph_vertices[end] ∈ sorted_uep[1:top_n],trajectories);
 
@@ -180,6 +180,8 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     view_color_sorted_counts_uep = vcat(color_sorted_counts_uep[view_sorted_uep_id],[:grey])
 
+    conf_int_choices = mst_conf_int[view_sorted_uep_id]
+
     ##############
 
     # ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n }" * string(top_n) * " MST : " * string(sum(sorted_counts_uep[1:top_n])) * " trajectories", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
@@ -203,7 +205,11 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{% of trajectories}", xlabel = L"M^{(i)}_{N_i}")
 
-    CairoMakie.barplot!(ax_mo,view_sorted_uep_counts ./ sum(view_sorted_uep_counts),color = view_color_sorted_counts_uep)
+    sorted_uep_proportions = view_sorted_uep_counts ./ sum(view_sorted_uep_counts)
+
+    CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_counts_uep)
+
+    CairoMakie.errorbars!(ax_mo,1:length(sorted_uep_proportions)-1,sorted_uep_proportions[1:end-1],sorted_uep_proportions[1:end-1] .- first.(conf_int_choices),last.(conf_int_choices) .- sorted_uep_proportions[1:end-1],color = :black,whiskerwidth = 10)
 
     ax_mo.xticks = (1:length(view_sorted_uep_counts),string.(1:length(view_sorted_uep_counts)))
 
@@ -303,17 +309,21 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
         pop_equal = filter(tr->tr.minimal_stripe_subgraphs[tr.H0] == tr.minimal_stripe_subgraphs[end], pop)
 
-        pop_incl = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[end],tr.minimal_stripe_subgraphs[tr.H0])),pop)
+        pop_H0_incl_N = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[end],tr.minimal_stripe_subgraphs[tr.H0])) & !(tr.minimal_stripe_subgraphs[end] == tr.minimal_stripe_subgraphs[tr.H0]),pop)
+
+        pop_N_incl_H0 = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[tr.H0],tr.minimal_stripe_subgraphs[end])) & !(tr.minimal_stripe_subgraphs[end] == tr.minimal_stripe_subgraphs[tr.H0]),pop)
 
         n_pop = length(pop)
 
-        proportions = [length(pop_equal)/n_pop,(length(pop_incl) - length(pop_equal))/n_pop,(length(pop) - length(pop_incl))/n_pop]
+        proportions = [length(pop_equal),length(pop_H0_incl_N),length(pop_N_incl_H0),length(pop) - length(pop_equal) - length(pop_N_incl_H0) - length(pop_H0_incl_N)]
 
-        x = [1,2,3]
+        @assert sum(proportions) == n_pop
 
-        dodge = [n,n,n]
+        x = [1,2,3,4]
 
-        push!(all_prop,proportions)
+        dodge = [n,n,n,n]
+
+        push!(all_prop,proportions ./ n_pop)
         push!(all_dodge,dodge)
         push!(all_x,x)
 
@@ -329,7 +339,7 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     CairoMakie.hidedecorations!(ax_rh0,label = false,ticklabels = false,ticks = false,minorticks = false)
 
-    ax_rh0.xticks = (1:3,[L"M^{(i)}_{H_{0}} = M^{(i)}_{N_i}",L"M^{(i)}_{H_{0}} \subset M^{(i)}_{N_i}",L"M^{(i)}_{H_{0}} \nsubset M^{(i)}_{N_i}"])
+    ax_rh0.xticks = (1:4,[L"M^{(i)}_{H_{0}} = M^{(i)}_{N_i}",L"M^{(i)}_{H_{0}} \subset M^{(i)}_{N_i}",L"M^{(i)}_{N_i} \subset M^{(i)}_{H_{0}}",L"\text{MST change}"])
 
     for (label, layout) in zip(["A", "B", "C"], [mo_umap, ex1, rmh0])
         Label(layout[1, 1, TopLeft()], label,
