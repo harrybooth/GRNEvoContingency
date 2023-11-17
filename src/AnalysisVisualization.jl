@@ -1,6 +1,6 @@
-function plot_convergence_rate!(ax,conv,conv_time,n_trials,max_gen)
+function plot_convergence_rate!(ax,conv_time,n_trials,max_gen)
 
-    cum_conv = [sum(conv_time[conv] .< i)/n_trials for i in 1:max_gen];
+    cum_conv = [sum(conv_time .< i)/n_trials for i in 1:max_gen];
 
     CairoMakie.lines!(ax,cum_conv,color = :blue,linewidth = 4.)
 
@@ -170,25 +170,25 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     view_sorted_uep_id = sorted_counts_uep .> minimal_motif_count
 
-    other = sum(sorted_counts_uep[.!view_sorted_uep_id])
+    other = mean(sorted_counts_uep[.!view_sorted_uep_id])
 
-    n_other = sum(.!view_sorted_uep_id)
+    n_norm = sum(sorted_counts_uep)
 
-    n_norm = sum(view_sorted_uep_id)
+    sorted_uep_proportions = vcat(sorted_counts_uep[view_sorted_uep_id],[other]) ./ n_norm 
 
-    view_sorted_uep_counts = vcat(sorted_counts_uep[view_sorted_uep_id],[other])
-
-    view_color_sorted_counts_uep = vcat(color_sorted_counts_uep[view_sorted_uep_id],[:grey])
+    view_color_sorted_uep = vcat(color_sorted_counts_uep[view_sorted_uep_id],[:grey])
 
     conf_int_choices = mst_conf_int[view_sorted_uep_id]
+
+    push!(conf_int_choices,(minimum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm,maximum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm))
 
     ##############
 
     # ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n }" * string(top_n) * " MST : " * string(sum(sorted_counts_uep[1:top_n])) * " trajectories", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
 
-    count_top_n = sum(sorted_counts_uep[1:top_n])
+    count_top_n = round(sum(sorted_uep_proportions[1:top_n])*100, digits = 2)
 
-    ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n  M^{(i)}_{N_i} : %$count_top_n trajectories}", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
+    ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n  M^{(i)}_{N_i} : %$count_top_n % of trajectories}", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
 
     CairoMakie.scatter!(ax1,embedding, color = [haskey(top_n_dict,i) ? (ds_config.color_scheme[top_n_dict[i]],0.5) : (:grey,0.5) for i in end_parents],markersize = ds_config.embed_markersize)
 
@@ -203,17 +203,14 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     #######################
 
-    ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{% of trajectories}", xlabel = L"M^{(i)}_{N_i}")
+    ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{Probabilty}", xlabel = L"M^{(i)}_{N_i}")
 
-    sorted_uep_proportions = view_sorted_uep_counts ./ sum(view_sorted_uep_counts)
+    CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_uep)
 
-    CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_counts_uep)
+    CairoMakie.errorbars!(ax_mo,1:length(sorted_uep_proportions),sorted_uep_proportions,sorted_uep_proportions .- first.(conf_int_choices),last.(conf_int_choices) .- sorted_uep_proportions,color = :black,whiskerwidth = ds_config.fitness_markersize/2)
 
-    CairoMakie.errorbars!(ax_mo,1:length(sorted_uep_proportions)-1,sorted_uep_proportions[1:end-1],sorted_uep_proportions[1:end-1] .- first.(conf_int_choices),last.(conf_int_choices) .- sorted_uep_proportions[1:end-1],color = :black,whiskerwidth = 10)
+    ax_mo.xticks = (1:length(sorted_uep_proportions),vcat(string.(1:length(sorted_uep_proportions[1:end-1])),["Other"]))
 
-    ax_mo.xticks = (1:length(view_sorted_uep_counts),string.(1:length(view_sorted_uep_counts)))
-
-    n_other = sum(.!view_sorted_uep_id)
 
     CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
 
