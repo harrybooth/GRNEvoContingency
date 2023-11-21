@@ -154,11 +154,6 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     trajectories_p_d = filter(tr->tr.inc_metagraph_vertices[end] ∈ sorted_uep[1:top_n],trajectories);
 
-    # mo_umap = fig[1:4, 1:3] = GridLayout()
-
-    # ex1 = fig[1:3, 4:7] = GridLayout()
-    # rmh0 = fig[4, 4:7] = GridLayout()
-
     mo_umap = fig[1:4, 1:4] = GridLayout()
 
     ex1 = fig[1:3, 5:8] = GridLayout()
@@ -213,7 +208,6 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     ax_mo.xticks = (1:length(sorted_uep_proportions),vcat(string.(1:length(sorted_uep_proportions[1:end-1])),["Other"]))
 
-
     CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
 
     ###################
@@ -258,12 +252,12 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     h0 = tr_top_fitness_id[minimum(findall(tr_top_stripe_id .== 1))]
     Ni = tr_top_fitness_id[end]
 
-    # CairoMakie.text!(ax_fitness,(1.05*h0,0.7), text = L"H_0", fontsize = 0.8*ds_config.fontsize)
-    # CairoMakie.text!(ax_fitness,(0.925*Ni,0.7), text = L"N_i", fontsize = 0.8*ds_config.fontsize)
-
-    v = Int.(floor((h0+Ni)/2))
-
-    ax_fitness.xticks = ([1,h0,v,Ni],[L"1",L"H_0",L"%$v",L"N_i"])
+    if h0 != Ni
+        v = Int.(floor((h0+Ni)/2))
+        ax_fitness.xticks = ([1,h0,v,Ni],[L"1",L"H_0",L"%$v",L"N_i"])
+    else
+        ax_fitness.xticks = ([1,h0],[L"1",L"H_0 = N_i"])
+    end
 
     ####################
 
@@ -755,6 +749,8 @@ end
 
 function create_weight_edit_summary!(fig,n,trajectories,mutation_op,sorted_uep, vertex_top_map, draw_config, node_colors,fontsize,color_scheme)
 
+    weight_names_latex = reshape([L"W_{aa}",L"W_{ab}",L"W_{ac}",L"W_{ba}",L"W_{bb}",L"W_{bc}",L"W_{ca}",L"W_{cb}",L"W_{cc}",L"W_{ma}",L"W_{mb}",L"W_{mc}"],(3,4));
+
     grid_values = Tuple.(findall(ones(3,4) .> 0))
 
     colors = reverse(palette(:tab10)[1:4])
@@ -765,7 +761,7 @@ function create_weight_edit_summary!(fig,n,trajectories,mutation_op,sorted_uep, 
 
     ax_geno = Axis(plot_geno[1,1],backgroundcolor = (color_scheme[n],1.),title =L"\text{Minimal Stripe Topology}",aspect = DataAspect())
 
-    draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],draw_config,node_colors,fontsize,false,false)
+    draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],draw_config,node_colors,fontsize,weight_names_latex,true,false)
 
     norm_type = :pdf
 
@@ -1035,7 +1031,7 @@ function create_mutation_number_summary!(fig,trajectories,top_n,mut_prob,sorted_
 
         # draw_grn_layout!(ax_geno,top,e_width,vertex_size,arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors,false)
 
-        draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],draw_config,node_colors,fontsize,false)
+        draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],draw_config,node_colors,fontsize,false,false)
 
         #######################
 

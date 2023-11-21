@@ -39,7 +39,7 @@ function fs18_default()
 
     shift_factor_edge(x) = x ? 0.05*l : 0.
 
-    shift_factor_label = 2*shift_factor_node
+    shift_factor_label = 0.15*shift_factor_node
 
     arrow_size_act = 0.8*fs
     arrow_size_inh = 1.5*fs
@@ -72,7 +72,7 @@ function fs12_default()
 
     shift_factor_edge(x) = x ? 0.075*l : 0.
 
-    shift_factor_label = 2*shift_factor_node
+    shift_factor_label = 0.15*shift_factor_node
 
     arrow_size_act = 0.4*fs
     arrow_size_inh = 0.8*fs
@@ -120,7 +120,7 @@ function plot_shifted_arrows!(ax,arrow_type,arrow_size,pos_start::Point2f,pos_en
 
     mid_point = pos_start_new + 0.5*dir_travel_new
 
-    mid_point_text = mid_point + shift_factor_label*norm_dt
+    mid_point_text = mid_point + shift_factor_label*norm(dir_travel)*norm_dt
 
     CairoMakie.arrows!(ax,[pos_start_new[1]],[pos_start_new[2]],[dir_travel_new[1]],[dir_travel_new[2]]; arrowhead = arrow_type,arrowsize = arrow_size,arrow_attr...)
 
@@ -138,7 +138,7 @@ function plot_self_arc!(ax,arrow_type,arrow_size,radius,pos_start::Point2f,annot
         CairoMakie.scatter!(ax,centre + radius*Point2f((cos(0.2*pi),sin(0.2*pi))), marker = arrow_type, color = arrow_attr.color, rotations = 0.2*pi, markersize = arrow_size)
 
         if ! isnothing(annotation)
-            mid_point_text = centre + 2*Point2f((radius,0))
+            mid_point_text = centre - 1.5*Point2f((0,radius))
             CairoMakie.text!(ax,mid_point_text,text = annotation, align = (:center,:baseline),color = arrow_attr.color)
         end
     
@@ -148,7 +148,7 @@ function plot_self_arc!(ax,arrow_type,arrow_size,radius,pos_start::Point2f,annot
         CairoMakie.scatter!(ax,centre + radius*Point2f((cos(0.65*pi),sin(0.65*pi))), marker = arrow_type, color = arrow_attr.color, rotations = 0.65*pi, markersize = arrow_size)
 
         if ! isnothing(annotation)
-            mid_point_text = centre + 2*Point2f((radius,0))
+            mid_point_text = centre + 1.5*Point2f((0,radius))
             CairoMakie.text!(ax,mid_point_text,text = annotation, align = (:center,:baseline),color = arrow_attr.color)
         end
 
@@ -158,7 +158,7 @@ function plot_self_arc!(ax,arrow_type,arrow_size,radius,pos_start::Point2f,annot
         CairoMakie.scatter!(ax,centre + radius*Point2f((cos(1.65*pi),sin(1.65*pi))), marker = arrow_type, color = arrow_attr.color, rotations = 1.65*pi, markersize = arrow_size)
 
         if ! isnothing(annotation)
-            mid_point_text = centre - 2*Point2f((radius,0))
+            mid_point_text = centre - 1.5*Point2f((radius,0))
             CairoMakie.text!(ax,mid_point_text,text = annotation, align = (:center,:baseline),color = arrow_attr.color)
         end
     end
@@ -265,6 +265,103 @@ function draw_grn!(ax,network,draw_config::DrawGRNConfig,node_colors,fs,annotate
     hidedecorations!(ax); hidespines!(ax)
 
 end
+
+function draw_grn!(ax,network,draw_config::DrawGRNConfig,node_colors,fs,annotations,annotate = true,gene_letters = false)
+
+    network_m = reshape(network,(3,4))
+
+    non_zero_weights = Tuple.(findall(network_m .!= 0))
+
+    if gene_letters
+        CairoMakie.scatter!(ax,draw_config.fixed_layout_scatter,markersize = draw_config.node_size, color = :white, strokewidth = [draw_config.l,draw_config.l,draw_config.l,draw_config.l] , strokecolor = node_colors)
+        CairoMakie.scatter!(ax,draw_config.fixed_layout_scatter,marker = ['A','B','C','M'], markersize = fs, color = node_colors)
+    else
+        CairoMakie.scatter!(ax,draw_config.fixed_layout_scatter,markersize = draw_config.node_size, color = node_colors)
+    end
+
+    symbolic_name = [:A,:B,:C,:M]
+
+    for (pos_end_id,pos_start_id) in non_zero_weights
+
+        reverse = (pos_start_id,pos_end_id) ∈ non_zero_weights
+
+        pos_start = draw_config.fixed_layout_scatter[pos_start_id]
+        pos_end = draw_config.fixed_layout_scatter[pos_end_id]
+
+        pos_start_name = symbolic_name[pos_start_id]
+        pos_end_name = symbolic_name[pos_end_id]
+
+        if annotate
+            if pos_start_name == pos_end_name
+                if network_m[pos_end_id,pos_start_id] < 0
+                    plot_self_arc!(ax,'_',draw_config.arrow_size_inh,draw_config.self_arc_radius,pos_start,annotations[pos_end_id,pos_start_id],pos_start_name,draw_config.arrow_attr)
+                else
+                    plot_self_arc!(ax,'▲',draw_config.arrow_size_act,draw_config.self_arc_radius,pos_start,annotations[pos_end_id,pos_start_id],pos_start_name,draw_config.arrow_attr)
+                end
+            else
+                if pos_start_name == :M
+                    if network_m[pos_end_id,pos_start_id] < 0
+                        plot_shifted_arrows!(ax,'_',draw_config.arrow_size_inh,pos_start,pos_end,annotations[pos_end_id,pos_start_id],0.9*draw_config.shift_factor_node,draw_config.shift_factor_edge(false),-draw_config.shift_factor_label,draw_config.arrow_attr)
+                    else
+                        plot_shifted_arrows!(ax,'▲',draw_config.arrow_size_act,pos_start,pos_end,annotations[pos_end_id,pos_start_id],0.9*draw_config.shift_factor_node,draw_config.shift_factor_edge(false),-draw_config.shift_factor_label,draw_config.arrow_attr)
+                    end
+                else
+                    if reverse
+                        if network_m[pos_end_id,pos_start_id] < 0
+                            plot_shifted_arrows!(ax,'_',draw_config.arrow_size_inh,pos_start,pos_end,annotations[pos_end_id,pos_start_id],draw_config.shift_factor_node,draw_config.shift_factor_edge(true),draw_config.shift_factor_label,draw_config.arrow_attr)
+                        else
+                            plot_shifted_arrows!(ax,'▲',draw_config.arrow_size_act,pos_start,pos_end,annotations[pos_end_id,pos_start_id],draw_config.shift_factor_node,draw_config.shift_factor_edge(true),draw_config.shift_factor_label,draw_config.arrow_attr)
+                        end
+                    else
+                        if network_m[pos_end_id,pos_start_id] < 0
+                            plot_shifted_arrows!(ax,'_',draw_config.arrow_size_inh,pos_start,pos_end,annotations[pos_end_id,pos_start_id],draw_config.shift_factor_node,draw_config.shift_factor_edge(false),draw_config.shift_factor_label,draw_config.arrow_attr)
+                        else
+                            plot_shifted_arrows!(ax,'▲',draw_config.arrow_size_act,pos_start,pos_end,annotations[pos_end_id,pos_start_id],draw_config.shift_factor_node,draw_config.shift_factor_edge(false),draw_config.shift_factor_label,draw_config.arrow_attr)
+                        end
+                    end
+                end
+            end
+        else
+            if pos_start_name == pos_end_name
+                if network_m[pos_end_id,pos_start_id] < 0
+                    plot_self_arc!(ax,'_',draw_config.arrow_size_inh,draw_config.self_arc_radius,pos_start,nothing,pos_start_name,draw_config.arrow_attr)
+                else
+                    plot_self_arc!(ax,'▲',draw_config.arrow_size_act,draw_config.self_arc_radius,pos_start,nothing,pos_start_name,draw_config.arrow_attr)
+                end
+            else
+                if pos_start_name == :M
+                    if network_m[pos_end_id,pos_start_id] < 0
+                        plot_shifted_arrows!(ax,'_',draw_config.arrow_size_inh,pos_start,pos_end,nothing,0.9*draw_config.shift_factor_node,draw_config.shift_factor_edge(false),-draw_config.shift_factor_label,draw_config.arrow_attr)
+                    else
+                        plot_shifted_arrows!(ax,'▲',draw_config.arrow_size_act,pos_start,pos_end,nothing,0.9*draw_config.shift_factor_node,draw_config.shift_factor_edge(false),-draw_config.shift_factor_label,draw_config.arrow_attr)
+                    end
+                else
+                    if reverse
+                        if network_m[pos_end_id,pos_start_id] < 0
+                            plot_shifted_arrows!(ax,'_',draw_config.arrow_size_inh,pos_start,pos_end,nothing,draw_config.shift_factor_node,draw_config.shift_factor_edge(true),draw_config.shift_factor_label,draw_config.arrow_attr)
+                        else
+                            plot_shifted_arrows!(ax,'▲',draw_config.arrow_size_act,pos_start,pos_end,nothing,draw_config.shift_factor_node,draw_config.shift_factor_edge(true),draw_config.shift_factor_label,draw_config.arrow_attr)
+                        end
+                    else
+                        if network_m[pos_end_id,pos_start_id] < 0
+                            plot_shifted_arrows!(ax,'_',draw_config.arrow_size_inh,pos_start,pos_end,nothing,draw_config.shift_factor_node,draw_config.shift_factor_edge(false),draw_config.shift_factor_label,draw_config.arrow_attr)
+                        else
+                            plot_shifted_arrows!(ax,'▲',draw_config.arrow_size_act,pos_start,pos_end,nothing,draw_config.shift_factor_node,draw_config.shift_factor_edge(false),draw_config.shift_factor_label,draw_config.arrow_attr)
+                        end
+                    end
+                end
+            end
+        end
+
+    end
+
+    CairoMakie.xlims!(ax,draw_config.A_pos[1]-draw_config.shift_axis_edge,draw_config.C_pos[1]+draw_config.shift_axis_edge)
+    CairoMakie.ylims!(ax,draw_config.B_pos[2]-draw_config.shift_axis_edge,draw_config.M_pos[2]+draw_config.shift_axis_edge_m)
+
+    hidedecorations!(ax); hidespines!(ax)
+
+end
+
 
 function draw_grn!(ax,network,reverse_list,draw_config::DrawGRNConfig,node_colors,fs,annotate = false,gene_letters = false)
 
