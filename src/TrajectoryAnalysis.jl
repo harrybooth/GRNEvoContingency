@@ -279,6 +279,23 @@ function cumulative_wait_time(tr::Trajectory)
     
 end
 
+function average_wait_time(tr::Trajectory)
+
+    # return [sum(tr.wait_times[1:tr.H0-1])/(tr.H0-1);sum(tr.wait_times[tr.H0]);sum(tr.wait_times[tr.H0+1:end])/(length(tr.wait_times)-tr.H0-1)]
+
+    a = tr.wait_times[1:tr.H0-1]
+    b = tr.wait_times[tr.H0]
+    c = tr.wait_times[tr.H0+1:end]
+
+    if length(c) == 0 
+        return [sum(a);sum(b);0]
+    else
+        return [sum(a);sum(b);sum(c)]
+    end
+    
+end
+
+
 function fitness_restriction_measure(tr,restriction)
     tr.fitness_traj  .<= restriction
 end

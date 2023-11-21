@@ -381,11 +381,11 @@ mutable struct evo_summary_config
     pie_strokewidth
 end
 
-function create_evo_summary!(fig,trajectories,top_n,mutation_operator,sorted_uep, vertex_top_map,evo_config)
+function create_evo_summary!(fig,trajectories,top_n,mutation_operator,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
-    all_wait_times = reduce(hcat,[cumulative_wait_time(tr) for tr in trajectories]);
+    # all_wait_times = reduce(hcat,[cumulative_wait_time(tr) for tr in trajectories]);
 
-    colors = reverse(palette(:tab10)[1:4])
+    all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
 
     ax_wait_list = []
 
@@ -490,15 +490,34 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator,sorted_uep
 
         ############################
 
-        mean_wait = mean(all_wait_times[:,findall(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)],dims = 2)[:,1]
-        mean_wait_v = reduce(vcat,mean_wait)
+        sample_id = findall(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)
 
-        # mean_wait_v = log.(reduce(vcat,mean_wait))
+        if wait_time_summary == :mean
 
-        mean_wait_type_labels = [1,2,3]
+            mean_wait = mean(all_wait_times[:,sample_id],dims = 2)[:,1]
 
-        wt_l = CairoMakie.lines!(ax_wait_2,mean_wait_type_labels,mean_wait_v,color = :red,linewidth = evo_config.wait_linewidth)
-        wt_s = CairoMakie.scatter!(ax_wait_2,mean_wait_type_labels,mean_wait_v,color = :red,markersize = evo_config.wait_markersize)
+            std_error_wait = std(all_wait_times[:,sample_id],dims = 2)[:,1] ./ sqrt(length(sample_id))
+
+            mean_wait_type_labels = [1,2,3]
+
+            wt_l = CairoMakie.lines!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,linewidth = evo_config.wait_linewidth)
+            wt_s = CairoMakie.scatter!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,markersize = evo_config.wait_markersize)
+
+            CairoMakie.errorbars!(ax_wait_2,1:length(mean_wait),mean_wait,5 * std_error_wait,color = :red,whiskerwidth = evo_config.wait_markersize/2)
+
+        else
+
+            median_wait_time = mapslices(row->quantile(row, [0.5]),all_wait_times[:,sample_id],dims =2)[:,1]
+            lq_wait_time = mapslices(row->quantile(row, [0.25]),all_wait_times[:,sample_id],dims =2)[:,1]
+            uq_wait_time = mapslices(row->quantile(row, [0.75]),all_wait_times[:,sample_id],dims =2)[:,1]
+
+            median_wait_type_labels = [1,2,3]
+
+            wt_l = CairoMakie.lines!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,linewidth = evo_config.wait_linewidth)
+            wt_s = CairoMakie.scatter!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,markersize = evo_config.wait_markersize)
+
+            CairoMakie.rangebars!(ax_wait_2,1:length(median_wait_time),lq_wait_time,uq_wait_time,color = :red,whiskerwidth = evo_config.wait_markersize/2)
+        end
 
         push!(ax_wait_2_list,ax_wait_2)
 
@@ -550,11 +569,6 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator,sorted_uep
         epi_counts = reduce(vcat,map(tr->tr.other[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
-
-        # CairoMakie.pie!(ax_epi_uH0,epi_counts_prop,radius = 4,color = colors,
-        # inner_radius = 2,
-        # strokecolor = :white,
-        # strokewidth = 5)
 
         CairoMakie.pie!(ax_epi_uH0,epi_counts_prop,radius = evo_config.pie_radius,color = evo_config.pie_colors,
         inner_radius = evo_config.pie_inner_radius,
@@ -627,7 +641,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator,sorted_uep
             CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
             CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
 
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+            mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
             if type == :existing
                 if n==1
@@ -698,7 +712,13 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator,sorted_uep
 
     # labels_wait =  vcat([L"\mathbb{E}[\text{time to accept}]"],[L"\text{weight edits : existing}",L"\text{weight edits : new}",L"\text{weight edits : remove}"])
 
-    labels_wait =  [L"\mathbb{E}[\text{time to accept}]"]
+    # labels_wait =  [L"\mathbb{E}[\text{time to accept}]"]
+
+    if wait_time_summary == :mea
+        labels_wait =  [L"\mathbb{E}[\text{total generations}]"]
+    else
+        labels_wait =  [L"\text{total generations - [25%,50%,75%] quantiles}"]
+    end
 
     labels_mut =  [L"\text{weight edits : existing}",L"\text{weight edits : new}"]
 
@@ -720,7 +740,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator,sorted_uep
 
     legend_row_gap = 2
 
-    Legend(fig[top_n, 2:4, Bottom()], symbol_wait, labels_wait, framevisible=false,nbanks =1,orientation = :horizontal,patchsize = (10, 10),rowgap = legend_row_gap,colgap = 2,padding=(10.0f0, 10.0f0, 0, evo_config.fontsize+1.25*legend_row_gap))
+    Legend(fig[top_n, 2:4, Bottom()], symbol_wait, labels_wait, framevisible=false,nbanks =1,orientation = :horizontal,patchsize = (10, 10),rowgap = legend_row_gap,colgap = 2,padding=(10.0f0, 10.0f0, 0f0, evo_config.fontsize+1.5*legend_row_gap))
 
     Legend(fig[top_n, 5:9, Bottom()], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = legend_row_gap,colgap = 2)
     Legend(fig[top_n,  10:13, Bottom()], symbol_epi, labels_epi, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = legend_row_gap,colgap = 2)
