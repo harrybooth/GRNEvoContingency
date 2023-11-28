@@ -113,6 +113,25 @@ struct MutationOperator
     mutation_weights :: Vector{CartesianIndex{2}}
 end
 
+struct MutationOperatorSeq 
+    min_affinity :: Any
+    max_affinity :: Any
+    ϵ :: Any
+    Ls :: Any
+    μ :: Any
+    flip_prob :: Any
+    mutation_weights :: Vector{CartesianIndex{2}}
+end
+
+struct MutationOperatorSeqApprox
+    noise_distribution :: Distribution
+    n_sample_func :: Any
+    min_affinity :: Any
+    max_affinity :: Any
+    flip_prob :: Any
+    mutation_weights :: Vector{CartesianIndex{2}}
+end
+
 function MutationOperator(noise_distribution,noise_kwargs,n_sample_func,deletion_p,max_w,mutation_freq)
     return MutationOperator(noise_distribution(noise_kwargs...),n_sample_func,deletion_p,max_w,mutation_freq)
 end
@@ -240,6 +259,156 @@ function noise_mtype(w::Matrix{Float64},mut_op::MutationOperator)
 
     return new_w, choices, mtype, sizes, valid
 end
+
+
+# function noise_mtype_seq_approx(w::Matrix{Float64},mut_op::MutationOperatorSeqApprox)
+
+#     new_w = copy(w)
+
+#     n_mut = 0
+
+#     while n_mut == 0
+#         n_mut = mut_op.n_sample_func()
+#     end
+
+#     choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+#     mtype = []
+#     sizes = []
+
+#     for index in choices
+#         if new_w[index] == 0
+#             n = exp(rand(truncated(mut_op.noise_distribution;lower = 0)))
+#             push!(mtype,:new)
+
+#             if rand() < 0.5
+#                 new_w[index] = -1*mut_op.min_affinity*n
+#                 push!(sizes,-n)
+#             else
+#                 new_w[index] = mut_op.min_affinity*n
+#                 push!(sizes,n)
+#             end
+#         else
+#             # n = exp(rand(truncated(mut_op.noise_distribution; upper = log(mut_op.max_affinity/abs(new_w[index])),lower = log(mut_op.min_affinity/abs(new_w[index])))))
+
+#             n = exp(rand(truncated(mut_op.noise_distribution; upper = log(mut_op.max_affinity/abs(new_w[index])))))
+
+#             new_w[index] = new_w[index]*n
+
+#             if new_w[index] < mut_op.min_affinity
+#                 push!(mtype,:del)
+#                 push!(sizes,n)
+#                 new_w[index] = 0 
+#             else
+#                 push!(mtype,:existing)
+
+#                 if rand() < mut_op.flip_prob
+#                     new_w[index] = -1*new_w[index]
+#                     push!(sizes,-n)
+#                 else
+#                     push!(sizes,n)
+#                 end
+#             end
+#         end
+#     end
+
+#     return new_w, choices, mtype, sizes, true
+# end
+
+function noise_mtype_seq_approx(w::Matrix{Float64},mut_op::MutationOperatorSeqApprox)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+        if new_w[index] == 0
+            n = exp(rand(truncated(mut_op.noise_distribution;lower = 0)))
+            push!(mtype,:new)
+
+            if rand() < 0.5
+                new_w[index] = -1*mut_op.min_affinity*n
+                push!(sizes,-n)
+            else
+                new_w[index] = mut_op.min_affinity*n
+                push!(sizes,n)
+            end
+        else
+            n = exp(rand(truncated(mut_op.noise_distribution; upper = log(mut_op.max_affinity/abs(new_w[index])))))
+
+            new_w[index] = new_w[index]*n
+
+            push!(mtype,:existing)
+
+            if rand() < mut_op.flip_prob
+                new_w[index] = -1*new_w[index]
+                push!(sizes,-n)
+            else
+                push!(sizes,n)
+            end
+        end
+    end
+
+    return new_w, choices, mtype, sizes, true
+end
+
+
+function noise_mtype_sequence(w::Matrix{Float64},mut_op::MutationOperatorSeq)
+
+    new_w = copy(w)
+
+    mtype = []
+    sizes = []
+
+    for index in mut_op.mutation_weights
+
+        current_weight = w[index]
+
+        d0 = (log(mut_op.max_affinity)-log(current_w))/mut_op.ϵ
+
+        Z = Skellam((mut_op.Ls-d0)*mut_op.μ, d0*mut_op.μ/(mut_op.k-1))
+
+        if rand(Z) != 0
+
+            # m_compound = ((mut_op.Ls-d0)*mut_op.μ - d0*mut_op.μ/(mut_op.k-1))
+            # v_compound = ((mut_op.Ls-d0)*μ + d0*mut_op.μ/(mut_op.k-1))
+
+            Z_approx = truncated(Normal(mean(Z),var(Z)); lower = -d0, upper = mut_op.Ls - d0)
+
+            n =  exp.(-ϵ .* rand(Z_approx))
+
+            if rand() < mut_op.flip_prob
+                new_w[index] = -current_weight * n
+                push!(sizes,-n)
+            else
+                new_w[index] = current_weight * n
+                push!(sizes,n)
+            end
+
+            if (current_weight <= mut_op.min_affinity) & (new_w[index] > mut_op.min_affinity)
+                push!(mtype,:new)
+            elseif (current_weight > mut_op.min_affinity) & (new_w[index] <= mut_op.min_affinity)
+                push!(mtype,:del)
+            elseif (current_weight > mut_op.min_affinity) & (new_w[index] > mut_op.min_affinity)
+                push!(mtype,:existing)
+            else
+                push!(mtype,:other)
+            end
+        end
+    end
+
+    valid = maximum(abs.(new_w)) <= mut_op.max_affinity
+
+    return new_w, choices, mtype, sizes, valid
+end
+
 
 function noise_mtype_fm(w::Matrix{Float64},mut_op::MutationOperator,index)
 
@@ -416,6 +585,20 @@ function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant
     end
 end
 
+function strong_selection_rel!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Tuple{Float64,Int64},fitness_function)
+
+    mutant_fitness = fitness_function(mutant.phenotype)
+
+    population.has_fixed = false
+
+    if rand() < fixation_probability_kim(mutant_fitness[1] - population.fitness[1],(mutant_fitness[2] / population.fitness[2]) - 1,β[1],β[2])
+        population.dominant_individual = mutant
+        population.fitness = mutant_fitness
+        population.has_fixed = true
+    end
+end
+
+
 
 function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Float64,fitness_function)
 
@@ -543,6 +726,75 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
     return evo_trace
 
 end
+
+function SSWM_Evolution_Rel(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
+
+    p = (start_network,grn_parameters.degradation)
+    
+    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+
+    development = DefaultGRNSolver()
+    
+    founder = Individual(grn,development)
+
+    founder_fitness = fitness_function(founder.phenotype)
+
+    population = Population(founder,founder_fitness,false)
+
+    gen = 0
+    wait_time = 1
+
+    converged = false
+
+    full_weights = false
+
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
+
+    while has_not_converged(population,tolerance) && gen < max_gen
+
+        mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(population.dominant_individual,mutate_function,development)
+
+        if m_valid && SciMLBase.successful_retcode(mutant.phenotype.retcode)
+            strong_selection_rel!(population,mutant,β,fitness_function)
+        else
+            population.has_fixed = false
+        end
+
+        # push!(evo_trace.fitness_trajectory,population.fitness)
+        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
+        if population.has_fixed
+            push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.fitness_trajectory,population.fitness)
+            push!(evo_trace.wait_times,wait_time)
+            push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
+            if !isnothing(m_choices)
+                push!(evo_trace.mut_choices,m_choices)
+                push!(evo_trace.mut_type,m_type)
+                push!(evo_trace.mut_sizes,m_sizes)
+            end
+            wait_time = 0
+        else
+            wait_time += 1
+        end
+
+        gen += 1
+    end
+
+    if !has_not_converged(population,tolerance)
+        evo_trace.converged = true
+        # final_network = copy(evo_trace.traversed_networks[end])
+        # if minimum(abs.(final_network[final_network .!= 0.])) > 0.1*maximum(abs.(final_network))  
+        #     evo_trace.full_weights = true
+        # end
+    else
+        push!(evo_trace.wait_times,wait_time)
+    end
+
+    return evo_trace
+
+end
+
 
 function SSWM_Evolution_FM(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function,mutate_function_fm)
 

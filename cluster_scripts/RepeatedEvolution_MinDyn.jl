@@ -51,7 +51,9 @@ end
 
 # @everywhere all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main","Final_Experiments/RE_Minimal_Inhibiting_Main"]
 
-@everywhere all_experiments = ["Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_1","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_2","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_3","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_4","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_5"]
+# @everywhere all_experiments = ["Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_1","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_2","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_3","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_4","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_5"]
+
+all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main_SeqMut_1","Final_Experiments/RE_Minimal_Inhibiting_Main_SeqMut_2"]
 
 # "Experiment_1/RE_Minimal_Inhibiting_Single"
 
