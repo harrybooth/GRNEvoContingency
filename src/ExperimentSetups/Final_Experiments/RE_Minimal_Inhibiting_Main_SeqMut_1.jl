@@ -86,7 +86,7 @@ n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 min_affinity = 1e-2
 max_affinity = 10. 
 
-flip_prob = 0.15
+flip_prob = 0.1
 
 mutation_op = MutationOperatorSeqApprox(noise_distribution,n_sample_func, min_affinity,max_affinity,flip_prob,mutation_weights)
 
