@@ -57,6 +57,8 @@ tolerance = 0.9
 
 ###############
 
+vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
+
 viable_mutations = ones(Int,Ng,Ng+1)
 
 viable_mutations[2,4] = 0

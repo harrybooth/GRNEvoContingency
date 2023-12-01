@@ -57,6 +57,8 @@ tolerance = 0.9
 
 ###############
 
+vertex_names = Dict(1=>"A",2=> "B", 3=> "C", 4=> "M")
+
 viable_mutations = ones(Int,Ng,Ng+1)
 
 viable_mutations[2,4] = 0
@@ -111,7 +113,7 @@ mutate_function = i -> noise_mtype_dup(i,all_sites,n_sample_func)
 
 #############
 
-β = (100.,N)
+β = (1.,N)
 
 n_trials = 10000
 max_gen = 250000
