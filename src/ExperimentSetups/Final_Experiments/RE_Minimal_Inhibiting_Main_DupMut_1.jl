@@ -79,7 +79,7 @@ N = 10^5
 
 μ = 1e-7 * N
 
-min_affinity = 1e-3
+min_affinity = 1e-5
 max_affinity = 10. 
 
 v = log(min_affinity /max_affinity)

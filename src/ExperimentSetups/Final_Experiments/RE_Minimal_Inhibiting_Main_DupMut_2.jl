@@ -113,7 +113,7 @@ mutate_function = i -> noise_mtype_dup(i,all_sites,n_sample_func)
 
 #############
 
-β = (1.,N)
+β = (100.,N)
 
 n_trials = 10000
 max_gen = 250000
