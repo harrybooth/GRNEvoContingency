@@ -115,6 +115,27 @@ mutate_function = i -> noise_mtype_dup(i,all_sites,n_sample_func)
 
 β = (100.,N)
 
+########## Dyn Setup ######### 
+
+save_id = [CartesianIndex(1,25),CartesianIndex(2,25),CartesianIndex(3,25),CartesianIndex(1,50),CartesianIndex(2,50),CartesianIndex(3,50),CartesianIndex(1,100),CartesianIndex(2,100),CartesianIndex(3,100)]
+n_segments = 4
+n_steps = 10
+
+d_metric = Euclidean()
+relative_dyn = true
+
+fundamental_networks_dict = load(datadirx("networks/FindNetworks_CentreStripe_Full_RawData.jld2"));
+
+fundamental_topologies =  ["feed_forward","mutual_inh","frozen_osc","bistable","classical"]
+
+fundamental_networks = reduce(vcat,[fundamental_networks_dict[top_choice * "_networks"] for top_choice in fundamental_topologies])
+fundamental_networks_t2s = reduce(vcat,[fundamental_networks_dict[top_choice * "_t2s"] for top_choice in fundamental_topologies])
+fundamental_labels = reduce(vcat,[[top_choice for _ in 1:length(fundamental_networks_dict[top_choice * "_networks"])] for top_choice in fundamental_topologies])
+
+n_fundamental_networks = length(fundamental_networks)
+
+######### Simulation setup ######### 
+
 n_trials = 10000
 max_gen = 250000
 
