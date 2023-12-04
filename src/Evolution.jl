@@ -548,21 +548,33 @@ function noise_mtype_dup_1(w::Matrix{Float64},all_sites,n_sample_func)
   
                 for (ng,index) in enumerate(site.associated_w)
 
-                    n = new_w[index]*exp(-1*rand(site.pm_noise_distribution))
+                    if rand() < site.reg_flip_probability
+                        n = -1*new_w[index]*exp(-1*rand(site.pm_noise_distribution))
+                    else
+                        n = -new_w[index]*exp(-1*rand(site.pm_noise_distribution))
+                    end
 
                     new_w[ng,target_gene] = new_w[ng,target_gene] + n
                     push!(sizes,n)
                 end
 
             else
-                push!(mtype,:TFBS_dup)
+                if site.name == "M=>A"
+                    nothing
+                else
+                    push!(mtype,:TFBS_dup)
+                    
+                    target_gene = sample([1,2,3],1)[1]
 
-                target_gene = sample([1,2,3],1)[1]
+                    if rand() < site.reg_flip_probability
+                        n = -1*new_w[site.associated_w]*exp(-1*rand(site.pm_noise_distribution))
+                    else
+                        n = new_w[site.associated_w]*exp(-1*rand(site.pm_noise_distribution))
+                    end
 
-                n = new_w[site.associated_w]*exp(-1*rand(site.pm_noise_distribution))
-
-                new_w[target_gene,site.associated_w[2]]  = new_w[target_gene,site.associated_w[2]] + n
-                push!(sizes,n)
+                    new_w[target_gene,site.associated_w[2]]  = new_w[target_gene,site.associated_w[2]] + n
+                    push!(sizes,n)
+                end
             end
         end
 
