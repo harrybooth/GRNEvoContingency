@@ -485,6 +485,95 @@ function noise_mtype_dup(w::Matrix{Float64},all_sites,n_sample_func)
     return new_w, map(x->x.name,choices), mtype, all_sizes, valid
 end
 
+function noise_mtype_dup_1(w::Matrix{Float64},all_sites,n_sample_func)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = n_sample_func()
+    end
+
+    choices = sample(all_sites,n_mut,replace = false)
+    mtype = []
+    all_sizes = []
+
+    for site in choices
+
+        sizes = []
+
+        if rand() < site.pm_probability
+
+            if typeof(site) == TF
+                push!(mtype,:TF_pm)
+                for index in site.associated_w
+                    n = exp(-1*rand(site.pm_noise_distribution))
+    
+                    if new_w[index] == 0
+                        nothing
+                    else
+                        if rand() < site.reg_flip_probability
+                            new_w[index] = -1*n*new_w[index]
+                            push!(sizes,-n)
+                        else
+                            new_w[index] = n*new_w[index]
+                            push!(sizes,n)
+                        end
+                    end
+                end
+            else
+                push!(mtype,:TFBS_pm)
+                n = exp(-1*rand(site.pm_noise_distribution))
+    
+                if new_w[site.associated_w] == 0
+                    nothing
+                else
+                    if rand() < site.reg_flip_probability
+                        new_w[site.associated_w] = -1*n*new_w[site.associated_w]
+                        push!(sizes,-n)
+                    else
+                        new_w[site.associated_w] = n*new_w[site.associated_w]
+                        push!(sizes,n)
+                    end
+                end
+            end
+
+        else
+            if typeof(site) == TF
+
+                push!(mtype,:TF_dup)
+
+                target_gene = sample([1,2,3],1)[1]
+  
+                for (ng,index) in enumerate(site.associated_w)
+
+                    n = new_w[index]*exp(-1*rand(site.pm_noise_distribution))
+
+                    new_w[ng,target_gene] = new_w[ng,target_gene] + n
+                    push!(sizes,n)
+                end
+
+            else
+                push!(mtype,:TFBS_dup)
+
+                target_gene = sample([1,2,3],1)[1]
+
+                n = new_w[site.associated_w]*exp(-1*rand(site.pm_noise_distribution))
+
+                new_w[target_gene,site.associated_w[2]]  = new_w[target_gene,site.associated_w[2]] + n
+                push!(sizes,n)
+            end
+        end
+
+        push!(all_sizes,sizes)
+    end
+
+    valid = maximum(abs.(new_w)) <= 10.
+
+    return new_w, map(x->x.associated_w,choices), mtype, all_sizes, valid
+end
+
 
 
 function noise_mtype_fm(w::Matrix{Float64},mut_op::MutationOperator,index)

@@ -255,8 +255,6 @@ end
 
 const powerset_topologies = [[bit == '1' ? -1 : bit == '2' ? 0 : 1 for bit in string(i;base = 3,pad = 10)] for i in 0:3^10-1];
 
-
-
 function v_restricted_cumulative_wait_time(tr::Trajectory,restriction,restriction_measure)
     id = maximum(findall(restriction_measure(tr,restriction)))
 

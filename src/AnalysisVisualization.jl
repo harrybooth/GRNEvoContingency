@@ -123,7 +123,7 @@ function draw_example_network!(fig,network,show_pheno,draw_config,node_colors,fs
         CairoMakie.lines!(ax,morphogen_v, color = node_colors[4], linewidth = 4.)
     end
     
-    draw_grn!(ax_geno,orig_network,draw_config,node_colors,fs,false)
+    draw_grn!(ax_geno,orig_network,draw_config,node_colors,fs,false,false)
 
     hidedecorations!(ax)
 
@@ -162,6 +162,9 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     top_n_dict = Dict(v_id=>pos for (pos,v_id) in enumerate(sorted_uep[1:top_n]))
 
     #### Motif Distribution
+    
+    print("1")
+    print("\n")
 
     color_sorted_counts_uep = [i <= top_n ? ds_config.color_scheme[i] : :grey for i in 1:length(sorted_counts_uep)]
 
@@ -180,6 +183,9 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     push!(conf_int_choices,(minimum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm,maximum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm))
 
     ##############
+
+    print("2")
+    print("\n")
 
     # ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n }" * string(top_n) * " MST : " * string(sum(sorted_counts_uep[1:top_n])) * " trajectories", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
 
@@ -200,6 +206,9 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     #######################
 
+    print("3")
+    print("\n")
+
     ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{Probabilty}", xlabel = L"M^{(i)}_{N_i}")
 
     CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_uep)
@@ -211,6 +220,9 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
 
     ###################
+
+    print("4")
+    print("\n")
 
     tr_data = filter(tr->tr.inc_metagraph_vertices[tr.H0] ∈ sorted_uep[example_mst],trajectories);
     tr_data_id = findall(tr->tr.inc_metagraph_vertices[tr.H0] ∈ sorted_uep[example_mst],trajectories)
@@ -261,6 +273,14 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     ####################
 
+    print("5")
+    print("\n")
+
+    print(length(tr_phenotypes))
+    print("\n")
+    print(length(tr_traj))
+    print("\n")
+
     # ex1.alignmode = Mixed(right = 0)
 
     ax_pheno_list = []
@@ -291,6 +311,9 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     linkyaxes!(ax_pheno_list...)
 
     ##########################
+
+    print("7")
+    print("\n")
 
     all_prop  = []
     all_dodge  = []
@@ -414,7 +437,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator,sorted_uep
 
         # draw_grn_layout!(ax_geno,top,e_width,vertex_size,arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors,false)
 
-        draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],evo_config.draw_config,evo_config.node_colors,evo_config.fontsize,false)
+        draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],evo_config.draw_config,evo_config.node_colors,evo_config.fontsize,false,false)
 
         if n == 1
             ax_wait = Axis(plot_wait[1,1], title = L"\mathbb{E}[\text{total weight edits}]",yticklabelsize = 0.8*evo_config.fontsize)
@@ -1315,6 +1338,194 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,pred_con
     # rowgap!(entropy_plot, Relative(0.05))
 
     rowgap!(fig.layout, Relative(0.05))
+    colgap!(fig.layout, Relative(0.01))
+
+end
+
+
+function create_evo_summary_DM!(fig,trajectories,top_n,mutation_operator,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+
+    # all_wait_times = reduce(hcat,[cumulative_wait_time(tr) for tr in trajectories]);
+
+    all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
+
+    ax_wait_list = []
+
+    ax_wait_list = []
+    ax_wait_2_list = []
+
+    wt_l_list = []
+    wt_s_list = []
+
+    min_t_u = -mutation_operator.max_w
+    max_t_u = mutation_operator.max_w
+
+    for n in 1:top_n
+
+        # plot_geno = fig[n, 1] = GridLayout()
+        # plot_wait = fig[n, 2] = GridLayout()
+        # plot_mut_hist = fig[n, 3:4] = GridLayout()
+        # plot_epi_types = fig[n, 5:6] = GridLayout()
+
+        plot_geno = fig[n, 1] = GridLayout()
+        plot_wait = fig[n, 2:4] = GridLayout()
+
+        if n==1
+            ax_geno = Axis(plot_geno[1,1],backgroundcolor = (evo_config.color_scheme[n],evo_config.color_fade),title =L"M^{(i)}_{N_i}",aspect = DataAspect())
+        else
+            ax_geno = Axis(plot_geno[1,1],backgroundcolor = (evo_config.color_scheme[n],evo_config.color_fade),aspect = DataAspect())
+        end
+
+        # top = Int.(reshape(vertex_top_map[sorted_uep[n]],(3,4)))
+
+        # draw_grn_layout!(ax_geno,top,e_width,vertex_size,arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors,false)
+
+        draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],evo_config.draw_config,evo_config.node_colors,evo_config.fontsize,false,false)
+
+        if n == 1
+            ax_wait = Axis(plot_wait[1,1], title = L"\mathbb{E}[\text{total weight edits}]",yticklabelsize = 0.8*evo_config.fontsize)
+        else
+            ax_wait = Axis(plot_wait[1,1],yticklabelsize = 0.8*evo_config.fontsize)
+        end
+
+        ax_wait_2 = Axis(plot_wait[1,1], yticklabelcolor = :red, yaxisposition = :right,yscale = log10,yticklabelsize = 0.8*evo_config.fontsize)
+
+        hidespines!(ax_wait_2 )
+        hideydecorations!(ax_wait_2,label = false,ticklabels = false,ticks = false,minorticks = false)
+        hidexdecorations!(ax_wait_2)
+
+        # #############################
+
+        mut_type_prop_all = []
+        mut_type_time_labels = []
+        mut_type_labels = []
+
+        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,1,tr.H0-2), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n]) & (tr.H0-2 > 0),trajectories_p))
+
+        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,1,tr.H0-2), [:TF_pm,:TFBS_pm,:TF_dup,:TFBS_dup]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n]) & (tr.H0-2 > 0),trajectories))
+
+        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+        push!(mut_type_prop_all,mut_type_prop_av)
+        push!(mut_type_labels, [1,2,3,4])
+        push!(mut_type_time_labels,[1,1,1])
+
+        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0-1,tr.H0-1), [:existing,:new,:del]),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n] ,trajectories_p))
+        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,tr.H0-1,tr.H0-1), [:TF_pm,:TFBS_pm,:TF_dup,:TFBS_dup]),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n] ,trajectories))
+
+        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+        push!(mut_type_prop_all,mut_type_prop_av)
+        push!(mut_type_labels, [1,2,3,4])
+        push!(mut_type_time_labels,[2,2,2])
+
+        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0,length(tr.topologies)-1), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n])  & (tr.H0 < length(tr.topologies)),trajectories_p))
+
+        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,tr.H0,length(tr.topologies)-1), [:TF_pm,:TFBS_pm,:TF_dup,:TFBS_dup]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n])  & (tr.H0 < length(tr.topologies)),trajectories))
+
+        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+        push!(mut_type_prop_all,mut_type_prop_av)
+        push!(mut_type_labels, [1,2,3,4])
+        push!(mut_type_time_labels,[3,3,3])
+
+        mut_type_prop_all = reduce(vcat,mut_type_prop_all)
+        mut_type_time_labels = reduce(vcat,mut_type_time_labels)
+        mut_type_labels = reduce(vcat,mut_type_labels); 
+
+        CairoMakie.barplot!(ax_wait,mut_type_time_labels,mut_type_prop_all,stack = mut_type_labels,color = mut_type_labels)
+
+        if n == top_n
+            ax_wait.xticks = (1:3,[L"t<H_{0}",L"t=H_{0}",L"t>H_{0}" ])
+        else
+            hidexdecorations!(ax_wait)
+        end
+        
+        #format y ticks to latex numbers
+
+        CairoMakie.hidexdecorations!(ax_wait,label = false,ticklabels = false,ticks = false,minorticks = false)
+        CairoMakie.hideydecorations!(ax_wait,label = false,ticklabels = false,ticks = false,minorticks = false,grid = false)
+
+        push!(ax_wait_list,ax_wait)
+
+        ############################
+
+        sample_id = findall(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)
+
+        if wait_time_summary == :mean
+
+            mean_wait = mean(all_wait_times[:,sample_id],dims = 2)[:,1]
+
+            std_error_wait = std(all_wait_times[:,sample_id],dims = 2)[:,1] ./ sqrt(length(sample_id))
+
+            mean_wait_type_labels = [1,2,3]
+
+            wt_l = CairoMakie.lines!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,linewidth = evo_config.wait_linewidth)
+            wt_s = CairoMakie.scatter!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,markersize = evo_config.wait_markersize)
+
+            CairoMakie.errorbars!(ax_wait_2,1:length(mean_wait),mean_wait,5 * std_error_wait,color = :red,whiskerwidth = evo_config.wait_markersize/2)
+
+        else
+
+            median_wait_time = mapslices(row->quantile(row, [0.5]),all_wait_times[:,sample_id],dims =2)[:,1]
+            lq_wait_time = mapslices(row->quantile(row, [0.25]),all_wait_times[:,sample_id],dims =2)[:,1]
+            uq_wait_time = mapslices(row->quantile(row, [0.75]),all_wait_times[:,sample_id],dims =2)[:,1]
+
+            median_wait_type_labels = [1,2,3]
+
+            wt_l = CairoMakie.lines!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,linewidth = evo_config.wait_linewidth)
+            wt_s = CairoMakie.scatter!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,markersize = evo_config.wait_markersize)
+
+            CairoMakie.rangebars!(ax_wait_2,1:length(median_wait_time),lq_wait_time,uq_wait_time,color = :red,whiskerwidth = evo_config.wait_markersize/2)
+        end
+
+        push!(ax_wait_2_list,ax_wait_2)
+
+        push!(wt_l_list,wt_l)
+        push!(wt_s_list,wt_s)
+
+        #############################
+
+        colgap!(plot_geno,Relative(0.01))
+        rowgap!(plot_geno,Relative(0.05))
+    
+        colgap!(plot_wait, Relative(0.01))
+        rowgap!(plot_wait, Relative(0.05))
+
+        colgap!(plot_mut_hist, Relative(0.01))
+        rowgap!(plot_mut_hist, Relative(0.05))
+
+        colgap!(plot_epi_types, Relative(0.01))
+        rowgap!(plot_epi_types, Relative(0.05))
+    end
+
+    if wait_time_summary == :mea
+        labels_wait =  [L"\mathbb{E}[\text{total generations}]"]
+    else
+        labels_wait =  [L"\text{total generations - [25%,50%,75%] quantiles}"]
+    end
+
+    labels_mut =  [L"\text{TF_pm}",L"\text{TFBS_pm}",L"\text{TF_dup}",L"\text{TFBS_dup}"]
+
+    symbol_wait = [[wt_s_list[1], wt_l_list[1]]]
+
+    symbol_mut = [PolyElement(color=c) for c in palette(:viridis, 4)[1:4]]
+
+
+    # Legend(fig[top_n+1, :], symbol_all, labels, framevisible=false,nbanks = 1,orientation = :horizontal,patchsize = (10, 10), rowgap = 10,colgap = 10)
+
+    # Legend(fig[top_n, 4:13, Bottom()], symbol_all, labels, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = 10,colgap = 10)
+
+    legend_row_gap = 2
+
+    Legend(fig[top_n, 2:4, Bottom()], symbol_wait, labels_wait, framevisible=false,nbanks =1,orientation = :horizontal,patchsize = (10, 10),rowgap = legend_row_gap,colgap = 2,padding=(10.0f0, 10.0f0, 0f0, evo_config.fontsize+1.5*legend_row_gap))
+
+    Legend(fig[top_n, 5:9, Bottom()], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = legend_row_gap,colgap = 2)
+
+    linkyaxes!(ax_wait_list...)
+    linkyaxes!(ax_wait_2_list...)
+
+    rowgap!(fig.layout, Relative(0.01))
     colgap!(fig.layout, Relative(0.01))
 
 end
