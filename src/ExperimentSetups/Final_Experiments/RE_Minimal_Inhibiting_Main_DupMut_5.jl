@@ -134,6 +134,6 @@ n_fundamental_networks = length(fundamental_networks)
 
 β = (10.,N)
 
-n_trials = 10000
+n_trials = 8000
 max_gen = 250000
 
