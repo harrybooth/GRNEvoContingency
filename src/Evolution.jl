@@ -216,6 +216,288 @@ function noise_mtype(w::Matrix{Float64},mut_op::MutationOperator)
     return new_w, choices, mtype, sizes, valid
 end
 
+function noise_mtype_v1(w::Matrix{Float64},mut_op::MutationOperatorNew)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+        if new_w[index] == 0
+            n = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+            new_w[index] = n
+            push!(mtype,:new)
+            push!(sizes,n)
+        else
+            n = exp(-1*rand(mut_op.noise_distribution))
+
+            if rand() < mut_op.sign_flip_probability
+                new_w[index] = -1*new_w[index]*n
+                push!(sizes,-n)
+            else
+                new_w[index] = new_w[index]*n
+                push!(sizes,n)
+            end
+
+            if abs(new_w[index]) < mut_op.start_affinity
+                new_w[index] = 0
+                push!(mtype,:del)
+            else
+                push!(mtype,:existing)
+            end
+        end
+    end
+
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w, choices, mtype, sizes, valid
+end
+
+function noise_mtype_v2(w::Matrix{Float64},mut_op::MutationOperatorNew)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+        if new_w[index] == 0
+            n = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+            new_w[index] = n
+            push!(mtype,:new)
+            push!(sizes,n)
+        else
+            n = exp(-1*rand(mut_op.noise_distribution))
+
+            new_w[index] = new_w[index]*n
+            push!(sizes,n)
+
+            if abs(new_w[index]) < mut_op.start_affinity
+                new_w[index] = 0
+                push!(mtype,:del)
+            else
+                push!(mtype,:existing)
+            end
+        end
+    end
+
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w, choices, mtype, sizes, valid
+end
+
+function noise_mtype_v3(w::Matrix{Float64},mut_op::MutationOperatorNew)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if rand() < mut_op.pm_prob
+
+            push!(mtype,:existing)
+
+            if new_w[index] == 0
+                n = exp(-1*rand(mut_op.noise_distribution))
+                if rand() < 0.5
+                    new_w[index] = mut_op.start_affinity*n
+                    push!(sizes,n)
+                else
+                    new_w[index] = -1*mut_op.start_affinity*n
+                    push!(sizes,-n)
+                end
+            else
+                n = exp(-1*rand(mut_op.noise_distribution))
+                new_w[index] = new_w[index]*n
+                push!(sizes,n)
+            end
+
+        else
+            n = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+            new_w[index] = new_w[index] + n
+            push!(sizes,n)
+            push!(mtype,:new)
+        end
+
+    end
+
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w, choices, mtype, sizes, valid
+end
+
+function noise_mtype_v3_restricted(w::Matrix{Float64},mut_op::MutationOperatorNew)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if rand() < mut_op.pm_prob
+
+            push!(mtype,:existing)
+
+            if new_w[index] == 0
+                n = exp(-1*rand(mut_op.noise_distribution))
+                if rand() < 0.5
+                    new_w[index] = mut_op.start_affinity*n
+                    push!(sizes,n)
+                else
+                    new_w[index] = -1*mut_op.start_affinity*n
+                    push!(sizes,-n)
+                end
+            else
+                n = exp(-1*rand(mut_op.noise_distribution))
+                new_w[index] = new_w[index]*n
+                push!(sizes,n)
+            end
+
+        else
+            max_w = maximum(abs.(w))
+            n = rand(Uniform(-max_w,max_w))
+            new_w[index] = new_w[index] + n
+            push!(sizes,n)
+            push!(mtype,:new)
+        end
+
+    end
+
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w, choices, mtype, sizes, valid
+end
+
+function noise_mtype_v4(w::Matrix{Float64},mut_op::MutationOperatorNew)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if rand() < mut_op.pm_prob
+
+            push!(mtype,:existing)
+
+            if new_w[index] == 0
+                n = exp(-1*rand(mut_op.noise_distribution))
+                if rand() < 0.5
+                    new_w[index] = mut_op.start_affinity*n
+                    push!(sizes,n)
+                else
+                    new_w[index] = -1*mut_op.start_affinity*n
+                    push!(sizes,-n)
+                end
+            else
+                n = exp(-1*rand(mut_op.noise_distribution))
+                new_w[index] = new_w[index]*n
+                push!(sizes,n)
+            end
+
+        else
+            n = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+            new_w[index] = n
+            push!(sizes,n)
+            push!(mtype,:new)
+        end
+
+    end
+
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w, choices, mtype, sizes, valid
+end
+
+function noise_mtype_v4_restricted(w::Matrix{Float64},mut_op::MutationOperatorNew)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if rand() < mut_op.pm_prob
+
+            push!(mtype,:new)
+
+            if new_w[index] == 0
+                n = exp(-1*rand(mut_op.noise_distribution))
+                if rand() < 0.5
+                    new_w[index] = mut_op.start_affinity*n
+                    push!(sizes,n)
+                else
+                    new_w[index] = -1*mut_op.start_affinity*n
+                    push!(sizes,-n)
+                end
+            else
+                n = exp(-1*rand(mut_op.noise_distribution))
+                new_w[index] = new_w[index]*n
+                push!(sizes,n)
+            end
+
+        else
+            max_w = maximum(abs.(w))
+            n = rand(Uniform(-max_w,max_w))
+            new_w[index] = n
+            push!(sizes,n)
+            push!(mtype,:existing)
+        end
+
+    end
+
+    valid = maximum(abs.(new_w)) <= mut_op.max_w
+
+    return new_w, choices, mtype, sizes, valid
+end
 
 # Selection 
 
