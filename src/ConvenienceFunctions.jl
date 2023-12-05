@@ -10,7 +10,7 @@ function create_full_fitness_traj(fitness_traj,wait_times)
 
     all_ff = []
     
-    for (fitness,wt) in zip(fitness_traj[1:end-1],wait_times)
+    for (fitness,wt) in zip(fitness_traj[1:end-1],wait_times[2:end])
 
         full_fitness  = fill(fitness,wt)
 

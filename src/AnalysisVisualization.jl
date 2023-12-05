@@ -162,9 +162,6 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     top_n_dict = Dict(v_id=>pos for (pos,v_id) in enumerate(sorted_uep[1:top_n]))
 
     #### Motif Distribution
-    
-    print("1")
-    print("\n")
 
     color_sorted_counts_uep = [i <= top_n ? ds_config.color_scheme[i] : :grey for i in 1:length(sorted_counts_uep)]
 
@@ -183,9 +180,6 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     push!(conf_int_choices,(minimum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm,maximum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm))
 
     ##############
-
-    print("2")
-    print("\n")
 
     # ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n }" * string(top_n) * " MST : " * string(sum(sorted_counts_uep[1:top_n])) * " trajectories", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
 
@@ -206,9 +200,6 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     #######################
 
-    print("3")
-    print("\n")
-
     ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{Probabilty}", xlabel = L"M^{(i)}_{N_i}")
 
     CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_uep)
@@ -220,9 +211,6 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
 
     ###################
-
-    print("4")
-    print("\n")
 
     tr_data = filter(tr->tr.inc_metagraph_vertices[tr.H0] ∈ sorted_uep[example_mst],trajectories);
     tr_data_id = findall(tr->tr.inc_metagraph_vertices[tr.H0] ∈ sorted_uep[example_mst],trajectories)
@@ -240,7 +228,7 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     tr_fd = create_full_fitness_traj(tr_data[tr_choice].fitness_traj_tuple,tr_data[tr_choice].wait_times)
 
     tr_top_fitness_id = uniqueid(tr_fd)[tr_traj_id]
-
+    
     tr_fd_coarse = map(x->x[1]+1,tr_fd)
     tr_fd_refine = map(x->x[2],tr_fd)
 
@@ -273,14 +261,6 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
     ####################
 
-    print("5")
-    print("\n")
-
-    print(length(tr_phenotypes))
-    print("\n")
-    print(length(tr_traj))
-    print("\n")
-
     # ex1.alignmode = Mixed(right = 0)
 
     ax_pheno_list = []
@@ -311,9 +291,6 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
     linkyaxes!(ax_pheno_list...)
 
     ##########################
-
-    print("7")
-    print("\n")
 
     all_prop  = []
     all_dodge  = []
