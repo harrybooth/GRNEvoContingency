@@ -85,7 +85,7 @@ viable_mutations[3,4] = 0
 
 mutation_weights = findall(viable_mutations .> 0)
 
-noise_cv = 0.2
+noise_cv = 0.1
 
 noise_distribution = Normal(0.1,noise_cv)
 
@@ -93,7 +93,7 @@ n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
 mutation_op = MutationOperatorNew(noise_distribution,n_sample_func,pm_prob,min_affinity,max_w,mutation_weights,sign_flip_probability);
 
-mutate_function = i -> noise_mtype_v3(i,mutation_op)
+mutate_function = i -> noise_mtype_v1(i,mutation_op)
 
 ########## Dyn Setup ######### 
 
