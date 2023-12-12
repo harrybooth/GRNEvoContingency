@@ -576,7 +576,7 @@ function noise_mtype_mult_add(w::Matrix{Float64},mut_op::MutationOperatorDual)
 
         if rand() < mut_op.pm_prob
 
-            push!(mtype,:multiplicative)
+            push!(mtype,:existing)
 
             if new_w[index] == 0
                 n = rand(mut_op.mult_noise_distribution)
@@ -594,7 +594,7 @@ function noise_mtype_mult_add(w::Matrix{Float64},mut_op::MutationOperatorDual)
             end
 
         else
-            push!(mtype,:additive)
+            push!(mtype,:new)
 
             n = rand(mut_op.additive_noise_distribution)
 
