@@ -123,6 +123,16 @@ struct MutationOperatorNew
     sign_flip_probability :: Float64
 end
 
+struct MutationOperatorDual
+    mult_noise_distribution :: Distribution
+    additive_noise_distribution :: Distribution
+    n_sample_func :: Any
+    pm_prob :: Float64
+    start_affinity :: Float64
+    max_w ::Float64
+    mutation_weights :: Vector{CartesianIndex{2}}
+    sign_flip_probability :: Float64
+end
 
 function MutationOperator(noise_distribution,noise_kwargs,n_sample_func,deletion_p,max_w,mutation_freq)
     return MutationOperator(noise_distribution(noise_kwargs...),n_sample_func,deletion_p,max_w,mutation_freq)
@@ -546,6 +556,105 @@ function noise_mtype_v4_restricted(w::Matrix{Float64},mut_op::MutationOperatorNe
     return new_w, choices, mtype, sizes, valid
 end
 
+function noise_mtype_mult_add(w::Matrix{Float64},mut_op::MutationOperatorDual)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    mut_op
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if rand() < mut_op.pm_prob
+
+            push!(mtype,:multiplicative)
+
+            if new_w[index] == 0
+                n = rand(mut_op.mult_noise_distribution)
+                if rand() < 0.5
+                    new_w[index] = mut_op.start_affinity*n
+                    push!(sizes,n)
+                else
+                    new_w[index] = -1*mut_op.start_affinity*n
+                    push!(sizes,-n)
+                end
+            else
+                n = rand(mut_op.mult_noise_distribution)
+                new_w[index] = new_w[index]*n
+                push!(sizes,n)
+            end
+
+        else
+            push!(mtype,:additive)
+
+            n = rand(mut_op.additive_noise_distribution)
+
+            new_w[index] = new_w[index] + n
+            push!(sizes,n)
+        end
+
+        if abs(new_w[index]) > mut_op.max_w
+            new_w[index] = sign(new_w[index])*mut_op.max_w
+        end
+
+    end
+
+    return new_w, choices, mtype, sizes, true
+end
+
+function noise_mtype_v1iii(w::Matrix{Float64},mut_op::MutationOperatorNew)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    choices = sample(mut_op.mutation_weights,n_mut,replace = false)
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if new_w[index] == 0
+            n = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+            new_w[index] = n
+            push!(mtype,:new)
+            push!(sizes,n)
+
+        elseif rand(Exponential(0.1)) > abs(new_w[index])
+            new_w[index] = 0
+
+            push!(mtype,:del)
+        else
+            n = exp(-1*rand(mut_op.noise_distribution))
+
+            new_w[index] = new_w[index]*n
+            push!(sizes,n)
+     
+            if abs(new_w[index]) > mut_op.max_w
+                new_w[index] = sign(new_w[index])*mut_op.max_w
+            end
+
+            push!(mtype,:existing)
+        end
+    end
+
+    return new_w, choices, mtype, sizes, true
+end
+
+
 # Selection 
 
 function fixation_probability(Δf,β)
@@ -615,7 +724,6 @@ function strong_selection_rel!(population::Population{Tuple{Float64,Float64}},mu
         population.has_fixed = true
     end
 end
-
 
 
 function strong_selection!(population::Population{Tuple{Float64,Float64}},mutant::Individual,β::Float64,fitness_function)
