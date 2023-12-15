@@ -74,7 +74,7 @@ mut_prob = 0.1
 
 min_affinity = 1e-3
 
-sign_flip_probability = 0.25
+sign_flip_probability = 0.5
 
 pm_prob = 0.5
 
