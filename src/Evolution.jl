@@ -168,7 +168,7 @@ function noise_specified(w::Vector{Float64},mut_id::Int64,mut_size::Float64,mut_
     return new_w
 end
 
-function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vector{Float64},mut_type::Vector{Any})
+function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vector{Any},mut_type::Vector{Any})
 
     new_w = copy(w)
 
@@ -611,6 +611,222 @@ function noise_mtype_mult_add(w::Matrix{Float64},mut_op::MutationOperatorDual)
     return new_w, choices, mtype, sizes, true
 end
 
+function noise_mtype_mult_add_2(w::Matrix{Float64},mut_op::MutationOperatorDual)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    mut_op
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if rand() < mut_op.pm_prob
+
+            push!(mtype,:existing)
+
+            if new_w[index] == 0
+                n = rand(mut_op.mult_noise_distribution)
+                if rand() < 0.5
+                    new_w[index] = mut_op.start_affinity*n
+                    push!(sizes,n)
+                else
+                    new_w[index] = -1*mut_op.start_affinity*n
+                    push!(sizes,-n)
+                end
+            else
+                n = rand(mut_op.mult_noise_distribution)
+
+                if rand() < mut_op.sign_flip_probability
+                    new_w[index] = -1*new_w[index]*n
+                    push!(sizes,-n)
+                else
+                    new_w[index] = new_w[index]*n
+                    push!(sizes,n)
+                end
+            end
+
+        else
+            push!(mtype,:new)
+
+            n = rand(mut_op.additive_noise_distribution)
+
+            new_w[index] = abs(new_w[index] + n)
+            
+            if rand() < mut_op.sign_flip_probability
+                new_w[index] = -1*abs(new_w[index] + n)
+                push!(sizes,-n)
+            else
+                new_w[index] = abs(new_w[index] + n)
+                push!(sizes,n)
+            end
+
+        end
+
+        if abs(new_w[index]) > mut_op.max_w
+            new_w[index] = sign(new_w[index])*mut_op.max_w
+        end
+
+    end
+
+    return new_w, choices, mtype, sizes, true
+end
+
+function noise_mtype_mult_add_3(w::Matrix{Float64},mut_op::MutationOperatorDual)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    mut_op
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if rand() < mut_op.pm_prob
+
+            push!(mtype,:existing)
+
+            if new_w[index] == 0
+                n = rand(mut_op.mult_noise_distribution)
+                if rand() < 0.5
+                    new_w[index] = mut_op.start_affinity*n
+                    push!(sizes,n)
+                else
+                    new_w[index] = -1*mut_op.start_affinity*n
+                    push!(sizes,-n)
+                end
+            else
+                n = rand(mut_op.mult_noise_distribution)
+                new_w[index] = new_w[index]*n
+                push!(sizes,n)
+            end
+
+        else
+            push!(mtype,:new)
+
+            n = rand(Uniform(-mut_op.max_w,mut_op.max_w))
+
+            new_w[index] = n
+            push!(sizes,n)
+        end
+
+        if abs(new_w[index]) > mut_op.max_w
+            new_w[index] = sign(new_w[index])*mut_op.max_w
+        end
+
+    end
+
+    return new_w, choices, mtype, sizes, true
+end
+
+function noise_mtype_mult_add_4(w::Matrix{Float64},mut_op::MutationOperatorDual)
+
+    new_w = copy(w)
+
+    n_mut = 0
+
+    while n_mut == 0
+        n_mut = mut_op.n_sample_func()
+    end
+
+    mut_op
+
+    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    mtype = []
+    sizes = []
+
+    for index in choices
+
+        if rand() < mut_op.pm_prob
+
+            push!(mtype,:existing)
+
+            if new_w[index] == 0
+                n = rand(mut_op.mult_noise_distribution)
+                if rand() < 0.5
+                    new_w[index] = mut_op.start_affinity*n
+                    push!(sizes,n)
+                else
+                    new_w[index] = -1*mut_op.start_affinity*n
+                    push!(sizes,-n)
+                end
+            else
+                n = rand(mut_op.mult_noise_distribution)
+
+                if rand() < mut_op.sign_flip_probability
+                    new_w[index] = -1*new_w[index]*n
+                    push!(sizes,-n)
+                else
+                    new_w[index] = new_w[index]*n
+                    push!(sizes,n)
+                end
+            end
+
+        else
+            push!(mtype,:new)
+
+            n = rand(Uniform(0,mut_op.max_w))
+
+            if rand() < mut_op.sign_flip_probability
+                new_w[index] = -1*n
+                push!(sizes,-n)
+            else
+                new_w[index] = n
+                push!(sizes,n)
+            end
+        end
+
+        if abs(new_w[index]) > mut_op.max_w
+            new_w[index] = sign(new_w[index])*mut_op.max_w
+        end
+
+    end
+
+    return new_w, choices, mtype, sizes, true
+end
+
+
+function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vector{Any},mut_type::Vector{Any},mut_op::MutationOperatorDual)
+
+    new_w = copy(w)
+
+    for n in 1:length(mut_id)
+        if mut_type[n] == :new
+            new_w[mut_id[n]] = new_w[mut_id[n]] + mut_size[n]
+        elseif mut_type[n] == :existing
+            if new_w[mut_id[n]] == 0
+                new_w[mut_id[n]] = mut_op.start_affinity*mut_size[n]
+            else
+                new_w[mut_id[n]] = new_w[mut_id[n]]*mut_size[n]
+            end
+        else
+            new_w[mut_id[n]] = NaN
+        end
+
+        if abs(new_w[mut_id[n]]) > mut_op.max_w
+            new_w[mut_id[n]] = sign(new_w[mut_id[n]])*mut_op.max_w
+        end
+    end
+
+    return new_w
+end
+
 function noise_mtype_v1iii(w::Matrix{Float64},mut_op::MutationOperatorNew)
 
     new_w = copy(w)
@@ -702,6 +918,29 @@ function noise_mtype_v1iii_sign(w::Matrix{Float64},mut_op::MutationOperatorNew)
     return new_w, choices, mtype, sizes, true
 end
 
+function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vector{Any},mut_type::Vector{Any},mut_op::MutationOperatorNew)
+
+    new_w = copy(w)
+
+    for n in 1:length(mut_id)
+        if mut_type[n] == :new
+            new_w[mut_id[n]] = mut_size[n]
+        elseif mut_type[n] == :existing
+            new_w[mut_id[n]] = new_w[mut_id[n]]*mut_size[n]
+
+            if abs(new_w[mut_id[n]]) > mut_op.max_w
+                new_w[mut_id[n]] = sign(new_w[mut_id[n]])*mut_op.max_w
+            end
+
+        elseif mut_type[n] == :del
+            new_w[mut_id[n]] = 0
+        else
+            new_w[mut_id[n]] = NaN
+        end
+    end
+
+    return new_w
+end
 
 # Selection 
 
