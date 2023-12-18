@@ -121,7 +121,6 @@ function noise_mtype_seq_approx(w::Matrix{Float64},mut_op::MutationOperatorSeqAp
     return new_w, choices, mtype, sizes, valid
 end
 
-
 function noise_mtype_sequence(w::Matrix{Float64},mut_op::MutationOperatorSeq)
 
     new_w = copy(w)
@@ -375,8 +374,6 @@ function noise_mtype_dup_1(w::Matrix{Float64},all_sites,n_sample_func)
 
     return new_w, map(x->x.associated_w,choices), mtype, all_sizes, valid
 end
-
-
 
 function noise_mtype_fm(w::Matrix{Float64},mut_op::MutationOperator,index)
 

@@ -91,11 +91,11 @@ mult_noise_distribution = LogNormal(-0.1,mult_σ)
 
 add_σ = 1.
 
-additive_noise_distribution = Normal(0.,add_σ)
+additive_noise_distribution = Uniform(0,max_w)
 
 n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
-mutation_op = MutationOperatorDual(mult_noise_distribution,additive_noise_distribution,n_sample_func,pm_prob,min_affinity,max_w,mutation_weights,sign_flip_probability);
+mutation_op = MutationOperatorUniform(mult_noise_distribution,additive_noise_distribution,n_sample_func,pm_prob,min_affinity,max_w,mutation_weights,sign_flip_probability);
 
 mutate_function = i -> noise_mtype_mult_add_4(i,mutation_op)
 

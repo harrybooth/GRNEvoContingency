@@ -46,7 +46,7 @@ function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_f
     return rtype
 end
 
-function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_function,mut_op::Union{MutationOperatorNew,MutationOperatorDual})
+function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_function,mut_op::Union{MutationOperatorNew,MutationOperatorDual,MutationOperatorUniform})
 
     n_mut = length(mut_tuple[:weight_id])
 
@@ -112,7 +112,7 @@ function evaluate_epistasis_types!(tr,grn_parameters,development,fitness_functio
     tr.other = all_class_epi
 end
 
-function evaluate_epistasis_types!(tr,grn_parameters,development,fitness_function,mut_op::Union{MutationOperatorNew,MutationOperatorDual})
+function evaluate_epistasis_types!(tr,grn_parameters,development,fitness_function,mut_op::Union{MutationOperatorNew,MutationOperatorDual,MutationOperatorUniform})
     all_class_epi = map(mi->evaluate_epistasis_class(mi,grn_parameters,development,fitness_function,mut_op),tr.mutant_info);
     tr.other = all_class_epi
 end

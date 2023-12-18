@@ -747,7 +747,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
 
 end
 
-function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_evo_summary!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     # all_wait_times = reduce(hcat,[cumulative_wait_time(tr) for tr in trajectories]);
 
@@ -976,7 +976,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             min_t = minimum(mut_size)
             max_t = maximum(mut_size)
 
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+            norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
 
             CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
             CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
@@ -996,7 +996,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             min_t = minimum(mut_size)
             max_t = maximum(mut_size)
 
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+            norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
 
             if type == :existing
                 CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
@@ -1022,7 +1022,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             min_t = minimum(mut_size)
             max_t = maximum(mut_size)
 
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+            norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
 
             if type == :existing
                 CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
@@ -1086,7 +1086,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
         labels_wait =  [L"\text{total generations - [25%,50%,75%] quantiles}"]
     end
 
-    labels_mut =  [L"\text{weight edits : existing}",L"\text{weight edits : new}"]
+    labels_mut =  [L"\text{weight edits: multiplicative}",L"\text{weight edits: additive}"]
 
     labels_epi  = [L"\text{RSE}",L"\text{Sign epistasis}",L"\text{No epistasis}",L"\text{Single mutation}"]
 
