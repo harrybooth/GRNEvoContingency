@@ -1,3 +1,5 @@
+const mut_choice_map = reshape(1:12 |> collect,(3,4))
+
 mutable struct Trajectory
 
     sim_id :: Int64
@@ -136,7 +138,7 @@ function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tupl
                                                                                                             mss_probabilities,mss_predictions,mss_entropies,mss_prediction_error,train_test_indicator,train_test_indicator_mss,embeddings,other)
 end
 
-function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tuple::Vector{Tuple{Float64, Float64}},wait_times,mut_types::Any,mut_sizes::Any,weight_names)
+function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tuple::Vector{Tuple{Float64, Float64}},wait_times,mut_choices::Any,mut_types::Any,mut_sizes::Any,weight_names)
 
     geno_traj = [collect(i) for i in eachcol(geno_traj_m)]
 
@@ -171,7 +173,7 @@ function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tupl
 
     ######## generate mutation data
 
-    weight_id = get_mutation_id(geno_traj_m)
+    weight_id = map(mc-> [mut_choice_map[i] for i in mc],mut_choices)
 
     fitness_delta = get_fitness_delta(fitness_traj_add)
 

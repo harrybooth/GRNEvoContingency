@@ -583,11 +583,7 @@ function noise_mtype_mult_add(w::Matrix{Float64},mut_op::MutationOperatorDual)
     mtype = []
     sizes = []
 
-    choices_select = []
-
     for index in choices
-
-        push!(choices_select,index)
 
         if rand() < mut_op.pm_prob
 
@@ -619,14 +615,11 @@ function noise_mtype_mult_add(w::Matrix{Float64},mut_op::MutationOperatorDual)
 
         if abs(new_w[index]) > mut_op.max_w
             new_w[index] = sign(new_w[index])*mut_op.max_w
-            pop!(mtype)
-            pop!(choices_select)
-            pop!(sizes)
         end
 
     end
 
-    return new_w, choices_select, mtype, sizes, true
+    return new_w, choices, mtype, sizes, true
 end
 
 function noise_mtype_mult_add_2(w::Matrix{Float64},mut_op::MutationOperatorDual)
