@@ -76,7 +76,7 @@ min_affinity = 1e-3
 
 sign_flip_probability = 0.5
 
-pm_prob = 0.9
+pm_prob = 0.5
 
 viable_mutations = ones(Int,Ng,Ng+1)
 
@@ -89,7 +89,7 @@ mult_σ = 0.2
 
 mult_noise_distribution = LogNormal(-0.1,mult_σ)
 
-add_σ = 1.
+add_σ = 0.5
 
 additive_noise_distribution = Normal(0.,add_σ)
 
@@ -120,5 +120,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_trials = 10000
+n_trials = 20000
 max_gen = 250000

@@ -2278,8 +2278,212 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,pred_con
 
     ##################
 
-    linkyaxes!(ax_train,ax_test)
-    linkyaxes!(ax_train_accuracy,ax_test_accuracy)
+    # linkyaxes!(ax_train,ax_test)
+    # linkyaxes!(ax_train_accuracy,ax_test_accuracy)
+
+    linkyaxes!([ax_train,ax_test,ax_train_accuracy,ax_test_accuracy]...)
+
+    valid_xticks = filter(x->x%2==1,1:max_ce)
+
+    ax_train.xticks = (valid_xticks,string.(valid_xticks))
+    ax_test.xticks = (valid_xticks,string.(valid_xticks))
+
+    ax_entropy.xticks = (1:max_ce,string.(1:max_ce))
+
+    CairoMakie.hidedecorations!(ax_train,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    CairoMakie.hidedecorations!(ax_test,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    hidespines!(ax_train_accuracy)
+
+    hideydecorations!(ax_test_accuracy,label = false,ticklabels = false,ticks = false,minorticks = false)
+    hidexdecorations!(ax_test_accuracy)
+
+    hideydecorations!(ax_train_accuracy,label = false,ticklabels = false,ticks = false,minorticks = false)
+    hidexdecorations!(ax_train_accuracy)
+
+
+    Legend(fig[3, 1:2],
+        vcat([train_ac,train_ac_null,[ent_line,ent_scatt]],[PolyElement(color=c) for c in cp]),
+        vcat([L"v\text{-restricted accuracy}",L"\text{Null accuracy}",L"\text{Average entropy}"],[L"\text{Incorrect}",L"\text{Correct}",L"M_{H_0} \text{ assigned}"]),framevisible=false,orientation = :horizontal,nbanks = 2,
+        patchsize = (10, 10),rowgap = 2,colgap = 7,padding=(10.0f0, 10.0f0, 0.0f0, 0.0f0))
+
+    
+    colgap!(performance_plot,Relative(0.01))
+    rowgap!(performance_plot,Relative(0.05))
+
+    # colgap!(entropy_plot, Relative(0.01))
+    # rowgap!(entropy_plot, Relative(0.05))
+
+    rowgap!(fig.layout, Relative(0.05))
+    colgap!(fig.layout, Relative(0.01))
+
+end
+
+function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,predict_label_to_vertex_rev,pred_config)
+
+    cp = palette(:viridis, 3)
+
+    performance_plot = fig[1, 1:2] = GridLayout()
+    entropy_plot = fig[2, 1:2] = GridLayout()
+
+    ax_train = Axis(performance_plot[1,1], xlabel = L"v \text{, cumulative weight edits}", title = L"\text{Train (in-sample)}", ylabel = L"\text{% of sample}")
+    ax_test = Axis(performance_plot[1,2],xlabel = L"v \text{, cumulative weight edits}", title = L"\text{Train (out-of-sample)}")
+
+    ax_train_accuracy = Axis(performance_plot[1,1])
+    ax_test_accuracy = Axis(performance_plot[1,2],yticklabelcolor = :green, yaxisposition = :right,ylabelcolor = :green)
+
+    hideydecorations!(ax_test)
+    hideydecorations!(ax_train_accuracy)
+
+    ax_entropy = Axis(entropy_plot[1,1:2],xlabel = L"v \text{, cumulative weight edits}", ylabel = L"\text{Prediction entropies}")
+
+    all_bar_counts = []
+    all_bar_stack = []
+    all_bar_x = []
+
+    total_tr = 0
+    total_te = 0
+
+    if isnothing(max_ce)
+        max_ce = maximum(map(tr->tr.weight_edits[tr.H0],trajectories_p))
+    end
+
+    pop = filter(tr->tr.train_test_indicator == :train,trajectories_p)
+
+    mean_accuracies = []
+    mean_null_accuracies = []
+    roc = []
+
+    for r in 1:max_ce
+        
+        pop_achieved = filter(tr->v_restricted_label_inclusion(tr,x->weight_edit_restriction_measure(x,r),:H0),pop)
+
+        pop_not_achieved = filter(tr->!v_restricted_label_inclusion(tr,x->weight_edit_restriction_measure(x,r),:H0),pop)
+
+        accuracies  = map(tr->v_restricted_accuracy(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)
+
+        null_accuracies  = map(tr->v_restricted_accuracy(tr,x->weight_edit_restriction_measure(x,0),pred_type),pop_not_achieved)
+
+        pop_na_labels = map(tr->predict_label_to_vertex_rev[tr.inc_metagraph_vertices[tr.H0]],pop_not_achieved)
+
+        pred_prob  = reduce(hcat,map(tr->v_restricted_probabilities(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)) |> transpose |> collect;
+
+        roc_score = roc_auc_score(pop_na_labels,pred_prob,multi_class = "ovr", average = "weighted")
+
+        bar_counts = [count(x->x==0,accuracies),count(x->x==1,accuracies),length(pop_achieved)] ./ length(trajectories_p)
+
+        bar_stack = [1,2,3]
+
+        bar_x = [r,r,r]
+
+        push!(all_bar_counts,bar_counts)
+        push!(all_bar_stack,bar_stack)
+        push!(all_bar_x,bar_x)
+
+        if length(accuracies) > 1
+            push!(roc,roc_score)
+            push!(mean_accuracies,mean(accuracies))
+            push!(mean_null_accuracies,mean(null_accuracies))
+        end
+
+    end
+
+    train_ac = CairoMakie.lines!(ax_train_accuracy,Float64.(mean_accuracies),color = :green, linestyle = "--",linewidth = pred_config.perf_linewidth)
+    train_ac_null = CairoMakie.lines!(ax_train_accuracy,Float64.(mean_null_accuracies),color = :cyan,linestyle = "--",linewidth = pred_config.perf_linewidth)
+    train_roc = CairoMakie.lines!(ax_train_accuracy,Float64.(roc),color = :purple,linestyle = "--",linewidth = pred_config.perf_linewidth)
+
+    all_bar_counts = reduce(vcat,all_bar_counts)
+    all_bar_stack = reduce(vcat,all_bar_stack)
+    all_bar_x = reduce(vcat,all_bar_x);
+
+    CairoMakie.barplot!(ax_train,all_bar_x,all_bar_counts,stack = all_bar_stack,color = all_bar_stack)
+
+    ################################
+
+    all_bar_counts = []
+    all_bar_stack = []
+    all_bar_x = []
+
+    total_tr = 0
+    total_te = 0
+
+    pop = filter(tr->tr.train_test_indicator == :test,trajectories_p)
+
+    mean_accuracies = []
+    mean_null_accuracies = []
+    roc = []
+
+    for r in 1:max_ce
+        
+        pop_achieved = filter(tr->v_restricted_label_inclusion(tr,x->weight_edit_restriction_measure(x,r),:H0),pop)
+
+        pop_not_achieved = filter(tr->!v_restricted_label_inclusion(tr,x->weight_edit_restriction_measure(x,r),:H0),pop)
+
+        accuracies  = map(tr->v_restricted_accuracy(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)
+
+        null_accuracies  = map(tr->v_restricted_accuracy(tr,x->weight_edit_restriction_measure(x,0),pred_type),pop_not_achieved)
+
+        pop_na_labels = map(tr->predict_label_to_vertex_rev[tr.inc_metagraph_vertices[tr.H0]],pop_not_achieved)
+
+        pred_prob  = reduce(hcat,map(tr->v_restricted_probabilities(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)) |> transpose |> collect;
+
+        roc_score = roc_auc_score(pop_na_labels,pred_prob,multi_class = "ovr", average = "weighted")
+
+        bar_counts = [count(x->x==0,accuracies),count(x->x==1,accuracies),length(pop_achieved)] ./ length(trajectories_p)
+
+        bar_stack = [1,2,3]
+
+        bar_x = [r,r,r]
+
+        push!(all_bar_counts,bar_counts)
+        push!(all_bar_stack,bar_stack)
+        push!(all_bar_x,bar_x)
+
+        if length(accuracies) > 1
+            push!(roc,roc_score)
+            push!(mean_accuracies,mean(accuracies))
+            push!(mean_null_accuracies,mean(null_accuracies))
+        end
+
+    end
+
+    test_ac = CairoMakie.lines!(ax_test_accuracy,Float64.(mean_accuracies),color = :blue,linestyle = "--",linewidth = pred_config.perf_linewidth)
+    test_ac_null = CairoMakie.lines!(ax_test_accuracy,Float64.(mean_null_accuracies),color = :cyan,linestyle = "--",linewidth = pred_config.perf_linewidth)
+    test_roc = CairoMakie.lines!(ax_test_accuracy,Float64.(roc),color = :purple,linestyle = "--",linewidth = pred_config.perf_linewidth)
+
+    all_bar_counts = reduce(vcat,all_bar_counts)
+    all_bar_stack = reduce(vcat,all_bar_stack)
+    all_bar_x = reduce(vcat,all_bar_x);
+
+    CairoMakie.barplot!(ax_test,all_bar_x,all_bar_counts,stack = all_bar_stack,color = all_bar_stack)
+
+    ####################
+
+    all_mean_ent = []
+
+    for r in 1:max_ce
+
+        pop_not_achieved = filter(tr->!v_restricted_label_inclusion(tr,x->weight_edit_restriction_measure(x,r),:H0),trajectories_p)
+        
+        mean_ent = map(tr->v_restricted_entropy(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)
+
+        hist!(ax_entropy, mean_ent, scale_to=pred_config.entropy_hist_scale, offset=r, direction=:x, bins = 25, color = (:grey,0.5))
+        push!(all_mean_ent,mean(mean_ent))
+
+        # 0.6
+
+    end
+
+    ent_line = CairoMakie.lines!(ax_entropy,Float64.(all_mean_ent),color = :red, linewidth = pred_config.entropy_linewidth)
+    ent_scatt = CairoMakie.scatter!(ax_entropy,Float64.(all_mean_ent),color = :red, markersize = pred_config.entropy_markersize)
+
+    ##################
+
+    # linkyaxes!(ax_train,ax_test)
+    # linkyaxes!(ax_train_accuracy,ax_test_accuracy)
+
+    linkyaxes!([ax_train,ax_test,ax_train_accuracy,ax_test_accuracy]...)
 
     valid_xticks = filter(x->x%2==1,1:max_ce)
 
