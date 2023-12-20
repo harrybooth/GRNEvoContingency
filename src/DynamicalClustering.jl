@@ -127,3 +127,18 @@ end
 function entropy(v)
     length(v) != 1 ? -sum(v[v .!= 0] .* log.(v[v .!= 0])) / log(length(v)) : -sum(v[v .!= 0] .* log.(v[v .!= 0]))
 end
+
+function cross_entropy(p,q)
+
+    total_entropy = 0
+
+    for (pi,qi) in zip(p,q)
+        if (pi == 0) || (qi == 0)
+            nothing
+        else
+            total_entropy += pi*log(qi)
+        end
+    end
+    
+    return -total_entropy
+end

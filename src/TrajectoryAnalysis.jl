@@ -534,6 +534,17 @@ function v_restricted_entropy(tr::Trajectory,restriction_measure,prediction_type
     end
 end
 
+function v_restricted_probabilities(tr::Trajectory,restriction_measure,prediction_type)
+    prediction_id = maximum(findall(restriction_measure(tr)))
+    if prediction_type == :tt
+        return tr.tt_label_probabilities[prediction_id,:]
+    elseif prediction_type == :gt
+        return tr.gt_label_probabilities[prediction_id,:]
+    else
+        return tr.mss_probabilities[prediction_id,:]
+    end
+end
+
 function v_restricted_label_inclusion(tr::Trajectory,restriction_measure,label_type)
     prediction_id = maximum(findall(restriction_measure(tr)))
     if label_type == :H0
