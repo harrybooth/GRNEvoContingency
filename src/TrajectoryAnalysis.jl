@@ -493,6 +493,52 @@ function assign_predictions!(tr::Trajectory,model,prediction_type,predict_label_
 
 end
 
+function assign_predictions_sk!(tr::Trajectory,model,prediction_type,predict_label_to_vertex)
+
+    if prediction_type == :tt
+        tt = reduce(hcat,tr.topologies)
+        tt_dtrain = tt[1:10,:] |> transpose |> collect
+        tr.tt_label_probabilities = model.predict_proba(tt_dtrain)
+        tr.tt_label_predictions = mapslices(p->predict_label_to_vertex[argmax(p)],tr.tt_label_probabilities,dims = 2)
+        tr.tt_label_entropies = mapslices(p->entropy(p),tr.tt_label_probabilities,dims = 2);
+
+    elseif prediction_type == :gt
+        gt = reduce(hcat,tr.geno_traj)
+        gt_dtrain = gt[1:10,:] |> transpose |> collect
+        tr.gt_label_probabilities = model.predict_proba(gt_dtrain)
+        tr.gt_label_predictions = mapslices(p->predict_label_to_vertex[argmax(p)],tr.gt_label_probabilities,dims = 2)
+        tr.gt_label_entropies = mapslices(p->entropy(p),tr.gt_label_probabilities,dims = 2);
+    else
+        gt = reduce(hcat,tr.geno_traj)
+        gt_dtrain = gt[1:10,:] |> transpose |> collect
+
+        prediction_prob = []
+        prediction_labels = []
+
+        for m in model
+            edge_prob = m.predict_proba(gt_dtrain)
+            edge_label = mapslices(x->argmax(x)-2 ,edge_prob,dims = 2)
+
+            push!(prediction_prob,edge_prob)
+            push!(prediction_labels,edge_label)
+        end
+
+        tr.mss_probabilities = reduce((x,y) -> cat(x,y,dims = 3),[reshape(mss_p,(size(mss_p)...,1)) for mss_p in prediction_prob])
+        tr.mss_predictions = [r |> collect for r in eachrow(reduce(hcat,prediction_labels))]
+        
+        mss_entropies = []
+
+        for n in 1:length(tr.topologies)
+            ps = @view tr.mss_probabilities[n,:,:]
+            e = entropy([calculate_probability(ps,t) for t in powerset_topologies])
+            push!(mss_entropies,e)
+        end
+
+        tr.mss_entropies = mss_entropies
+    end
+
+end
+
 
 function assign_mss_prediction_errors!(tr::Trajectory,metric)
 

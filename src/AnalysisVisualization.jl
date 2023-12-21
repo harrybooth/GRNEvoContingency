@@ -2281,7 +2281,7 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,pred_con
     # linkyaxes!(ax_train,ax_test)
     # linkyaxes!(ax_train_accuracy,ax_test_accuracy)
 
-    linkyaxes!([ax_train,ax_test,ax_train_accuracy,ax_test_accuracy]...)
+    linkyaxes!([ax_train,ax_test,ax_train_accuracy,ax_test_accuracy,ax_entropy]...)
 
     valid_xticks = filter(x->x%2==1,1:max_ce)
 
@@ -2483,7 +2483,7 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,predict_
     # linkyaxes!(ax_train,ax_test)
     # linkyaxes!(ax_train_accuracy,ax_test_accuracy)
 
-    linkyaxes!([ax_train,ax_test,ax_train_accuracy,ax_test_accuracy]...)
+    linkyaxes!([ax_train,ax_test,ax_train_accuracy,ax_test_accuracy,ax_entropy]...)
 
     valid_xticks = filter(x->x%2==1,1:max_ce)
 
