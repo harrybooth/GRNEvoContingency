@@ -2329,7 +2329,7 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,pred_con
 
 end
 
-function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,predict_label_to_vertex_rev,pred_config)
+function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,vertex_to_predict_label,pred_config)
 
     cp = palette(:viridis, 3)
 
@@ -2378,12 +2378,12 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,predict_
 
         null_accuracies  = map(tr->v_restricted_accuracy(tr,x->weight_edit_restriction_measure(x,0),pred_type),pop_not_achieved)
 
-        if pred_type != :mss
-            pop_na_labels = map(tr->predict_label_to_vertex_rev[tr.inc_metagraph_vertices[tr.H0]],pop_not_achieved)
-            pred_prob  = reduce(hcat,map(tr->v_restricted_probabilities(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)) |> transpose |> collect;
-            roc_score = roc_auc_score(pop_na_labels,pred_prob,multi_class = "ovr", average = "weighted")
-            push!(roc,roc_score)
-        end
+        # if pred_type != :mss
+        #     pop_na_labels = map(tr->vertex_to_predict_label[tr.inc_metagraph_vertices[tr.H0]],pop_not_achieved)
+        #     pred_prob  = reduce(hcat,map(tr->v_restricted_probabilities(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)) |> transpose |> collect;
+        #     roc_score = roc_auc_score(pop_na_labels,pred_prob,multi_class = "ovr", average = "weighted")
+        #     push!(roc,roc_score)
+        # end
 
         bar_counts = [count(x->x==0,accuracies),count(x->x==1,accuracies),length(pop_achieved)] ./ length(trajectories_p)
 
@@ -2406,9 +2406,9 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,predict_
     train_ac = CairoMakie.lines!(ax_train_accuracy,Float64.(mean_accuracies),color = :green, linestyle = "--",linewidth = pred_config.perf_linewidth)
     train_ac_null = CairoMakie.lines!(ax_train_accuracy,Float64.(mean_null_accuracies),color = :cyan,linestyle = "--",linewidth = pred_config.perf_linewidth)
 
-    if pred_type != :mss
-        train_roc = CairoMakie.lines!(ax_train_accuracy,Float64.(roc),color = :purple,linestyle = "--",linewidth = pred_config.perf_linewidth)
-    end
+    # if pred_type != :mss
+    #     train_roc = CairoMakie.lines!(ax_train_accuracy,Float64.(roc),color = :purple,linestyle = "--",linewidth = pred_config.perf_linewidth)
+    # end
 
     all_bar_counts = reduce(vcat,all_bar_counts)
     all_bar_stack = reduce(vcat,all_bar_stack)
@@ -2436,7 +2436,7 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,predict_
     roc = []
 
     for r in 1:max_ce
-        
+
         pop_achieved = filter(tr->v_restricted_label_inclusion(tr,x->weight_edit_restriction_measure(x,r),:H0),pop)
 
         pop_not_achieved = filter(tr->!v_restricted_label_inclusion(tr,x->weight_edit_restriction_measure(x,r),:H0),pop)
@@ -2445,12 +2445,12 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,predict_
 
         null_accuracies  = map(tr->v_restricted_accuracy(tr,x->weight_edit_restriction_measure(x,0),pred_type),pop_not_achieved)
 
-        if pred_type != :mss
-            pop_na_labels = map(tr->predict_label_to_vertex_rev[tr.inc_metagraph_vertices[tr.H0]],pop_not_achieved)
-            pred_prob  = reduce(hcat,map(tr->v_restricted_probabilities(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)) |> transpose |> collect
-            roc_score = roc_auc_score(pop_na_labels,pred_prob,multi_class = "ovr", average = "weighted")
-            push!(roc,roc_score)
-        end
+        # if pred_type != :mss
+        #     pop_na_labels = map(tr->vertex_to_predict_label[tr.inc_metagraph_vertices[tr.H0]],pop_not_achieved)
+        #     pred_prob  = reduce(hcat,map(tr->v_restricted_probabilities(tr,x->weight_edit_restriction_measure(x,r),pred_type),pop_not_achieved)) |> transpose |> collect
+        #     roc_score = roc_auc_score(pop_na_labels,pred_prob,multi_class = "ovr", average = "weighted")
+        #     push!(roc,roc_score)
+        # end
 
         bar_counts = [count(x->x==0,accuracies),count(x->x==1,accuracies),length(pop_achieved)] ./ length(trajectories_p)
 
@@ -2472,9 +2472,9 @@ function create_prediction_summary!(fig,trajectories_p,pred_type,max_ce,predict_
     test_ac = CairoMakie.lines!(ax_test_accuracy,Float64.(mean_accuracies),color = :blue,linestyle = "--",linewidth = pred_config.perf_linewidth)
     test_ac_null = CairoMakie.lines!(ax_test_accuracy,Float64.(mean_null_accuracies),color = :cyan,linestyle = "--",linewidth = pred_config.perf_linewidth)
 
-    if pred_type != :mss
-        test_roc = CairoMakie.lines!(ax_test_accuracy,Float64.(roc),color = :purple,linestyle = "--",linewidth = pred_config.perf_linewidth)
-    end
+    # if pred_type != :mss
+    #     test_roc = CairoMakie.lines!(ax_test_accuracy,Float64.(roc),color = :purple,linestyle = "--",linewidth = pred_config.perf_linewidth)
+    # end
 
     all_bar_counts = reduce(vcat,all_bar_counts)
     all_bar_stack = reduce(vcat,all_bar_stack)
