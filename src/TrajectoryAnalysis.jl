@@ -509,14 +509,42 @@ function assign_predictions_sk!(tr::Trajectory,model,prediction_type,predict_lab
         tr.gt_label_predictions = mapslices(p->predict_label_to_vertex[argmax(p)],tr.gt_label_probabilities,dims = 2)
         tr.gt_label_entropies = mapslices(p->entropy(p),tr.gt_label_probabilities,dims = 2);
     else
+        nothing
+    end
+
+end
+
+function assign_predictions_sk!(tr::Trajectory,model,prediction_type,predict_label_to_vertex,weight_class_dict)
+
+    if prediction_type == :tt
+        tt = reduce(hcat,tr.topologies)
+        tt_dtrain = tt[1:10,:] |> transpose |> collect
+        tr.tt_label_probabilities = model.predict_proba(tt_dtrain)
+        tr.tt_label_predictions = mapslices(p->predict_label_to_vertex[argmax(p)],tr.tt_label_probabilities,dims = 2)
+        tr.tt_label_entropies = mapslices(p->entropy(p),tr.tt_label_probabilities,dims = 2);
+
+    elseif prediction_type == :gt
+        gt = reduce(hcat,tr.geno_traj)
+        gt_dtrain = gt[1:10,:] |> transpose |> collect
+        tr.gt_label_probabilities = model.predict_proba(gt_dtrain)
+        tr.gt_label_predictions = mapslices(p->predict_label_to_vertex[argmax(p)],tr.gt_label_probabilities,dims = 2)
+        tr.gt_label_entropies = mapslices(p->entropy(p),tr.gt_label_probabilities,dims = 2);
+    else
         gt = reduce(hcat,tr.geno_traj)
         gt_dtrain = gt[1:10,:] |> transpose |> collect
 
         prediction_prob = []
         prediction_labels = []
 
-        for m in model
-            edge_prob = m.predict_proba(gt_dtrain)
+        for (n,m) in enumerate(model)
+            edge_prob_v = m.predict_proba(gt_dtrain)
+
+            edge_prob = zeros(size(edge_prob_v,1),3)
+
+            for (nc,col) in enumerate(eachcol(edge_prob_v))
+                edge_prob[:,weight_class_dict[n][2][nc-1]+2] = col
+            end
+
             edge_label = mapslices(x->argmax(x)-2 ,edge_prob,dims = 2)
 
             push!(prediction_prob,edge_prob)
@@ -542,7 +570,13 @@ end
 
 function assign_mss_prediction_errors!(tr::Trajectory,metric)
 
-    tr.mss_prediction_error = [Distances.evaluate(metric,vcat(pred,[0.,0.]),tr.minimal_stripe_subgraphs[end]) for pred in tr.mss_predictions]
+    tr.mss_prediction_error = [Distances.evaluate(metric,vcat(pred,[0.,0.]),tr.minimal_stripe_subgraphs[tr.H0]) for pred in tr.mss_predictions]
+
+end
+
+function assign_mss_prediction_errors!(tr::Trajectory)
+
+    tr.mss_prediction_error = [vcat(pred,[0.,0.]) == tr.minimal_stripe_subgraphs[tr.H0] for pred in tr.mss_predictions]
 
 end
 
