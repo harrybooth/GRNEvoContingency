@@ -48,12 +48,6 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 β = (1.,10000)
 
-noise_cv = 1.
-
-mut_prob = 0.1
-
-deletion_prob = 0.01
-
 grn_parameters = DefaultGRNParameters();
 
 max_w = 10.
@@ -62,19 +56,19 @@ output_gene = 3
 
 n_stripe = 1
 
-min_width = 5
-
-lower_bound = 5.
-
-upper_bound = 10.
-
 max_conc = 20.
 
 fitness_function = s -> fitness_evaluation(s,x->malt_fitness_absolute(x,n_stripe,max_conc),output_gene);
 
-# fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
-
 tolerance = 0.9
+
+mut_prob = 0.1
+
+min_affinity = 1e-3
+
+sign_flip_probability = 0.5
+
+pm_prob = 0.5
 
 viable_mutations = ones(Int,Ng,Ng+1)
 
@@ -83,11 +77,19 @@ viable_mutations[3,4] = 0
 
 mutation_weights = findall(viable_mutations .> 0)
 
+mult_σ = 0.2
+
+mult_noise_distribution = LogNormal(-0.1,mult_σ)
+
+add_σ = 1.
+
+additive_noise_distribution = Normal(0.,add_σ)
+
 n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
-mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
+mutation_op = MutationOperatorDual(mult_noise_distribution,additive_noise_distribution,n_sample_func,pm_prob,min_affinity,max_w,mutation_weights,sign_flip_probability);
 
-mutate_function = i -> noise_mtype(i,mutation_op)
+mutate_function = i -> noise_mtype_mult_add(i,mutation_op)
 
 ########## Dyn Setup ######### 
 
