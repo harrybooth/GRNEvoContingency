@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=RepeatedEvolution_MainData
+#SBATCH --job-name=RepeatedEvolution_8
 #SBATCH --ntasks=1000
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
@@ -10,4 +10,4 @@
 
 # Initialise Julia
 ml Julia/1.8.2-linux-x86_64
-julia RepeatedEvolution_MinDyn_1.jl
+julia RepeatedEvolution_MinDyn_8.jl
