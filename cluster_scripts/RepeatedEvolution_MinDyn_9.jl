@@ -53,7 +53,7 @@ end
 
 # @everywhere all_experiments = ["Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_1","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_2","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_3","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_4","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_Contingent_5"]
 
-all_experiments = ["Variations/RE_Minimal_Inhibiting_Theta_2"]
+all_experiments = ["Final_Experiments/Variations/RE_Minimal_Inhibiting_Theta_2"]
 
 # "Experiment_1/RE_Minimal_Inhibiting_Single"
 
