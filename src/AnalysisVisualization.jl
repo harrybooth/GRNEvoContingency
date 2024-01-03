@@ -359,6 +359,424 @@ function plot_dynamical_summary!(fig,trajectories,embedding,top_n,minimal_motif_
 
 end
 
+function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,mst_conf_int,end_parents,vertex_top_map,example_mst,tr_choice,ds_config)
+
+    trajectories_p_d = filter(tr->tr.inc_metagraph_vertices[end] ∈ sorted_uep[1:top_n],trajectories);
+
+    mo_umap = fig[1:4, 1:4] = GridLayout()
+
+    ex1 = fig[5:7, 1:4] = GridLayout()
+    rmh0 = fig[8,1:4] = GridLayout()
+
+    top_n_dict = Dict(v_id=>pos for (pos,v_id) in enumerate(sorted_uep[1:top_n]))
+
+    #### Motif Distribution
+
+    color_sorted_counts_uep = [i <= top_n ? ds_config.color_scheme[i] : :grey for i in 1:length(sorted_counts_uep)]
+
+    view_sorted_uep_id = sorted_counts_uep .> minimal_motif_count
+
+    other = mean(sorted_counts_uep[.!view_sorted_uep_id])
+
+    n_norm = sum(sorted_counts_uep)
+
+    sorted_uep_proportions = vcat(sorted_counts_uep[view_sorted_uep_id],[other]) ./ n_norm 
+
+    view_color_sorted_uep = vcat(color_sorted_counts_uep[view_sorted_uep_id],[:grey])
+
+    conf_int_choices = mst_conf_int[view_sorted_uep_id]
+
+    push!(conf_int_choices,(minimum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm,maximum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm))
+
+    ##############
+
+    # ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n }" * string(top_n) * " MST : " * string(sum(sorted_counts_uep[1:top_n])) * " trajectories", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
+
+    count_top_n = round(sum(sorted_uep_proportions[1:top_n])*100, digits = 2)
+
+    ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n  M^{(i)}_{N_i} : %$count_top_n % of trajectories}", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
+
+    CairoMakie.scatter!(ax1,embedding, color = [haskey(top_n_dict,i) ? (ds_config.color_scheme[top_n_dict[i]],0.5) : (:grey,0.5) for i in end_parents],markersize = ds_config.embed_markersize)
+
+    hidedecorations!(ax1, label = false)
+
+    for i in 1:top_n
+
+        ax_geno = Axis(mo_umap[3,i], backgroundcolor = (ds_config.color_scheme[i],ds_config.color_fade),aspect = DataAspect())
+
+        draw_grn!(ax_geno,vertex_top_map[sorted_uep[i]],ds_config.draw_config,ds_config.node_colors,ds_config.fontsize,false,false)
+    end
+
+    #######################
+
+    ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{Probabilty}", xlabel = L"M^{(i)}_{N_i}")
+
+    CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_uep)
+
+    CairoMakie.errorbars!(ax_mo,1:length(sorted_uep_proportions),sorted_uep_proportions,sorted_uep_proportions .- first.(conf_int_choices),last.(conf_int_choices) .- sorted_uep_proportions,color = :black,whiskerwidth = ds_config.fitness_markersize/2)
+
+    ax_mo.xticks = (1:length(sorted_uep_proportions),vcat(string.(1:length(sorted_uep_proportions[1:end-1])),["Other"]))
+
+    CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    ###################
+
+    tr_data = filter(tr->tr.inc_metagraph_vertices[tr.H0] ∈ sorted_uep[example_mst],trajectories);
+    tr_data_id = findall(tr->tr.inc_metagraph_vertices[tr.H0] ∈ sorted_uep[example_mst],trajectories)
+
+    tr_traj_id = uniqueid(tr_data[tr_choice].topologies)
+    tr_traj_id[end] = length(tr_data[tr_choice].topologies)
+
+    tr_traj = tr_data[tr_choice].topologies[tr_traj_id]
+    tr_networks = tr_data[tr_choice].geno_traj[tr_traj_id]
+
+    development = DefaultGRNSolver()
+
+    tr_phenotypes = [Individual(reshape(net,(3,4)),grn_parameters,development).phenotype.u[end] for net in tr_networks]
+
+    tr_fd = create_full_fitness_traj(tr_data[tr_choice].fitness_traj_tuple,tr_data[tr_choice].wait_times)
+
+    tr_top_fitness_id = uniqueid(tr_fd)[tr_traj_id]
+    
+    tr_fd_coarse = map(x->x[1]+1,tr_fd)
+    tr_fd_refine = map(x->x[2],tr_fd)
+
+    tr_top_fitness_rf = [(x,tr_fd_refine[x]) for x in tr_top_fitness_id]
+
+    tr_top_stripe_id = [tr_fd_coarse[x] for x in tr_top_fitness_id]
+
+    ###################
+
+    progression_cs = palette(:haline,length(tr_top_fitness_rf)+1)
+
+    ax_fitness = Axis(ex1[1:2,1:length(tr_phenotypes)],xlabel = L"\text{Generation}")
+
+    hideydecorations!(ax_fitness,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    rline = CairoMakie.lines!(ax_fitness,tr_fd_refine, color = :grey, linewidth = ds_config.fitness_linewidth)
+    cline = CairoMakie.lines!(ax_fitness,tr_fd_coarse, linestyle = "--", color = :blue,linewidth = ds_config.fitness_linewidth)
+
+    CairoMakie.scatter!(ax_fitness,tr_top_fitness_rf, color = [progression_cs[i] for i in 1:length(tr_top_fitness_rf)], markersize = ds_config.fitness_markersize, marker = '★')
+
+    h0 = tr_top_fitness_id[minimum(findall(tr_top_stripe_id .== 1))]
+    Ni = tr_top_fitness_id[end]
+
+    if h0 != Ni
+        v = Int.(floor((h0+Ni)/2))
+        ax_fitness.xticks = ([1,h0,v,Ni],[L"1",L"H_0",L"%$v",L"N_i"])
+    else
+        ax_fitness.xticks = ([1,h0],[L"1",L"H_0 = N_i"])
+    end
+
+    ####################
+
+    # ex1.alignmode = Mixed(right = 0)
+
+    ax_pheno_list = []
+
+    for i in 1:length(tr_phenotypes)
+
+        if tr_top_stripe_id[i] == 1
+            ax_geno = Axis(ex1[3:4,i], backgroundcolor = (ds_config.color_scheme[example_mst],ds_config.color_fade),aspect = DataAspect())
+        else
+            ax_geno = Axis(ex1[3:4,i], backgroundcolor = RGBf(0.98, 0.98, 0.98),aspect = DataAspect())
+        end
+
+        ax_pheno = Axis(ex1[5,i],alignmode=Mixed(bottom=0))
+
+        for g in 1:3
+            CairoMakie.lines!(ax_pheno,tr_phenotypes[i][g,:],linewidth = ds_config.pheno_linewidth, color = ds_config.node_colors[g])
+        end
+
+        CairoMakie.scatter!(ax_pheno,[(90,0.8*tr_phenotypes[end][3,50])],color = progression_cs[i], markersize = ds_config.fitness_markersize,marker = '★')
+
+        CairoMakie.hidedecorations!(ax_pheno)
+
+        draw_grn!(ax_geno,tr_traj[i],ds_config.draw_config,ds_config.node_colors,ds_config.fontsize,false,false)
+
+        push!(ax_pheno_list,ax_pheno)
+    end
+
+    linkyaxes!(ax_pheno_list...)
+
+    ##########################
+
+    all_prop  = []
+    all_dodge  = []
+    all_x  = []
+
+    for n in 1:top_n
+
+        pop = filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories_p_d)
+
+        pop_equal = filter(tr->tr.minimal_stripe_subgraphs[tr.H0] == tr.minimal_stripe_subgraphs[end], pop)
+
+        pop_H0_incl_N = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[end],tr.minimal_stripe_subgraphs[tr.H0])) & !(tr.minimal_stripe_subgraphs[end] == tr.minimal_stripe_subgraphs[tr.H0]),pop)
+
+        pop_N_incl_H0 = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[tr.H0],tr.minimal_stripe_subgraphs[end])) & !(tr.minimal_stripe_subgraphs[end] == tr.minimal_stripe_subgraphs[tr.H0]),pop)
+
+        n_pop = length(pop)
+
+        proportions = [length(pop_equal),length(pop_H0_incl_N),length(pop_N_incl_H0),length(pop) - length(pop_equal) - length(pop_N_incl_H0) - length(pop_H0_incl_N)]
+
+        @assert sum(proportions) == n_pop
+
+        x = [1,2,3,4]
+
+        dodge = [n,n,n,n]
+
+        push!(all_prop,proportions ./ n_pop)
+        push!(all_dodge,dodge)
+        push!(all_x,x)
+
+    end
+
+    ax_rh0 = Axis(rmh0[1,1],alignmode=Mixed(top=0))
+
+    x = reduce(vcat,all_x)
+    dodge = reduce(vcat,all_dodge)
+    proportions = reduce(vcat,all_prop)
+
+    CairoMakie.barplot!(ax_rh0,x,proportions,color = [ds_config.color_scheme[n] for n in dodge],dodge = dodge)
+
+    CairoMakie.hidedecorations!(ax_rh0,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    ax_rh0.xticks = (1:4,[L"M^{(i)}_{H_{0}} = M^{(i)}_{N_i}",L"M^{(i)}_{H_{0}} \subset M^{(i)}_{N_i}",L"M^{(i)}_{N_i} \subset M^{(i)}_{H_{0}}",L"\text{MST change}"])
+
+    for (label, layout) in zip(["A", "B", "C"], [mo_umap, ex1, rmh0])
+        Label(layout[1, 1, TopLeft()], label,
+            fontsize = ds_config.caption_fontsize,
+            font = :bold,
+            padding = (0,ds_config.caption_padding, ds_config.caption_padding, 0),
+            halign = :right)
+    end
+    
+    colgap = 5
+    rowgap = 10
+
+    colgap!(mo_umap,colgap)
+    rowgap!(mo_umap, rowgap)
+
+    colgap!(ex1, colgap)
+    rowgap!(ex1, rowgap)
+
+    colgap!(rmh0,colgap)
+    rowgap!(rmh0, rowgap)
+
+    rowgap!(fig.layout, Relative(0.01))
+    colgap!(fig.layout, Relative(0.01))
+
+end
+
+function plot_dynamical_summary_parents!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,mst_conf_int,end_parents,vertex_top_map,example_mst,tr_choice,ds_config)
+
+    trajectories_p_d = filter(tr->tr.inc_metagraph_parents[end] ∈ sorted_uep[1:top_n],trajectories);
+
+    mo_umap = fig[1:4, 1:4] = GridLayout()
+
+    ex1 = fig[1:3, 5:8] = GridLayout()
+    rmh0 = fig[4, 5:8] = GridLayout()
+
+    top_n_dict = Dict(v_id=>pos for (pos,v_id) in enumerate(sorted_uep[1:top_n]))
+
+    #### Motif Distribution
+
+    color_sorted_counts_uep = [i <= top_n ? ds_config.color_scheme[i] : :grey for i in 1:length(sorted_counts_uep)]
+
+    view_sorted_uep_id = sorted_counts_uep .> minimal_motif_count
+
+    other = mean(sorted_counts_uep[.!view_sorted_uep_id])
+
+    n_norm = sum(sorted_counts_uep)
+
+    sorted_uep_proportions = vcat(sorted_counts_uep[view_sorted_uep_id],[other]) ./ n_norm 
+
+    view_color_sorted_uep = vcat(color_sorted_counts_uep[view_sorted_uep_id],[:grey])
+
+    conf_int_choices = mst_conf_int[view_sorted_uep_id]
+
+    push!(conf_int_choices,(minimum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm,maximum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm))
+
+    ##############
+
+    # ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n }" * string(top_n) * " MST : " * string(sum(sorted_counts_uep[1:top_n])) * " trajectories", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
+
+    count_top_n = round(sum(sorted_uep_proportions[1:top_n])*100, digits = 2)
+
+    ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n  M^{(i)}_{N_i} : %$count_top_n % of trajectories}", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
+
+    CairoMakie.scatter!(ax1,embedding, color = [haskey(top_n_dict,i) ? (ds_config.color_scheme[top_n_dict[i]],0.5) : (:grey,0.5) for i in end_parents],markersize = ds_config.embed_markersize)
+
+    hidedecorations!(ax1, label = false)
+
+    for i in 1:top_n
+
+        ax_geno = Axis(mo_umap[3,i], backgroundcolor = (ds_config.color_scheme[i],ds_config.color_fade),aspect = DataAspect())
+
+        draw_grn!(ax_geno,vertex_top_map[sorted_uep[i]],ds_config.draw_config,ds_config.node_colors,ds_config.fontsize,false,false)
+    end
+
+    #######################
+
+    ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{Probabilty}", xlabel = L"M^{(i)}_{N_i}")
+
+    CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_uep)
+
+    CairoMakie.errorbars!(ax_mo,1:length(sorted_uep_proportions),sorted_uep_proportions,sorted_uep_proportions .- first.(conf_int_choices),last.(conf_int_choices) .- sorted_uep_proportions,color = :black,whiskerwidth = ds_config.fitness_markersize/2)
+
+    ax_mo.xticks = (1:length(sorted_uep_proportions),vcat(string.(1:length(sorted_uep_proportions[1:end-1])),["Other"]))
+
+    CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    ###################
+
+    tr_data = filter(tr->tr.inc_metagraph_parents[tr.H0] ∈ sorted_uep[example_mst],trajectories);
+    tr_data_id = findall(tr->tr.inc_metagraph_parents[tr.H0] ∈ sorted_uep[example_mst],trajectories)
+
+    tr_traj_id = uniqueid(tr_data[tr_choice].topologies)
+    tr_traj_id[end] = length(tr_data[tr_choice].topologies)
+
+    tr_traj = tr_data[tr_choice].topologies[tr_traj_id]
+    tr_networks = tr_data[tr_choice].geno_traj[tr_traj_id]
+
+    development = DefaultGRNSolver()
+
+    tr_phenotypes = [Individual(reshape(net,(3,4)),grn_parameters,development).phenotype.u[end] for net in tr_networks]
+
+    tr_fd = create_full_fitness_traj(tr_data[tr_choice].fitness_traj_tuple,tr_data[tr_choice].wait_times)
+
+    tr_top_fitness_id = uniqueid(tr_fd)[tr_traj_id]
+    
+    tr_fd_coarse = map(x->x[1]+1,tr_fd)
+    tr_fd_refine = map(x->x[2],tr_fd)
+
+    tr_top_fitness_rf = [(x,tr_fd_refine[x]) for x in tr_top_fitness_id]
+
+    tr_top_stripe_id = [tr_fd_coarse[x] for x in tr_top_fitness_id]
+
+    ###################
+
+    progression_cs = palette(:haline,length(tr_top_fitness_rf)+1)
+
+    ax_fitness = Axis(ex1[1:2,1:length(tr_phenotypes)],xlabel = L"\text{Generation}")
+
+    hideydecorations!(ax_fitness,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    rline = CairoMakie.lines!(ax_fitness,tr_fd_refine, color = :grey, linewidth = ds_config.fitness_linewidth)
+    cline = CairoMakie.lines!(ax_fitness,tr_fd_coarse, linestyle = "--", color = :blue,linewidth = ds_config.fitness_linewidth)
+
+    CairoMakie.scatter!(ax_fitness,tr_top_fitness_rf, color = [progression_cs[i] for i in 1:length(tr_top_fitness_rf)], markersize = ds_config.fitness_markersize, marker = '★')
+
+    h0 = tr_top_fitness_id[minimum(findall(tr_top_stripe_id .== 1))]
+    Ni = tr_top_fitness_id[end]
+
+    if h0 != Ni
+        v = Int.(floor((h0+Ni)/2))
+        ax_fitness.xticks = ([1,h0,v,Ni],[L"1",L"H_0",L"%$v",L"N_i"])
+    else
+        ax_fitness.xticks = ([1,h0],[L"1",L"H_0 = N_i"])
+    end
+
+    ####################
+
+    # ex1.alignmode = Mixed(right = 0)
+
+    ax_pheno_list = []
+
+    for i in 1:length(tr_phenotypes)
+
+        if tr_top_stripe_id[i] == 1
+            ax_geno = Axis(ex1[3:4,i], backgroundcolor = (ds_config.color_scheme[example_mst],ds_config.color_fade),aspect = DataAspect())
+        else
+            ax_geno = Axis(ex1[3:4,i], backgroundcolor = RGBf(0.98, 0.98, 0.98),aspect = DataAspect())
+        end
+
+        ax_pheno = Axis(ex1[5,i],alignmode=Mixed(bottom=0))
+
+        for g in 1:3
+            CairoMakie.lines!(ax_pheno,tr_phenotypes[i][g,:],linewidth = ds_config.pheno_linewidth, color = ds_config.node_colors[g])
+        end
+
+        CairoMakie.scatter!(ax_pheno,[(90,0.8*tr_phenotypes[end][3,50])],color = progression_cs[i], markersize = ds_config.fitness_markersize,marker = '★')
+
+        CairoMakie.hidedecorations!(ax_pheno)
+
+        draw_grn!(ax_geno,tr_traj[i],ds_config.draw_config,ds_config.node_colors,ds_config.fontsize,false,false)
+
+        push!(ax_pheno_list,ax_pheno)
+    end
+
+    linkyaxes!(ax_pheno_list...)
+
+    ##########################
+
+    all_prop  = []
+    all_dodge  = []
+    all_x  = []
+
+    for n in 1:top_n
+
+        pop = filter(tr->tr.inc_metagraph_parents[end] == sorted_uep[n],trajectories_p_d)
+
+        pop_equal = filter(tr->tr.minimal_stripe_subgraphs[tr.H0] == tr.minimal_stripe_subgraphs[end], pop)
+
+        pop_H0_incl_N = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[end],tr.minimal_stripe_subgraphs[tr.H0])) & !(tr.minimal_stripe_subgraphs[end] == tr.minimal_stripe_subgraphs[tr.H0]),pop)
+
+        pop_N_incl_H0 = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[tr.H0],tr.minimal_stripe_subgraphs[end])) & !(tr.minimal_stripe_subgraphs[end] == tr.minimal_stripe_subgraphs[tr.H0]),pop)
+
+        n_pop = length(pop)
+
+        proportions = [length(pop_equal),length(pop_H0_incl_N),length(pop_N_incl_H0),length(pop) - length(pop_equal) - length(pop_N_incl_H0) - length(pop_H0_incl_N)]
+
+        @assert sum(proportions) == n_pop
+
+        x = [1,2,3,4]
+
+        dodge = [n,n,n,n]
+
+        push!(all_prop,proportions ./ n_pop)
+        push!(all_dodge,dodge)
+        push!(all_x,x)
+
+    end
+
+    ax_rh0 = Axis(rmh0[1,1],alignmode=Mixed(top=0))
+
+    x = reduce(vcat,all_x)
+    dodge = reduce(vcat,all_dodge)
+    proportions = reduce(vcat,all_prop)
+
+    CairoMakie.barplot!(ax_rh0,x,proportions,color = [ds_config.color_scheme[n] for n in dodge],dodge = dodge)
+
+    CairoMakie.hidedecorations!(ax_rh0,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    ax_rh0.xticks = (1:4,[L"M^{(i)}_{H_{0}} = M^{(i)}_{N_i}",L"M^{(i)}_{H_{0}} \subset M^{(i)}_{N_i}",L"M^{(i)}_{N_i} \subset M^{(i)}_{H_{0}}",L"\text{MST change}"])
+
+    for (label, layout) in zip(["A", "B", "C"], [mo_umap, ex1, rmh0])
+        Label(layout[1, 1, TopLeft()], label,
+            fontsize = ds_config.caption_fontsize,
+            font = :bold,
+            padding = (0,ds_config.caption_padding, ds_config.caption_padding, 0),
+            halign = :right)
+    end
+    
+    colgap = 5
+    rowgap = 10
+
+    colgap!(mo_umap,colgap)
+    rowgap!(mo_umap, rowgap)
+
+    colgap!(ex1, colgap)
+    rowgap!(ex1, rowgap)
+
+    colgap!(rmh0,colgap)
+    rowgap!(rmh0, rowgap)
+
+    rowgap!(fig.layout, Relative(0.01))
+    colgap!(fig.layout, Relative(0.01))
+
+end
+
 mutable struct evo_summary_config
 
     fontsize
