@@ -1537,6 +1537,413 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::Union{Mut
 
 end
 
+function create_evo_summary_portrait!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+
+    all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
+
+    ax_wait_list = []
+
+    ax_wait_list = []
+    ax_wait_2_list = []
+
+    wt_l_list = []
+    wt_s_list = []
+
+    min_t_u = -mutation_operator.max_w
+    max_t_u = mutation_operator.max_w
+
+    for n in 1:top_n
+
+        plot_geno = fig[n, 1] = GridLayout()
+        plot_wait = fig[n, 2:4] = GridLayout()
+        plot_mut_hist = fig[n, 5:9] = GridLayout()
+
+        if n==1
+            ax_geno = Axis(plot_geno[1,1],backgroundcolor = (evo_config.color_scheme[n],evo_config.color_fade),title =L"M^{(i)}_{N_i}",aspect = DataAspect())
+        else
+            ax_geno = Axis(plot_geno[1,1],backgroundcolor = (evo_config.color_scheme[n],evo_config.color_fade),aspect = DataAspect())
+        end
+
+        ax_geno_s = Axis(plot_geno[2,1],backgroundcolor = :transparent,
+        leftspinevisible = false,
+        rightspinevisible = false,
+        bottomspinevisible = false,
+        topspinevisible = false,
+        xticklabelsvisible = false, 
+        yticklabelsvisible = false,
+        xgridcolor = :transparent,
+        ygridcolor = :transparent,
+        xminorticksvisible = false,
+        yminorticksvisible = false,
+        xticksvisible = false,
+        yticksvisible = false,
+        xautolimitmargin = (0.0,0.0),
+        yautolimitmargin = (0.0,0.0))
+
+        hidedecorations!(ax_geno_s)
+
+        draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],evo_config.draw_config,evo_config.node_colors,evo_config.fontsize,false,false)
+
+        ax_wait = Axis(plot_wait[2,1:3],yticklabelsize = 0.8*evo_config.fontsize,yaxisposition = :right, xticklabelsvisible = false, yticksize= 0.25*evo_config.fontsize)
+
+        ax_wait_2 = Axis(plot_wait[2,1:3], yticklabelcolor = :red,yscale = log10,yticklabelsize = 0.8*evo_config.fontsize,yticksize= 0.25*evo_config.fontsize)
+
+        hidespines!(ax_wait_2 )
+        hideydecorations!(ax_wait_2,label = false,ticklabels = false,ticks = false,minorticks = false)
+        hidexdecorations!(ax_wait_2)
+
+        # #############################
+
+        mut_type_prop_all = []
+        mut_type_time_labels = []
+        mut_type_labels = []
+
+        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,1,tr.H0-2), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n]) & (tr.H0-2 > 0),trajectories_p))
+
+        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,1,tr.H0-2), [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n]) & (tr.H0-2 > 0),trajectories))
+
+        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+        push!(mut_type_prop_all,mut_type_prop_av)
+        push!(mut_type_labels, [1,2,3,4])
+        push!(mut_type_time_labels,[1,1,1,1])
+
+        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0-1,tr.H0-1), [:existing,:new,:del]),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n] ,trajectories_p))
+        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,tr.H0-1,tr.H0-1), [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n] ,trajectories))
+
+        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+        push!(mut_type_prop_all,mut_type_prop_av)
+        push!(mut_type_labels, [1,2,3,4])
+        push!(mut_type_time_labels,[2,2,2,2])
+
+        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0,length(tr.topologies)-1), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n])  & (tr.H0 < length(tr.topologies)),trajectories_p))
+
+        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,tr.H0,length(tr.topologies)-1), [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n])  & (tr.H0 < length(tr.topologies)),trajectories))
+
+        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+        push!(mut_type_prop_all,mut_type_prop_av)
+        push!(mut_type_labels, [1,2,3,4])
+        push!(mut_type_time_labels,[3,3,3,3])
+
+        mut_type_prop_all = reduce(vcat,mut_type_prop_all)
+        mut_type_time_labels = reduce(vcat,mut_type_time_labels)
+        mut_type_labels = reduce(vcat,mut_type_labels); 
+
+        CairoMakie.barplot!(ax_wait,mut_type_time_labels,mut_type_prop_all,stack = mut_type_labels,color = mut_type_labels)
+
+        # ax_wait.xticks = (1:3,[L"t<H_{0}",L"t=H_{0}",L"t>H_{0}" ])
+
+        #format y ticks to latex numbers
+
+        CairoMakie.hidexdecorations!(ax_wait,label = false,ticklabels = false,ticks = false,minorticks = false)
+        CairoMakie.hideydecorations!(ax_wait,label = false,ticklabels = false,ticks = false,minorticks = false,grid = false)
+
+        push!(ax_wait_list,ax_wait)
+
+        ############################ noise_distribut
+
+        sample_id = findall(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)
+
+        if wait_time_summary == :mean
+
+            mean_wait = mean(all_wait_times[:,sample_id],dims = 2)[:,1]
+
+            std_error_wait = std(all_wait_times[:,sample_id],dims = 2)[:,1] ./ sqrt(length(sample_id))
+
+            mean_wait_type_labels = [1,2,3]
+
+            wt_l = CairoMakie.lines!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,linewidth = evo_config.wait_linewidth)
+            wt_s = CairoMakie.scatter!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,markersize = evo_config.wait_markersize)
+
+            CairoMakie.errorbars!(ax_wait_2,1:length(mean_wait),mean_wait,5 * std_error_wait,color = :red,whiskerwidth = evo_config.wait_markersize/2)
+
+        else
+
+            median_wait_time = mapslices(row->quantile(row, [0.5]),all_wait_times[:,sample_id],dims =2)[:,1]
+            lq_wait_time = mapslices(row->quantile(row, [0.25]),all_wait_times[:,sample_id],dims =2)[:,1]
+            uq_wait_time = mapslices(row->quantile(row, [0.75]),all_wait_times[:,sample_id],dims =2)[:,1]
+
+            median_wait_type_labels = [1,2,3]
+
+            wt_l = CairoMakie.lines!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,linewidth = evo_config.wait_linewidth)
+            wt_s = CairoMakie.scatter!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,markersize = evo_config.wait_markersize)
+
+            CairoMakie.rangebars!(ax_wait_2,1:length(median_wait_time),lq_wait_time,uq_wait_time,color = :red,whiskerwidth = evo_config.wait_markersize/2)
+        end
+
+        push!(ax_wait_2_list,ax_wait_2)
+
+        push!(wt_l_list,wt_l)
+        push!(wt_s_list,wt_s)
+
+        #############################
+
+        ax_epi_lH0 = Axis(plot_wait[1,1],title = L"t<H_{0}")
+
+        epi_counts = reduce(vcat,map(tr->tr.other[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+        epi_counts_prop = calculate_epi_class_proportion(epi_counts)
+
+        CairoMakie.pie!(ax_epi_lH0,epi_counts_prop,radius = evo_config.pie_radius,color = evo_config.pie_colors,
+        inner_radius = evo_config.pie_inner_radius,
+        strokecolor = :white,
+        strokewidth = evo_config.pie_strokewidth)
+
+        CairoMakie.hidedecorations!(ax_epi_lH0)
+
+        ax_epi_H0 = Axis(plot_wait[1,2],title = L"t=H_{0}")
+ 
+        epi_counts = map(tr->tr.other[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+        epi_counts_prop = calculate_epi_class_proportion(epi_counts)
+
+        CairoMakie.pie!(ax_epi_H0,epi_counts_prop,radius = evo_config.pie_radius,color = evo_config.pie_colors,
+        inner_radius = evo_config.pie_inner_radius,
+        strokecolor = :white,
+        strokewidth = evo_config.pie_strokewidth)
+
+        CairoMakie.hidedecorations!(ax_epi_H0)
+
+        ax_epi_uH0 = Axis(plot_wait[1,3],title = L"t>H_{0}")
+
+        epi_counts = reduce(vcat,map(tr->tr.other[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+        epi_counts_prop = calculate_epi_class_proportion(epi_counts)
+
+        CairoMakie.pie!(ax_epi_uH0,epi_counts_prop,radius = evo_config.pie_radius,color = evo_config.pie_colors,
+        inner_radius = evo_config.pie_inner_radius,
+        strokecolor = :white,
+        strokewidth = evo_config.pie_strokewidth)
+
+        CairoMakie.hidedecorations!(ax_epi_uH0)
+
+        ###############################\
+
+        bins = 50
+
+        additive_ax = []
+        mult_ax = []
+
+        for type in [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]
+
+            if type[2] == :additive
+    
+                min_t = -quantile(mutation_operator.additive_noise_distribution,0.99)
+                max_t = quantile(mutation_operator.additive_noise_distribution,0.99)
+
+                mut_noise_dist = mutation_operator.additive_noise_distribution;
+    
+                norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+    
+                if type[1] 
+                    if n==1
+                        ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+                        ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+                        ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+                    else
+                        ax1 = Axis(plot_mut_hist[1,1])
+                        ax2 = Axis(plot_mut_hist[1,2])
+                        ax3 = Axis(plot_mut_hist[1,3])
+                    end
+    
+                    plot_color = palette(:viridis, 4)[1]
+    
+                    hidedecorations!(ax1)
+                else
+    
+                    ax1 = Axis(plot_mut_hist[2,1])
+                    ax2 = Axis(plot_mut_hist[2,2])
+                    ax3 = Axis(plot_mut_hist[2,3])
+    
+                    plot_color = palette(:viridis, 4)[2]
+                end
+    
+                mut_size_r = map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = reduce(vcat,mut_size_r)
+                
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+                hidedecorations!(ax1)
+    
+                mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = reduce(vcat,mut_size_r)
+    
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = plot_color)  # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+                hidedecorations!(ax2)
+    
+                mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = reduce(vcat,mut_size_r)
+    
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+    
+                hidedecorations!(ax3)
+    
+                push!(additive_ax,ax1)
+                push!(additive_ax,ax2)
+                push!(additive_ax,ax3)
+    
+            else
+                min_t = 0.
+                max_t = quantile(mutation_operator.mult_noise_distribution,0.99)
+    
+                mut_noise_dist = mutation_operator.mult_noise_distribution;
+    
+                norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+    
+                if type[1] 
+
+                    ax1 = Axis(plot_mut_hist[3,1])
+                    ax2 = Axis(plot_mut_hist[3,2])
+                    ax3 = Axis(plot_mut_hist[3,3])
+  
+    
+                    plot_color = palette(:viridis, 4)[3]
+                    hidedecorations!(ax1)
+                else
+                    ax1 = Axis(plot_mut_hist[4,1])
+                    ax2 = Axis(plot_mut_hist[4,2])
+                    ax3 = Axis(plot_mut_hist[4,3])
+
+                    plot_color = palette(:viridis, 4)[4]
+                end
+    
+                mut_size_r = map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = abs.(reduce(vcat,mut_size_r))
+                
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+                hidedecorations!(ax1)
+    
+                mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = abs.(reduce(vcat,mut_size_r))
+    
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = plot_color)  # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+                hidedecorations!(ax2)
+    
+                mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = abs.(reduce(vcat,mut_size_r))
+    
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+    
+                hidedecorations!(ax3)
+    
+                push!(mult_ax,ax1)
+                push!(mult_ax,ax2)
+                push!(mult_ax,ax3)
+            end
+    
+        end
+    
+        linkxaxes!(additive_ax...)
+        linkxaxes!(mult_ax...)
+
+        colgap!(plot_geno,Relative(0.01))
+        rowgap!(plot_geno,Relative(0.05))
+    
+        colgap!(plot_wait, Relative(0.01))
+        rowgap!(plot_wait, Relative(0.05))
+
+        colgap!(plot_mut_hist, Relative(0.01))
+        rowgap!(plot_mut_hist, Relative(0.05))
+
+        # colgap!(plot_epi_types, Relative(0.01))
+        # rowgap!(plot_epi_types, Relative(0.05))
+    end
+
+    if wait_time_summary == :mean
+        labels_wait =  [L"\mathbb{E}[\text{Average total generations}]"]
+    else
+        labels_wait =  [L"\text{Average total generations}"]
+    end
+
+    labels_mut =  [L"\text{new/+}",L"\text{new/*}",L"\text{existing/+}",L"\text{existing/*}"]
+
+    labels_epi  = [L"\text{R.S.E}",L"\text{S.E}",L"\text{N.E}",L"\text{S.M}"]
+
+    labels = vcat(labels_wait,labels_epi)
+
+    symbol_wait = [[wt_s_list[1], wt_l_list[1]]]
+
+    symbol_mut = [PolyElement(color=c) for c in palette(:viridis, 4)[1:4]]
+
+    symbol_epi = [PolyElement(color=c) for c in evo_config.pie_colors]
+
+    symbol_all = vcat(symbol_wait,symbol_epi)
+
+    # Legend(fig[top_n+1, :], symbol_all, labels, framevisible=false,nbanks = 1,orientation = :horizontal,patchsize = (10, 10), rowgap = 10,colgap = 10)
+
+    # Legend(fig[top_n, 4:13, Bottom()], symbol_all, labels, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = 10,colgap = 10)
+
+    legend_row_gap = 2
+
+    # Legend(fig[top_n, 2:4, Bottom()], symbol_wait, labels_wait, framevisible=false,nbanks =1,orientation = :horizontal,patchsize = (10, 10),rowgap = legend_row_gap,colgap = 2,padding=(10.0f0, 10.0f0, 0f0, evo_config.fontsize+1.5*legend_row_gap))
+
+    Legend(fig[top_n, 2:4, Bottom()], symbol_all, labels, framevisible=false,nbanks =3,orientation = :horizontal,patchsize = (10, 10),rowgap = legend_row_gap,colgap = 2,padding=(10.0f0, 10.0f0, 0f0, evo_config.fontsize+1.5*legend_row_gap))
+
+    Legend(fig[top_n, 5:9, Bottom()], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = legend_row_gap,colgap = 2)
+
+    # Legend(fig[top_n,  10:13, Bottom()], symbol_epi, labels_epi, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = legend_row_gap,colgap = 2)
+
+    linkyaxes!(ax_wait_list...)
+    linkyaxes!(ax_wait_2_list...)
+
+    rowgap!(fig.layout, Relative(0.01))
+    colgap!(fig.layout, Relative(0.01))
+
+end
+
 function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationOperatorNew,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     # all_wait_times = reduce(hcat,[cumulative_wait_time(tr) for tr in trajectories]);
@@ -1909,7 +2316,1105 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
 
 end
 
-function create_weight_edit_summary!(fig,n,trajectories,mutation_op::MutationOperator,sorted_uep, vertex_top_map, draw_config, node_colors,fontsize,color_scheme)
+# function create_weight_edit_summary!(fig,n,trajectories,mutation_op::MutationOperator,sorted_uep, vertex_top_map, draw_config, node_colors,fontsize,color_scheme)
+
+#     weight_names_latex = reshape([L"W_{aa}",L"W_{ab}",L"W_{ac}",L"W_{ba}",L"W_{bb}",L"W_{bc}",L"W_{ca}",L"W_{cb}",L"W_{cc}",L"W_{ma}",L"W_{mb}",L"W_{mc}"],(3,4));
+
+#     grid_values = Tuple.(findall(ones(3,4) .> 0))
+
+#     colors = reverse(palette(:tab10)[1:4])
+
+#     ax_wait_list = []
+
+#     plot_geno = fig[grid_values[11]...] = GridLayout()
+
+#     ax_geno = Axis(plot_geno[1,1],backgroundcolor = (color_scheme[n],1.),title =L"\text{Minimal Stripe Topology}",aspect = DataAspect())
+
+#     draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],draw_config,node_colors,fontsize,weight_names_latex,true,false)
+
+#     norm_type = :pdf
+
+#     ###############################
+
+#     plot_mut_hist = fig[grid_values[12]...] = GridLayout()
+
+#     bins = 50
+
+#     min_t_list = [[],[]]
+#     max_t_list = [[],[]]
+
+#     weight_grid_layouts = []
+
+#     for (nt,type) in enumerate([:new,:existing])
+
+#         if type == :existing
+#             mut_noise_dist = mutation_op.noise_distribution;
+#         else
+#             mut_noise_dist = Uniform(-mutation_op.max_w,mutation_op.max_w);
+#         end
+
+#         mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#         if type == :existing
+#             if n==1
+#                 ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+#             else
+#                 ax1 = Axis(plot_mut_hist[1,1])
+#             end
+#         else
+#             ax1 = Axis(plot_mut_hist[2,1])
+#         end
+
+#         if type == :existing
+#             CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
+#         else
+#             CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
+#         end
+
+#         min_t = minimum(mut_size)
+#         max_t = maximum(mut_size)
+
+#         push!(min_t_list[nt],min_t)
+#         push!(max_t_list[nt],max_t)
+
+#         norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+
+#         CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#         CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--")
+
+#         mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#         if type == :existing
+#             if n==1
+#                 ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+#             else
+#                 ax2 = Axis(plot_mut_hist[1,2])
+#             end
+#         else
+#             ax2 = Axis(plot_mut_hist[2,2])
+#         end
+
+#         min_t = minimum(mut_size)
+#         max_t = maximum(mut_size)
+
+#         push!(min_t_list[nt],min_t)
+#         push!(max_t_list[nt],max_t)
+
+#         norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+
+#         if type == :existing
+#             CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
+#         else
+#             CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
+#         end
+
+#         CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#         CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--")
+
+#         mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#         if type == :existing
+#             if n==1
+#                 ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+#             else
+#                 ax3 = Axis(plot_mut_hist[1,3])
+#             end
+#         else
+#             ax3 = Axis(plot_mut_hist[2,3])
+#         end
+
+#         min_t = minimum(mut_size)
+#         max_t = maximum(mut_size)
+
+#         push!(min_t_list[nt],min_t)
+#         push!(max_t_list[nt],max_t)
+
+#         norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+
+#         if type == :existing
+#             CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
+#         else
+#             CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
+#         end
+
+#         CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#         CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--")
+
+#         # linkxaxes!([ax1,ax2,ax3]...)
+#         # linkyaxes!([ax1,ax2,ax3]...)
+
+#         hidedecorations!(ax1)
+#         hidedecorations!(ax2)
+#         hidedecorations!(ax3)
+#     end
+
+#     colgap!(plot_mut_hist, 10)
+#     rowgap!(plot_mut_hist, 10)
+
+#     push!(weight_grid_layouts,plot_mut_hist)
+
+#     ###############################\
+
+#     bins = 15
+
+#     for weight_id in 1:10
+
+#         plot_mut_hist = fig[grid_values[weight_id]...] = GridLayout()
+
+#         for (nt,type) in enumerate([:new,:existing])
+
+#             if type == :existing
+#                 mut_noise_dist = Normal(0.0,noise_cv);
+#             else
+#                 mut_noise_dist = Uniform(-max_w,max_w);
+#             end
+
+#             mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#             if type == :existing
+#                 ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+#             else
+#                 ax1 = Axis(plot_mut_hist[2,1])
+#             end
+
+#             min_t = min_t_list[nt][1]
+#             max_t = max_t_list[nt][1]
+
+#             if length(mut_size) > 1
+#                 if type == :existing
+#                     CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+#                 else
+#                     CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+#                 end
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+#             CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#             CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--")
+
+#             mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#             if type == :existing
+#                 ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+#             else
+#                 ax2 = Axis(plot_mut_hist[2,2])
+#             end
+
+#             min_t = min_t_list[nt][2]
+#             max_t = max_t_list[nt][2]
+
+#             if length(mut_size) > 1
+#                 if type == :existing
+#                     CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+#                 else
+#                     CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+#                 end
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+#             CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#             CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--")
+
+#             mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#             if type == :existing
+#                 ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+#             else
+#                 ax3 = Axis(plot_mut_hist[2,3])
+#             end
+
+#             min_t = min_t_list[nt][3]
+#             max_t = max_t_list[nt][3]
+
+#             if length(mut_size) > 1
+#                 if type == :existing
+#                     CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+#                 else
+#                     CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+#                 end
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+#             CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#             CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--")
+
+#             # linkxaxes!([ax1,ax2,ax3]...)
+#             # linkyaxes!([ax1,ax2,ax3]...)
+
+#             hidedecorations!(ax1)
+#             hidedecorations!(ax2)
+#             hidedecorations!(ax3)
+#         end
+
+#         colgap!(plot_mut_hist, 10)
+#         rowgap!(plot_mut_hist, 10)
+
+#         push!(weight_grid_layouts,plot_mut_hist)
+
+#     end
+
+#     for (label, layout) in zip(weight_names_latex, weight_grid_layouts[2:end])
+#         Label(layout[1, 1, TopLeft()], label,
+#             fontsize = 26,
+#             font = :bold,
+#             padding = (0, 5, 5, 0),
+#             halign = :right)
+#     end
+
+#     Label(weight_grid_layouts[1][1, 1, TopLeft()], L"\text{All}",
+#     fontsize = 26,
+#     font = :bold,
+#     padding = (0, 5, 5, 0),
+#     halign = :right)
+
+#     colors = palette(:viridis, 3)
+
+# end
+
+# function create_weight_edit_summary!(fig,n,trajectories,mutation_op::MutationOperatorDual,sorted_uep, vertex_top_map, draw_config, node_colors,fontsize,color_scheme)
+
+#     weight_names_latex = reshape([L"W_{aa}",L"W_{ab}",L"W_{ac}",L"W_{ba}",L"W_{bb}",L"W_{bc}",L"W_{ca}",L"W_{cb}",L"W_{cc}",L"W_{ma}",L"W_{mb}",L"W_{mc}"],(3,4));
+
+#     grid_values = Tuple.(findall(ones(3,4) .> 0))
+
+#     colors = reverse(palette(:tab10)[1:4])
+
+#     ax_wait_list = []
+
+#     plot_geno = fig[grid_values[11]...] = GridLayout()
+
+#     ax_geno = Axis(plot_geno[1,1],backgroundcolor = (color_scheme[n],1.),title =L"\text{Minimal Stripe Topology}",aspect = DataAspect())
+
+#     draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],draw_config,node_colors,fontsize,weight_names_latex,true,false)
+
+#     norm_type = :pdf
+
+#     ###############################
+
+#     plot_mut_hist = fig[grid_values[12]...] = GridLayout()
+
+#     bins = 50
+
+#     min_t_list = [[],[]]
+#     max_t_list = [[],[]]
+
+#     weight_grid_layouts = []
+
+#     for (nt,type) in enumerate([:new,:existing])
+
+#         if type == :existing
+#             mut_noise_dist = mutation_op.mult_noise_distribution;
+#         else
+#             mut_noise_dist = mutation_op.additive_noise_distribution;
+#         end
+
+#         mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#         if type == :existing
+#             if n==1
+#                 ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+#             else
+#                 ax1 = Axis(plot_mut_hist[1,1])
+#             end
+#         else
+#             ax1 = Axis(plot_mut_hist[2,1])
+#         end
+
+#         if type == :existing
+#             CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
+#         else
+#             CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
+#         end
+
+#         min_t = minimum(mut_size)
+#         max_t = maximum(mut_size)
+
+#         push!(min_t_list[nt],min_t)
+#         push!(max_t_list[nt],max_t)
+
+#         norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+
+#         CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#         CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--")
+
+#         mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#         if type == :existing
+#             if n==1
+#                 ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+#             else
+#                 ax2 = Axis(plot_mut_hist[1,2])
+#             end
+#         else
+#             ax2 = Axis(plot_mut_hist[2,2])
+#         end
+
+#         min_t = minimum(mut_size)
+#         max_t = maximum(mut_size)
+
+#         push!(min_t_list[nt],min_t)
+#         push!(max_t_list[nt],max_t)
+
+#         norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+
+#         if type == :existing
+#             CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
+#         else
+#             CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
+#         end
+
+#         CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#         CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--")
+
+#         mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#         if type == :existing
+#             if n==1
+#                 ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+#             else
+#                 ax3 = Axis(plot_mut_hist[1,3])
+#             end
+#         else
+#             ax3 = Axis(plot_mut_hist[2,3])
+#         end
+
+#         min_t = minimum(mut_size)
+#         max_t = maximum(mut_size)
+
+#         push!(min_t_list[nt],min_t)
+#         push!(max_t_list[nt],max_t)
+
+#         norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+
+#         if type == :existing
+#             CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
+#         else
+#             CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
+#         end
+
+#         CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#         CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--")
+
+#         # linkxaxes!([ax1,ax2,ax3]...)
+#         # linkyaxes!([ax1,ax2,ax3]...)
+
+#         hidedecorations!(ax1)
+#         hidedecorations!(ax2)
+#         hidedecorations!(ax3)
+#     end
+
+#     colgap!(plot_mut_hist, 10)
+#     rowgap!(plot_mut_hist, 10)
+
+#     push!(weight_grid_layouts,plot_mut_hist)
+
+#     ###############################\
+
+#     bins = 15
+
+#     for weight_id in 1:10
+
+#         plot_mut_hist = fig[grid_values[weight_id]...] = GridLayout()
+
+#         for (nt,type) in enumerate([:new,:existing])
+
+#             if type == :existing
+#                 mut_noise_dist = mutation_op.mult_noise_distribution;
+#             else
+#                 mut_noise_dist = mutation_op.additive_noise_distribution;
+#             end    
+
+#             mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#             if type == :existing
+#                 ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+#             else
+#                 ax1 = Axis(plot_mut_hist[2,1])
+#             end
+
+#             min_t = min_t_list[nt][1]
+#             max_t = max_t_list[nt][1]
+
+#             if length(mut_size) > 1
+#                 if type == :existing
+#                     CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+#                 else
+#                     CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+#                 end
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+#             CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#             CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--")
+
+#             mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#             if type == :existing
+#                 ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+#             else
+#                 ax2 = Axis(plot_mut_hist[2,2])
+#             end
+
+#             min_t = min_t_list[nt][2]
+#             max_t = max_t_list[nt][2]
+
+#             if length(mut_size) > 1
+#                 if type == :existing
+#                     CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+#                 else
+#                     CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+#                 end
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+#             CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#             CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--")
+
+#             mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+
+#             if type == :existing
+#                 ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+#             else
+#                 ax3 = Axis(plot_mut_hist[2,3])
+#             end
+
+#             min_t = min_t_list[nt][3]
+#             max_t = max_t_list[nt][3]
+
+#             if length(mut_size) > 1
+#                 if type == :existing
+#                     CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+#                 else
+#                     CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+#                 end
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+#             CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red)
+#             CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--")
+
+#             # linkxaxes!([ax1,ax2,ax3]...)
+#             # linkyaxes!([ax1,ax2,ax3]...)
+
+#             hidedecorations!(ax1)
+#             hidedecorations!(ax2)
+#             hidedecorations!(ax3)
+#         end
+
+#         colgap!(plot_mut_hist, 10)
+#         rowgap!(plot_mut_hist, 10)
+
+#         push!(weight_grid_layouts,plot_mut_hist)
+
+#     end
+
+#     for (label, layout) in zip(weight_names_latex, weight_grid_layouts[2:end])
+#         Label(layout[1, 1, TopLeft()], label,
+#             fontsize = 26,
+#             font = :bold,
+#             padding = (0, 5, 5, 0),
+#             halign = :right)
+#     end
+
+#     Label(weight_grid_layouts[1][1, 1, TopLeft()], L"\text{All}",
+#     fontsize = 26,
+#     font = :bold,
+#     padding = (0, 5, 5, 0),
+#     halign = :right)
+
+#     colors = palette(:viridis, 3)
+
+# end
+
+# function create_weight_edit_summary!(fig,n,trajectories,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map, evo_config,color_scheme)
+
+#     weight_names_latex = reshape([L"W_{aa}",L"W_{ab}",L"W_{ac}",L"W_{ba}",L"W_{bb}",L"W_{bc}",L"W_{ca}",L"W_{cb}",L"W_{cc}",L"W_{ma}",L"W_{mb}",L"W_{mc}"],(3,4));
+
+#     grid_values = Tuple.(findall(ones(3,4) .> 0))
+
+#     colors = reverse(palette(:tab10)[1:4])
+
+#     ax_wait_list = []
+
+#     plot_geno = fig[grid_values[11]...] = GridLayout()
+
+#     ax_geno = Axis(plot_geno[1,1],backgroundcolor = (color_scheme[n],1.),title =L"\text{Minimal Stripe Topology}",aspect = DataAspect())
+
+#     draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],evo_config.draw_config,evo_config.node_colors,evo_config.fontsize,true,false)
+
+#     norm_type = :pdf
+
+#     ###############################
+
+#     plot_mut_hist = fig[grid_values[12]...] = GridLayout()
+
+#     bins = 50
+
+#     min_t_list = [[],[]]
+#     max_t_list = [[],[]]
+
+#     weight_grid_layouts = []
+
+#     additive_ax = []
+#     mult_ax = []
+
+#     for type in [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]
+
+#         if type[2] == :additive
+
+#             min_t = -quantile(mutation_operator.additive_noise_distribution,0.99)
+#             max_t = quantile(mutation_operator.additive_noise_distribution,0.99)
+
+#             if type[1] 
+#                 if n==1
+#                     ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+#                 else
+#                     ax1 = Axis(plot_mut_hist[1,1])
+#                 end
+
+#                 mut_noise_dist = mutation_operator.additive_noise_distribution;
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+                
+#                 if length(mut_size_r) != 0
+#                     mut_size = reduce(vcat,mut_size_r)
+#                     CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[1]) # new additive
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax1)
+#             else
+
+#                 ax1 = Axis(plot_mut_hist[2,1])
+
+#                 mut_noise_dist = mutation_operator.additive_noise_distribution;
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 if length(mut_size_r) != 0
+#                     mut_size = reduce(vcat,mut_size_r)
+#                     CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[2]) # ex additive
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax1)
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+
+#             CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#             CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+
+#             if type[1] 
+#                 if n==1
+#                     ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+#                 else
+#                     ax2 = Axis(plot_mut_hist[1,2])
+#                 end
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 if length(mut_size_r) != 0
+#                     mut_size = reduce(vcat,mut_size_r)
+#                     CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[1])  # new additive
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax2)
+#             else
+#                 ax2 = Axis(plot_mut_hist[2,2])
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 if length(mut_size_r) != 0
+#                     mut_size = reduce(vcat,mut_size_r)
+#                     CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[2]) # ex additive
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax2)
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+
+#             CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#             CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+
+#             if type[1] 
+#                 if n==1
+#                     ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+#                 else
+#                     ax3 = Axis(plot_mut_hist[1,3])
+#                 end
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 if length(mut_size_r) != 0
+#                     mut_size = reduce(vcat,mut_size_r)
+#                     CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[1]) # new additive
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax3)
+#             else
+#                 ax3 = Axis(plot_mut_hist[2,3])
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 if length(mut_size_r) != 0
+#                     mut_size = reduce(vcat,mut_size_r)
+#                     CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[2]) # ex additive
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax3)
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+
+#             CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#             CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+
+#             # hidedecorations!(ax1)
+#             # hidedecorations!(ax2)
+#             # hidedecorations!(ax3) # new all
+
+#             push!(additive_ax,ax1)
+#             push!(additive_ax,ax2)
+#             push!(additive_ax,ax3)
+
+#         else
+#             min_t = 0.
+#             max_t = quantile(mutation_operator.mult_noise_distribution,0.99)
+
+#             if type[1]
+#                 ax1 = Axis(plot_mut_hist[3,1])
+
+#                 mut_noise_dist = mutation_operator.mult_noise_distribution;
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+                
+#                 mut_size = abs.(reduce(vcat,mut_size_r))
+
+#                 if length(mut_size) != 0
+#                     CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[3]) # new mult
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax1)
+#             else
+#                 ax1 = Axis(plot_mut_hist[4,1])
+
+#                 mut_noise_dist = mutation_operator.mult_noise_distribution;
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+                
+#                 mut_size = abs.(reduce(vcat,mut_size_r))
+
+#                 if length(mut_size) != 0
+#                     CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[4]) # ex mult
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax1)
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+
+#             CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#             CairoMakie.vlines!(ax1,1.,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # ex all
+
+#             if type[1]
+#                 ax2 = Axis(plot_mut_hist[3,2])
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 mut_size = abs.(reduce(vcat,mut_size_r))
+
+#                 if length(mut_size) != 0
+#                     CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[3]) # new mult
+#                 else
+#                     mut_size = [0.]
+#                 end
+                
+#                 hidedecorations!(ax2)
+#             else
+#                 ax2 = Axis(plot_mut_hist[4,2])
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 mut_size = abs.(reduce(vcat,mut_size_r))
+
+#                 if length(mut_size) != 0
+#                     CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[4]) # ex mult
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax2)
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+
+#             CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#             CairoMakie.vlines!(ax2,1.,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # ex all
+
+#             if type[1]
+#                 ax3 = Axis(plot_mut_hist[3,3])
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 mut_size = abs.(reduce(vcat,mut_size_r))
+
+#                 if length(mut_size) != 0
+#                     CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[3]) # new mult
+#                 else
+#                     mut_size = [0.]
+#                 end
+
+#                 hidedecorations!(ax3) # ex all
+#             else
+#                 ax3 = Axis(plot_mut_hist[4,3])
+
+#                 mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+#                 mut_size = abs.(reduce(vcat,mut_size_r))
+
+#                 if length(mut_size) != 0
+#                     CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[4]) # ex mult
+#                 else
+#                     mut_size = [0.]
+#                 end
+                
+#                 hidedecorations!(ax3) # ex all
+#             end
+
+#             norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+
+#             CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#             CairoMakie.vlines!(ax3,1.,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+
+#             push!(mult_ax,ax1)
+#             push!(mult_ax,ax2)
+#             push!(mult_ax,ax3)
+#         end
+
+#     end
+
+#     linkxaxes!(additive_ax...)
+#     linkxaxes!(mult_ax...)
+
+#     colgap!(plot_mut_hist, 10)
+#     rowgap!(plot_mut_hist, 10)
+
+#     push!(weight_grid_layouts,plot_mut_hist)
+
+#     ###############################\ get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2)
+
+#     bins = 15
+
+#     for weight_id in 1:10
+
+#         plot_mut_hist = fig[grid_values[weight_id]...] = GridLayout()
+
+#         additive_ax = []
+#         mult_ax = []
+    
+#         for type in [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]
+    
+#             if type[2] == :additive
+
+#                 min_t = -quantile(mutation_operator.additive_noise_distribution,0.99)
+#                 max_t = quantile(mutation_operator.additive_noise_distribution,0.99)
+    
+#                 if type[1] 
+#                     if n==1
+#                         ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+#                     else
+#                         ax1 = Axis(plot_mut_hist[1,1])
+#                     end
+    
+#                     mut_noise_dist = mutation_operator.additive_noise_distribution;
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+                    
+#                     mut_size = reduce(vcat,mut_size_r)
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[1]) # new additive
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax1)
+#                 else
+    
+#                     ax1 = Axis(plot_mut_hist[2,1])
+    
+#                     mut_noise_dist = mutation_operator.additive_noise_distribution;
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = reduce(vcat,mut_size_r)
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[2]) # ex additive
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax1)
+#                 end
+    
+#                 norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+    
+#                 CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#                 CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+#                 if type[1] 
+#                     if n==1
+#                         ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+#                     else
+#                         ax2 = Axis(plot_mut_hist[1,2])
+#                     end
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = reduce(vcat,mut_size_r)
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[1])  # new additive
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax2)
+#                 else
+#                     ax2 = Axis(plot_mut_hist[2,2])
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = reduce(vcat,mut_size_r)
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[2]) # ex additive
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax2)
+#                 end
+    
+#                 norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+    
+#                 CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#                 CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+#                 if type[1] 
+#                     if n==1
+#                         ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+#                     else
+#                         ax3 = Axis(plot_mut_hist[1,3])
+#                     end
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = reduce(vcat,mut_size_r)
+                    
+#                     if length(mut_size) != 0
+
+#                         CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[1]) # new additive
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax3)
+#                 else
+#                     ax3 = Axis(plot_mut_hist[2,3])
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = reduce(vcat,mut_size_r)
+
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[2]) # ex additive
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax3)
+#                 end
+    
+#                 norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+    
+#                 CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#                 CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+    
+#                 # hidedecorations!(ax1)
+#                 # hidedecorations!(ax2)
+#                 # hidedecorations!(ax3) # new all
+    
+#                 push!(additive_ax,ax1)
+#                 push!(additive_ax,ax2)
+#                 push!(additive_ax,ax3)
+    
+#             else
+#                 min_t = 0.
+#                 max_t = quantile(mutation_operator.mult_noise_distribution,0.99)
+    
+#                 if type[1]
+#                     ax1 = Axis(plot_mut_hist[3,1])
+    
+#                     mut_noise_dist = mutation_operator.mult_noise_distribution;
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+                    
+#                     mut_size = abs.(reduce(vcat,mut_size_r))
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[3]) # new mult
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax1)
+#                 else
+#                     ax1 = Axis(plot_mut_hist[4,1])
+    
+#                     mut_noise_dist = mutation_operator.mult_noise_distribution;
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+                    
+#                     mut_size = abs.(reduce(vcat,mut_size_r))
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[4]) # ex mult
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax1)
+#                 end
+    
+#                 norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+    
+#                 CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#                 CairoMakie.vlines!(ax1,1.,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # ex all
+    
+#                 if type[1]
+#                     ax2 = Axis(plot_mut_hist[3,2])
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = abs.(reduce(vcat,mut_size_r))
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[3]) # new mult
+#                     else
+#                         mut_size = [0.]
+#                     end
+                    
+#                     hidedecorations!(ax2)
+#                 else
+#                     ax2 = Axis(plot_mut_hist[4,2])
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = abs.(reduce(vcat,mut_size_r))
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[4]) # ex mult
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax2)
+#                 end
+
+#                 norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+    
+#                 CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#                 CairoMakie.vlines!(ax2,1.,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # ex all
+    
+#                 if type[1]
+#                     ax3 = Axis(plot_mut_hist[3,3])
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = abs.(reduce(vcat,mut_size_r))
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[3]) # new mult
+#                     else
+#                         mut_size = [0.]
+#                     end
+    
+#                     hidedecorations!(ax3) # ex all
+#                 else
+#                     ax3 = Axis(plot_mut_hist[4,3])
+    
+#                     mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+#                     mut_size = abs.(reduce(vcat,mut_size_r))
+                    
+#                     if length(mut_size) != 0
+#                         CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 4)[4]) # ex mult
+#                     else
+#                         mut_size = [0.]
+#                     end
+                    
+#                     hidedecorations!(ax3) # ex all
+#                 end
+    
+#                 norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
+    
+#                 CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+#                 CairoMakie.vlines!(ax3,1.,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+    
+#                 push!(mult_ax,ax1)
+#                 push!(mult_ax,ax2)
+#                 push!(mult_ax,ax3)
+#             end
+    
+#         end
+    
+#         linkxaxes!(additive_ax...)
+#         linkxaxes!(mult_ax...)
+
+#         colgap!(plot_mut_hist, 10)
+#         rowgap!(plot_mut_hist, 10)
+
+#         push!(weight_grid_layouts,plot_mut_hist)
+
+#     end
+
+#     for (label, layout) in zip(weight_names_latex, weight_grid_layouts[2:end])
+#         Label(layout[1, 1, TopLeft()], label,
+#             fontsize = 26,
+#             font = :bold,
+#             padding = (0, 5, 5, 0),
+#             halign = :right)
+#     end
+
+#     Label(weight_grid_layouts[1][1, 1, TopLeft()], L"\text{All}",
+#     fontsize = 26,
+#     font = :bold,
+#     padding = (0, 5, 5, 0),
+#     halign = :right)
+
+#     colors = palette(:viridis, 4)
+
+# end
+
+function create_weight_edit_summary!(fig,n,trajectories,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map, evo_config,color_scheme)
 
     weight_names_latex = reshape([L"W_{aa}",L"W_{ab}",L"W_{ac}",L"W_{ba}",L"W_{bb}",L"W_{bc}",L"W_{ca}",L"W_{cb}",L"W_{cc}",L"W_{ma}",L"W_{mb}",L"W_{mc}"],(3,4));
 
@@ -1923,7 +3428,7 @@ function create_weight_edit_summary!(fig,n,trajectories,mutation_op::MutationOpe
 
     ax_geno = Axis(plot_geno[1,1],backgroundcolor = (color_scheme[n],1.),title =L"\text{Minimal Stripe Topology}",aspect = DataAspect())
 
-    draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],draw_config,node_colors,fontsize,weight_names_latex,true,false)
+    draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],evo_config.draw_config,evo_config.node_colors,evo_config.fontsize,true,false)
 
     norm_type = :pdf
 
@@ -1938,115 +3443,177 @@ function create_weight_edit_summary!(fig,n,trajectories,mutation_op::MutationOpe
 
     weight_grid_layouts = []
 
-    for (nt,type) in enumerate([:new,:existing])
+    additive_ax = []
+    mult_ax = []
 
-        if type == :existing
-            mut_noise_dist = mutation_op.noise_distribution;
-        else
-            mut_noise_dist = Uniform(-mutation_op.max_w,mutation_op.max_w);
-        end
+    for type in [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]
 
-        mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        if type[2] == :additive
 
-        if type == :existing
-            if n==1
-                ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+            min_t = -quantile(mutation_operator.additive_noise_distribution,0.99)
+            max_t = quantile(mutation_operator.additive_noise_distribution,0.99)
+
+            mut_noise_dist = mutation_operator.additive_noise_distribution;
+
+            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+
+            if type[1] 
+                if n==1
+                    ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+                    ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+                    ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+                else
+                    ax1 = Axis(plot_mut_hist[1,1])
+                    ax2 = Axis(plot_mut_hist[1,2])
+                    ax3 = Axis(plot_mut_hist[1,3])
+                end
+
+                plot_color = palette(:viridis, 4)[1]
+
+                hidedecorations!(ax1)
             else
-                ax1 = Axis(plot_mut_hist[1,1])
+
+                ax1 = Axis(plot_mut_hist[2,1])
+                ax2 = Axis(plot_mut_hist[2,2])
+                ax3 = Axis(plot_mut_hist[2,3])
+
+                plot_color = palette(:viridis, 4)[2]
             end
-        else
-            ax1 = Axis(plot_mut_hist[2,1])
-        end
 
-        if type == :existing
-            CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-        else
-            CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-        end
+            mut_size_r = map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
 
-        min_t = minimum(mut_size)
-        max_t = maximum(mut_size)
-
-        push!(min_t_list[nt],min_t)
-        push!(max_t_list[nt],max_t)
-
-        norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
-
-        CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-        CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--")
-
-        mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-        if type == :existing
-            if n==1
-                ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+            mut_size = reduce(vcat,mut_size_r)
+            
+            if length(mut_size) != 0
+                CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
             else
-                ax2 = Axis(plot_mut_hist[1,2])
+                mut_size = [0.]
             end
-        else
-            ax2 = Axis(plot_mut_hist[2,2])
-        end
 
-        min_t = minimum(mut_size)
-        max_t = maximum(mut_size)
+            CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+            CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
 
-        push!(min_t_list[nt],min_t)
-        push!(max_t_list[nt],max_t)
+            hidedecorations!(ax1)
 
-        norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+            mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
 
-        if type == :existing
-            CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-        else
-            CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-        end
+            mut_size = reduce(vcat,mut_size_r)
 
-        CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-        CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--")
-
-        mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-        if type == :existing
-            if n==1
-                ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+            if length(mut_size) != 0
+                CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = plot_color)  # new additive
             else
-                ax3 = Axis(plot_mut_hist[1,3])
+                mut_size = [0.]
             end
+
+            CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+            CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+
+            hidedecorations!(ax2)
+
+            mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+            mut_size = reduce(vcat,mut_size_r)
+
+            if length(mut_size) != 0
+                CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+            else
+                mut_size = [0.]
+            end
+
+            CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+            CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+
+            hidedecorations!(ax3)
+
+            push!(additive_ax,ax1)
+            push!(additive_ax,ax2)
+            push!(additive_ax,ax3)
+
         else
-            ax3 = Axis(plot_mut_hist[2,3])
+            min_t = 0.
+            max_t = quantile(mutation_operator.mult_noise_distribution,0.99)
+
+            mut_noise_dist = mutation_operator.mult_noise_distribution;
+
+            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+
+            if type[1] 
+
+                ax1 = Axis(plot_mut_hist[3,1])
+                ax2 = Axis(plot_mut_hist[3,2])
+                ax3 = Axis(plot_mut_hist[3,3])
+
+                plot_color = palette(:viridis, 4)[3]
+                hidedecorations!(ax1)
+            else
+                ax1 = Axis(plot_mut_hist[4,1])
+                ax2 = Axis(plot_mut_hist[4,2])
+                ax3 = Axis(plot_mut_hist[4,3])
+
+                plot_color = palette(:viridis, 4)[4]
+            end
+
+            mut_size_r = map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+            mut_size = abs.(reduce(vcat,mut_size_r))
+            
+            if length(mut_size) != 0
+                CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+            else
+                mut_size = [0.]
+            end
+
+            CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+            CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+
+            hidedecorations!(ax1)
+
+            mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+            mut_size = abs.(reduce(vcat,mut_size_r))
+
+            if length(mut_size) != 0
+                CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = plot_color)  # new additive
+            else
+                mut_size = [0.]
+            end
+
+            CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+            CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+
+            hidedecorations!(ax2)
+
+            mut_size_r = map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+
+            mut_size = abs.(reduce(vcat,mut_size_r))
+
+            if length(mut_size) != 0
+                CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+            else
+                mut_size = [0.]
+            end
+
+            CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+            CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+
+            hidedecorations!(ax3)
+
+            push!(mult_ax,ax1)
+            push!(mult_ax,ax2)
+            push!(mult_ax,ax3)
         end
 
-        min_t = minimum(mut_size)
-        max_t = maximum(mut_size)
-
-        push!(min_t_list[nt],min_t)
-        push!(max_t_list[nt],max_t)
-
-        norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
-
-        if type == :existing
-            CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-        else
-            CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-        end
-
-        CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-        CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--")
-
-        # linkxaxes!([ax1,ax2,ax3]...)
-        # linkyaxes!([ax1,ax2,ax3]...)
-
-        hidedecorations!(ax1)
-        hidedecorations!(ax2)
-        hidedecorations!(ax3)
     end
+
+    linkxaxes!(additive_ax...)
+    linkxaxes!(mult_ax...)
 
     colgap!(plot_mut_hist, 10)
     rowgap!(plot_mut_hist, 10)
 
     push!(weight_grid_layouts,plot_mut_hist)
 
-    ###############################\
+    ###############################\ get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2)
 
     bins = 15
 
@@ -2054,368 +3621,192 @@ function create_weight_edit_summary!(fig,n,trajectories,mutation_op::MutationOpe
 
         plot_mut_hist = fig[grid_values[weight_id]...] = GridLayout()
 
-        for (nt,type) in enumerate([:new,:existing])
+        additive_ax = []
+        mult_ax = []
+    
+        for type in [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]
 
-            if type == :existing
-                mut_noise_dist = Normal(0.0,noise_cv);
-            else
-                mut_noise_dist = Uniform(-max_w,max_w);
-            end
+            if type[2] == :additive
+    
+                min_t = -quantile(mutation_operator.additive_noise_distribution,0.99)
+                max_t = quantile(mutation_operator.additive_noise_distribution,0.99)
+    
+                mut_noise_dist = mutation_operator.additive_noise_distribution;
 
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
-            else
-                ax1 = Axis(plot_mut_hist[2,1])
-            end
-
-            min_t = min_t_list[nt][1]
-            max_t = max_t_list[nt][1]
-
-            if length(mut_size) > 1
-                if type == :existing
-                    CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+                norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+    
+                if type[1] 
+                    if n==1
+                        ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
+                        ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
+                        ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
+                    else
+                        ax1 = Axis(plot_mut_hist[1,1])
+                        ax2 = Axis(plot_mut_hist[1,2])
+                        ax3 = Axis(plot_mut_hist[1,3])
+                    end
+    
+                    plot_color = palette(:viridis, 4)[1]
+    
+                    hidedecorations!(ax1)
                 else
-                    CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+    
+                    ax1 = Axis(plot_mut_hist[2,1])
+                    ax2 = Axis(plot_mut_hist[2,2])
+                    ax3 = Axis(plot_mut_hist[2,3])
+    
+                    plot_color = palette(:viridis, 4)[2]
                 end
-            end
-
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
-            CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-            CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--")
-
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
-            else
-                ax2 = Axis(plot_mut_hist[2,2])
-            end
-
-            min_t = min_t_list[nt][2]
-            max_t = max_t_list[nt][2]
-
-            if length(mut_size) > 1
-                if type == :existing
-                    CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+    
+                mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = reduce(vcat,mut_size_r)
+                
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
                 else
-                    CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+                    mut_size = [0.]
                 end
-            end
-
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
-            CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-            CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--")
-
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
-            else
-                ax3 = Axis(plot_mut_hist[2,3])
-            end
-
-            min_t = min_t_list[nt][3]
-            max_t = max_t_list[nt][3]
-
-            if length(mut_size) > 1
-                if type == :existing
-                    CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
+    
+                CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+                hidedecorations!(ax1)
+    
+                mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = reduce(vcat,mut_size_r)
+    
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = plot_color)  # new additive
                 else
-                    CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
+                    mut_size = [0.]
                 end
+    
+                CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+                hidedecorations!(ax2)
+    
+                mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = reduce(vcat,mut_size_r)
+    
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+    
+                hidedecorations!(ax3)
+    
+                push!(additive_ax,ax1)
+                push!(additive_ax,ax2)
+                push!(additive_ax,ax3)
+    
+            else
+                min_t = 0.
+                max_t = quantile(mutation_operator.mult_noise_distribution,0.99)
+    
+                mut_noise_dist = mutation_operator.mult_noise_distribution;
+    
+                norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
+    
+                if type[1] 
+
+                    ax1 = Axis(plot_mut_hist[3,1])
+                    ax2 = Axis(plot_mut_hist[3,2])
+                    ax3 = Axis(plot_mut_hist[3,3])
+    
+                    plot_color = palette(:viridis, 4)[3]
+                    hidedecorations!(ax1)
+                else
+                    ax1 = Axis(plot_mut_hist[4,1])
+                    ax2 = Axis(plot_mut_hist[4,2])
+                    ax3 = Axis(plot_mut_hist[4,3])
+
+                    plot_color = palette(:viridis, 4)[4]
+                end
+    
+                mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = abs.(reduce(vcat,mut_size_r))
+                
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax1,1,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+                hidedecorations!(ax1)
+    
+                mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = abs.(reduce(vcat,mut_size_r))
+    
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = plot_color)  # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax2,1,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth) # new all
+    
+                hidedecorations!(ax2)
+    
+                mut_size_r = map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+    
+                mut_size = abs.(reduce(vcat,mut_size_r))
+    
+                if length(mut_size) != 0
+                    CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = plot_color) # new additive
+                else
+                    mut_size = [0.]
+                end
+    
+                CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
+                CairoMakie.vlines!(ax3,1,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
+    
+                hidedecorations!(ax3)
+    
+                push!(mult_ax,ax1)
+                push!(mult_ax,ax2)
+                push!(mult_ax,ax3)
             end
-
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
-            CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-            CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--")
-
-            # linkxaxes!([ax1,ax2,ax3]...)
-            # linkyaxes!([ax1,ax2,ax3]...)
-
-            hidedecorations!(ax1)
-            hidedecorations!(ax2)
-            hidedecorations!(ax3)
+    
         end
-
+    
+        linkxaxes!(additive_ax...)
+        linkxaxes!(mult_ax...)
+    
         colgap!(plot_mut_hist, 10)
         rowgap!(plot_mut_hist, 10)
-
+    
         push!(weight_grid_layouts,plot_mut_hist)
-
     end
 
     for (label, layout) in zip(weight_names_latex, weight_grid_layouts[2:end])
         Label(layout[1, 1, TopLeft()], label,
-            fontsize = 26,
+            fontsize = evo_config.fontsize,
             font = :bold,
             padding = (0, 5, 5, 0),
             halign = :right)
     end
 
     Label(weight_grid_layouts[1][1, 1, TopLeft()], L"\text{All}",
-    fontsize = 26,
+    fontsize = evo_config.fontsize,
     font = :bold,
     padding = (0, 5, 5, 0),
     halign = :right)
 
-    colors = palette(:viridis, 3)
-
-end
-
-function create_weight_edit_summary!(fig,n,trajectories,mutation_op::MutationOperatorDual,sorted_uep, vertex_top_map, draw_config, node_colors,fontsize,color_scheme)
-
-    weight_names_latex = reshape([L"W_{aa}",L"W_{ab}",L"W_{ac}",L"W_{ba}",L"W_{bb}",L"W_{bc}",L"W_{ca}",L"W_{cb}",L"W_{cc}",L"W_{ma}",L"W_{mb}",L"W_{mc}"],(3,4));
-
-    grid_values = Tuple.(findall(ones(3,4) .> 0))
-
-    colors = reverse(palette(:tab10)[1:4])
-
-    ax_wait_list = []
-
-    plot_geno = fig[grid_values[11]...] = GridLayout()
-
-    ax_geno = Axis(plot_geno[1,1],backgroundcolor = (color_scheme[n],1.),title =L"\text{Minimal Stripe Topology}",aspect = DataAspect())
-
-    draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],draw_config,node_colors,fontsize,weight_names_latex,true,false)
-
-    norm_type = :pdf
-
-    ###############################
-
-    plot_mut_hist = fig[grid_values[12]...] = GridLayout()
-
-    bins = 50
-
-    min_t_list = [[],[]]
-    max_t_list = [[],[]]
-
-    weight_grid_layouts = []
-
-    for (nt,type) in enumerate([:new,:existing])
-
-        if type == :existing
-            mut_noise_dist = mutation_op.mult_noise_distribution;
-        else
-            mut_noise_dist = mutation_op.additive_noise_distribution;
-        end
-
-        mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-        if type == :existing
-            if n==1
-                ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
-            else
-                ax1 = Axis(plot_mut_hist[1,1])
-            end
-        else
-            ax1 = Axis(plot_mut_hist[2,1])
-        end
-
-        if type == :existing
-            CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-        else
-            CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-        end
-
-        min_t = minimum(mut_size)
-        max_t = maximum(mut_size)
-
-        push!(min_t_list[nt],min_t)
-        push!(max_t_list[nt],max_t)
-
-        norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
-
-        CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-        CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--")
-
-        mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-        if type == :existing
-            if n==1
-                ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
-            else
-                ax2 = Axis(plot_mut_hist[1,2])
-            end
-        else
-            ax2 = Axis(plot_mut_hist[2,2])
-        end
-
-        min_t = minimum(mut_size)
-        max_t = maximum(mut_size)
-
-        push!(min_t_list[nt],min_t)
-        push!(max_t_list[nt],max_t)
-
-        norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
-
-        if type == :existing
-            CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-        else
-            CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-        end
-
-        CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-        CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--")
-
-        mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-        if type == :existing
-            if n==1
-                ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
-            else
-                ax3 = Axis(plot_mut_hist[1,3])
-            end
-        else
-            ax3 = Axis(plot_mut_hist[2,3])
-        end
-
-        min_t = minimum(mut_size)
-        max_t = maximum(mut_size)
-
-        push!(min_t_list[nt],min_t)
-        push!(max_t_list[nt],max_t)
-
-        norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
-
-        if type == :existing
-            CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-        else
-            CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-        end
-
-        CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-        CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--")
-
-        # linkxaxes!([ax1,ax2,ax3]...)
-        # linkyaxes!([ax1,ax2,ax3]...)
-
-        hidedecorations!(ax1)
-        hidedecorations!(ax2)
-        hidedecorations!(ax3)
-    end
-
-    colgap!(plot_mut_hist, 10)
-    rowgap!(plot_mut_hist, 10)
-
-    push!(weight_grid_layouts,plot_mut_hist)
-
-    ###############################\
-
-    bins = 15
-
-    for weight_id in 1:10
-
-        plot_mut_hist = fig[grid_values[weight_id]...] = GridLayout()
-
-        for (nt,type) in enumerate([:new,:existing])
-
-            if type == :existing
-                mut_noise_dist = mutation_op.mult_noise_distribution;
-            else
-                mut_noise_dist = mutation_op.additive_noise_distribution;
-            end    
-
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
-            else
-                ax1 = Axis(plot_mut_hist[2,1])
-            end
-
-            min_t = min_t_list[nt][1]
-            max_t = max_t_list[nt][1]
-
-            if length(mut_size) > 1
-                if type == :existing
-                    CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
-                else
-                    CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
-                end
-            end
-
-            norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
-            CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-            CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--")
-
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
-            else
-                ax2 = Axis(plot_mut_hist[2,2])
-            end
-
-            min_t = min_t_list[nt][2]
-            max_t = max_t_list[nt][2]
-
-            if length(mut_size) > 1
-                if type == :existing
-                    CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
-                else
-                    CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
-                end
-            end
-
-            norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
-            CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-            CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--")
-
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type_and_weight(tr,type,weight_id,tr.H0+1,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
-            else
-                ax3 = Axis(plot_mut_hist[2,3])
-            end
-
-            min_t = min_t_list[nt][3]
-            max_t = max_t_list[nt][3]
-
-            if length(mut_size) > 1
-                if type == :existing
-                    CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[1])
-                else
-                    CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = norm_type,color = palette(:viridis, 3)[2])
-                end
-            end
-
-            norm_pdf = [pdf(mut_noise_dist,abs(t)) for t in LinRange(min_t,max_t,100)];
-            CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red)
-            CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--")
-
-            # linkxaxes!([ax1,ax2,ax3]...)
-            # linkyaxes!([ax1,ax2,ax3]...)
-
-            hidedecorations!(ax1)
-            hidedecorations!(ax2)
-            hidedecorations!(ax3)
-        end
-
-        colgap!(plot_mut_hist, 10)
-        rowgap!(plot_mut_hist, 10)
-
-        push!(weight_grid_layouts,plot_mut_hist)
-
-    end
-
-    for (label, layout) in zip(weight_names_latex, weight_grid_layouts[2:end])
-        Label(layout[1, 1, TopLeft()], label,
-            fontsize = 26,
-            font = :bold,
-            padding = (0, 5, 5, 0),
-            halign = :right)
-    end
-
-    Label(weight_grid_layouts[1][1, 1, TopLeft()], L"\text{All}",
-    fontsize = 26,
-    font = :bold,
-    padding = (0, 5, 5, 0),
-    halign = :right)
-
-    colors = palette(:viridis, 3)
+    colors = palette(:viridis, 4)
 
 end
 

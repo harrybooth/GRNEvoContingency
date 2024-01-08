@@ -27,9 +27,9 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_network = [0.0 0.0 0.0 1.2490335893436255; 0.0 1.1953169642693524 8.935929988407764 0.0; -0.21577059555519695 0.0 0.0 0.0]
+start_network = [0.0 2.488749015201534 0.0 1.2490335893436255; 0.0 0.0 0.0 0.0; -0.21577059555519695 0.0 1.8108915156037493 0.0]
 
-start_top = [0 0 0 1; 0 1 1 0; -1 0 0 0]
+start_top =  [0 1 0 1; 0 0 0 0; -1 0 1 0]
 
 ########## Topologies ###########
 
@@ -47,12 +47,6 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 ########## Evolutionary Setup ######### 
 
 β = (1.,10000)
-
-noise_cv = 1.
-
-mut_prob = 0.1
-
-deletion_prob = 0.01
 
 grn_parameters = DefaultGRNParameters();
 
@@ -76,6 +70,14 @@ fitness_function = s -> fitness_evaluation(s,x->(nstripe_fitness(x,n_stripe,min_
 
 tolerance = 0.9
 
+mut_prob = 0.1
+
+min_affinity = 1e-3
+
+sign_flip_probability = 0.5
+
+pm_prob = 0.5
+
 viable_mutations = ones(Int,Ng,Ng+1)
 
 viable_mutations[2,4] = 0
@@ -83,11 +85,19 @@ viable_mutations[3,4] = 0
 
 mutation_weights = findall(viable_mutations .> 0)
 
+mult_σ = 0.2
+
+mult_noise_distribution = LogNormal(-0.1,mult_σ)
+
+add_σ = 1.
+
+additive_noise_distribution = Normal(0.,add_σ)
+
 n_sample_func() = rand(Binomial(length(mutation_weights),mut_prob))
 
-mutation_op = MutationOperator(Normal,(μ = 0.0,σ = noise_cv),n_sample_func,deletion_prob,max_w,mutation_weights)
+mutation_op = MutationOperatorDual(mult_noise_distribution,additive_noise_distribution,n_sample_func,pm_prob,min_affinity,max_w,mutation_weights,sign_flip_probability);
 
-mutate_function = i -> noise_mtype(i,mutation_op)
+mutate_function = i -> noise_mtype_mult_add(i,mutation_op)
 
 ########## Dyn Setup ######### 
 
@@ -110,5 +120,5 @@ n_fundamental_networks = length(fundamental_networks)
 
 ######### Simulation setup ######### 
 
-n_trials = 10000
+n_trials = 5000
 max_gen = 250000

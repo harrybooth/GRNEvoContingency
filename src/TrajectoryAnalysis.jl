@@ -187,7 +187,11 @@ function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tupl
 
     start_network = [collect(v) for v in eachcol(geno_traj_m[:,1:end-1])]
 
-    mutant_info = [(weight_id = weight_id[n],weight_id_label = weight_id_label[n],mut_type = mut_types[n], mut_size = mut_sizes[n],start_fitness = start_fitness[n],start_fitness_tuple = start_fitness_tuple[n],mutant_fitness = mutant_fitness[n],fitness_delta = fitness_delta[n],start_network = start_network[n]) for n in 1:length(weight_id)]
+    is_new_int = [[sn[wi] == 0 for wi in mw_id] for (sn,mw_id) in zip(start_network,weight_id)]
+
+    mut_types_combi = [[t for t in zip(new_int,mt)] for (new_int,mt) in zip(is_new_int,mut_types)]
+
+    mutant_info = [(weight_id = weight_id[n],weight_id_label = weight_id_label[n],mut_type = mut_types_combi[n], new_interaction = is_new_int[n], mut_size = mut_sizes[n],start_fitness = start_fitness[n],start_fitness_tuple = start_fitness_tuple[n],mutant_fitness = mutant_fitness[n],fitness_delta = fitness_delta[n],start_network = start_network[n]) for n in 1:length(weight_id)]
 
     ####### predictions
 

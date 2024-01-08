@@ -46,6 +46,54 @@ function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_f
     return rtype
 end
 
+# function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_function,mut_op::Union{MutationOperatorNew,MutationOperatorDual,MutationOperatorUniform})
+
+#     n_mut = length(mut_tuple[:weight_id])
+
+#     if n_mut > 1
+
+#         mut_combi = [[bit == '1' ? true : false for bit in string(i;base = 2,pad = n_mut)] for i in 1:2^n_mut-1]
+
+#         accept_new_mutant = []
+
+#         for mut_id in mut_combi[1:end-1]
+
+#             new_network = noise_specified(mut_tuple[:start_network],mut_tuple[:weight_id][mut_id],mut_tuple[:mut_size][mut_id],mut_tuple[:mut_type][mut_id],mut_op)
+
+#             mutant = Individual(reshape(new_network,(3,4)),grn_parameters,development)
+
+#             mutant_fitness = fitness_function(mutant.phenotype)
+
+#             # fix_p = fixation_probability(mutant_fitness[1] - mut_tuple[:start_fitness_tuple][1],mutant_fitness[2] - mut_tuple[:start_fitness_tuple][2],β)
+
+#             fix_p = fixation_probability_kim(mutant_fitness[1] - mut_tuple[:start_fitness_tuple][1],mutant_fitness[2] - mut_tuple[:start_fitness_tuple][2],β[1],β[2])
+
+#             # push!(accept_new_mutant,fix_p > 0)
+
+#             push!(accept_new_mutant,fix_p > 1/β[2])
+
+#         end
+
+#         rtype = :ne
+
+#         if !any(accept_new_mutant)
+#             rtype = :rse
+
+#         else
+#             for mut_id in 1:n_mut
+#                 accept_id = findall(x->x[mut_id],mut_combi[1:end-1])
+#                 if any([!x for x in accept_new_mutant[accept_id]])
+#                     rtype = :se
+#                 end
+#             end
+#         end
+#     else
+#         rtype = :sm
+#     end
+
+#     return rtype
+# end
+
 function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_function,mut_op::Union{MutationOperatorNew,MutationOperatorDual,MutationOperatorUniform})
 
     n_mut = length(mut_tuple[:weight_id])
@@ -74,25 +122,21 @@ function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_f
 
         end
 
-        rtype = :ne
-
         if !any(accept_new_mutant)
             rtype = :rse
-
+        elseif all(accept_new_mutant)
+            rtype = :ne
         else
-            for mut_id in 1:n_mut
-                accept_id = findall(x->x[mut_id],mut_combi[1:end-1])
-                if any([!x for x in accept_new_mutant[accept_id]])
-                    rtype = :se
-                end
-            end
+            rtype = :se
         end
+
     else
         rtype = :sm
     end
 
     return rtype
 end
+
 
 
 function calculate_epi_class_proportion(epi_class)

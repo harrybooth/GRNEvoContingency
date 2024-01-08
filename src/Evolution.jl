@@ -863,6 +863,55 @@ function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vect
     return new_w
 end
 
+function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vector{Any},mut_type::Vector{Tuple{Bool, Symbol}},mut_op::MutationOperatorDual)
+
+    new_w = copy(w)
+
+    for n in 1:length(mut_id)
+        if mut_type[n][2] == :additive
+            new_w[mut_id[n]] = new_w[mut_id[n]] + mut_size[n]
+        elseif mut_type[n][2] == :multiplicative
+            if new_w[mut_id[n]] == 0
+                new_w[mut_id[n]] = mut_op.start_affinity*mut_size[n]
+            else
+                new_w[mut_id[n]] = new_w[mut_id[n]]*mut_size[n]
+            end
+        else
+            new_w[mut_id[n]] = NaN
+        end
+
+        if abs(new_w[mut_id[n]]) > mut_op.max_w
+            new_w[mut_id[n]] = sign(new_w[mut_id[n]])*mut_op.max_w
+        end
+    end
+
+    return new_w
+end
+
+function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vector{Any},mut_type::Vector{Tuple{Bool, Symbol}},mut_op::MutationOperatorUniform)
+
+    new_w = copy(w)
+
+    for n in 1:length(mut_id)
+        if mut_type[n][2] == :additive
+            new_w[mut_id[n]] = mut_size[n]
+        elseif mut_type[n][2] == :multiplicative
+            if new_w[mut_id[n]] == 0
+                new_w[mut_id[n]] = mut_op.start_affinity*mut_size[n]
+            else
+                new_w[mut_id[n]] = new_w[mut_id[n]]*mut_size[n]
+            end
+        else
+            new_w[mut_id[n]] = NaN
+        end
+
+        if abs(new_w[mut_id[n]]) > mut_op.max_w
+            new_w[mut_id[n]] = sign(new_w[mut_id[n]])*mut_op.max_w
+        end
+    end
+
+    return new_w
+end
 
 function noise_mtype_v1iii(w::Matrix{Float64},mut_op::MutationOperatorNew)
 
