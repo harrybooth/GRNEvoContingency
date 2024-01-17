@@ -518,6 +518,7 @@ function assign_predictions_sk!(tr::Trajectory,model,prediction_type,predict_lab
 
 end
 
+
 function assign_predictions_sk!(tr::Trajectory,model,prediction_type,predict_label_to_vertex,weight_class_dict)
 
     if prediction_type == :tt
@@ -593,6 +594,18 @@ end
 function assign_gt_prediction_errors!(tr::Trajectory,label)
 
     tr.gt_prediction_error = [pred == label for pred in tr.gt_label_predictions]
+
+end
+
+function assign_tt_other_prediction_errors!(tr::Trajectory,label,predict_id)
+
+    tr.tt_prediction_error = [label == -1 ? !(pred ∈ predict_id) :  pred == label for pred in tr.tt_label_predictions]
+
+end
+
+function assign_gt_other_prediction_errors!(tr::Trajectory,label,predict_id)
+
+    tr.gt_prediction_error = [label == -1 ? !(pred ∈ predict_id) :  pred == label for pred in tr.gt_label_predictions]
 
 end
 

@@ -185,6 +185,8 @@ function draw_grn!(ax,network,draw_config::DrawGRNConfig,node_colors,fs,annotate
 
     annotations = string.(round.(network_m,digits = 2))
 
+    # print("1")
+
     for (pos_end_id,pos_start_id) in non_zero_weights
 
         reverse = (pos_start_id,pos_end_id) ∈ non_zero_weights
@@ -280,6 +282,8 @@ function draw_grn!(ax,network,draw_config::DrawGRNConfig,node_colors,fs,annotati
     end
 
     symbolic_name = [:A,:B,:C,:M]
+
+    # print("2")
 
     for (pos_end_id,pos_start_id) in non_zero_weights
 
@@ -379,6 +383,8 @@ function draw_grn!(ax,network,reverse_list,draw_config::DrawGRNConfig,node_color
     symbolic_name = [:A,:B,:C,:M]
 
     annotations = string.(round.(network_m,digits = 2))
+
+    # print("3")
 
     for (pos_end_id,pos_start_id) in non_zero_weights
 
