@@ -51,6 +51,17 @@ mutable struct Trajectory
     train_test_indicator :: Any
     train_test_indicator_mss :: Any
     embeddings :: Any
+
+    epistasis :: Any
+
+    tt_kl_div :: Any
+    gt_kl_div :: Any
+    mss_kl_div :: Any
+
+    gt_shap :: Any
+    tt_shap :: Any
+    mss_shap :: Any
+
     other :: Any
     
 end
@@ -215,13 +226,24 @@ function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tupl
     train_test_indicator = nothing
     train_test_indicator_mss = nothing
     embeddings = nothing
+
+    epistasis = nothing
+
+    tt_kl_div = nothing
+    gt_kl_div = nothing
+    mss_kl_div = nothing
+
+    tt_shap = nothing
+    gt_shap = nothing
+    mss_shap = nothing
+
     other = nothing
 
     ####### instantiate 
 
     Trajectory(sim_id,geno_traj,topologies,n_accepted_mutants,acceptance_ratio,mutation_number,stripe_indicator,H0,wait_times_v,fitness_traj_add,fitness_traj_tuple,top_edits,weight_edits,masked_hamming_distance_H0,masked_hamming_distance,initial_fitness,final_fitness,mutant_info,metagraph_vertices,metagraph_parents,minimal_stripe_subgraphs,parent_inclusion_indicator,
                                                                                                             tt_label_probabilities,tt_label_predictions,tt_label_entropies,tt_prediction_error,gt_label_probabilities,gt_label_predictions,gt_label_entropies,gt_prediction_error,
-                                                                                                            mss_probabilities,mss_predictions,mss_entropies,mss_prediction_error,train_test_indicator,train_test_indicator_mss,embeddings,other)
+                                                                                                            mss_probabilities,mss_predictions,mss_entropies,mss_prediction_error,train_test_indicator,train_test_indicator_mss,embeddings,epistasis,tt_kl_div,gt_kl_div,mss_kl_div,tt_shap,gt_shap,mss_shap,other)
 end
 
 function compute_cumulative_edits(gt)
