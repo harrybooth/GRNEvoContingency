@@ -376,7 +376,10 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
 
     view_sorted_uep_id = sorted_counts_uep .> minimal_motif_count
 
-    other = mean(sorted_counts_uep[.!view_sorted_uep_id])
+    # other = mean(sorted_counts_uep[.!view_sorted_uep_id])
+
+
+    other = sum(sorted_counts_uep[.!view_sorted_uep_id])
 
     n_norm = sum(sorted_counts_uep)
 
@@ -584,6 +587,8 @@ function plot_dynamical_summary_parents!(fig,trajectories,embedding,top_n,minima
     color_sorted_counts_uep = [i <= top_n ? ds_config.color_scheme[i] : :grey for i in 1:length(sorted_counts_uep)]
 
     view_sorted_uep_id = sorted_counts_uep .> minimal_motif_count
+
+    # other = mean(sorted_counts_uep[.!view_sorted_uep_id])
 
     other = mean(sorted_counts_uep[.!view_sorted_uep_id])
 
@@ -944,7 +949,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             ax_epi_lH0 = Axis(plot_epi_types[1,1])
         end
 
-        epi_counts = reduce(vcat,map(tr->tr.other[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -961,7 +966,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             ax_epi_H0 = Axis(plot_epi_types[1,2])
         end
 
-        epi_counts = map(tr->tr.other[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+        epi_counts = map(tr->tr.epistasis[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -978,7 +983,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             ax_epi_uH0 = Axis(plot_epi_types[1,3])
         end
 
-        epi_counts = reduce(vcat,map(tr->tr.other[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -1316,7 +1321,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::Union{Mut
             ax_epi_lH0 = Axis(plot_epi_types[1,1])
         end
 
-        epi_counts = reduce(vcat,map(tr->tr.other[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -1333,7 +1338,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::Union{Mut
             ax_epi_H0 = Axis(plot_epi_types[1,2])
         end
 
-        epi_counts = map(tr->tr.other[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+        epi_counts = map(tr->tr.epistasis[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -1350,7 +1355,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::Union{Mut
             ax_epi_uH0 = Axis(plot_epi_types[1,3])
         end
 
-        epi_counts = reduce(vcat,map(tr->tr.other[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -1682,7 +1687,7 @@ function create_evo_summary_portrait!(fig,trajectories,top_n,mutation_operator::
 
         ax_epi_lH0 = Axis(plot_wait[1,1],title = L"t<H_{0}")
 
-        epi_counts = reduce(vcat,map(tr->tr.other[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -1695,7 +1700,7 @@ function create_evo_summary_portrait!(fig,trajectories,top_n,mutation_operator::
 
         ax_epi_H0 = Axis(plot_wait[1,2],title = L"t=H_{0}")
  
-        epi_counts = map(tr->tr.other[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+        epi_counts = map(tr->tr.epistasis[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -1708,7 +1713,7 @@ function create_evo_summary_portrait!(fig,trajectories,top_n,mutation_operator::
 
         ax_epi_uH0 = Axis(plot_wait[1,3],title = L"t>H_{0}")
 
-        epi_counts = reduce(vcat,map(tr->tr.other[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -2090,7 +2095,7 @@ function create_epi_summary_portrait!(fig,trajectories,top_n,mutation_operator::
 
         ax_epi_lH0 = Axis(sub_plot[1,2],title = L"t<H_{0}")
 
-        epi_counts = reduce(vcat,map(tr->tr.other[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -2103,7 +2108,7 @@ function create_epi_summary_portrait!(fig,trajectories,top_n,mutation_operator::
 
         ax_epi_H0 = Axis(sub_plot[1,3],title = L"t=H_{0}")
  
-        epi_counts = map(tr->tr.other[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+        epi_counts = map(tr->tr.epistasis[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -2116,7 +2121,7 @@ function create_epi_summary_portrait!(fig,trajectories,top_n,mutation_operator::
 
         ax_epi_uH0 = Axis(sub_plot[1,4],title = L"t>H_{0}")
 
-        epi_counts = reduce(vcat,map(tr->tr.other[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -2327,7 +2332,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             ax_epi_lH0 = Axis(plot_epi_types[1,1])
         end
 
-        epi_counts = reduce(vcat,map(tr->tr.other[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -2344,7 +2349,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             ax_epi_H0 = Axis(plot_epi_types[1,2])
         end
 
-        epi_counts = map(tr->tr.other[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
+        epi_counts = map(tr->tr.epistasis[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 
@@ -2361,7 +2366,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
             ax_epi_uH0 = Axis(plot_epi_types[1,3])
         end
 
-        epi_counts = reduce(vcat,map(tr->tr.other[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
+        epi_counts = reduce(vcat,map(tr->tr.epistasis[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
 
         epi_counts_prop = calculate_epi_class_proportion(epi_counts)
 

@@ -27,9 +27,10 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_network = [0.0 0.0 0.0 1.2490335893436255; 0.0 1.9029791141132006 0.0 0.0; -0.21577059555519695 0.0 3.1027810929575845 0.0]
+start_network = [0.0 0.0 0.0 1.2490335893436255; 0.0 1.7372247500765696 0.0 0.0; -0.21577059555519695 0.0 2.0117285842888473 0.0]
 
 start_top = [0 0 0 1; 0 1 0 0; -1 0 1 0]
+
 ########## Topologies ###########
 
 # These are taken from: Cotterell, J., & Sharpe, J. (2010). An atlas of gene regulatory networks reveals multiple three‐gene mechanisms for interpreting morphogen gradients. Molecular systems biology, 6(1), 425.
