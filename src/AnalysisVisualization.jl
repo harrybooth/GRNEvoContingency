@@ -378,7 +378,6 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
 
     # other = mean(sorted_counts_uep[.!view_sorted_uep_id])
 
-
     other = sum(sorted_counts_uep[.!view_sorted_uep_id])
 
     n_norm = sum(sorted_counts_uep)
@@ -397,7 +396,7 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
 
     count_top_n = round(sum(sorted_uep_proportions[1:top_n])*100, digits = 2)
 
-    ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n  M^{(i)}_{N_i} : %$count_top_n % of trajectories}", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
+    ax1 = Axis(mo_umap[3:4,1:top_n], xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
 
     CairoMakie.scatter!(ax1,embedding, color = [haskey(top_n_dict,i) ? (ds_config.color_scheme[top_n_dict[i]],0.5) : (:grey,0.5) for i in end_parents],markersize = ds_config.embed_markersize)
 
@@ -405,14 +404,14 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
 
     for i in 1:top_n
 
-        ax_geno = Axis(mo_umap[3,i], backgroundcolor = (ds_config.color_scheme[i],ds_config.color_fade),aspect = DataAspect())
+        ax_geno = Axis(mo_umap[2,i], backgroundcolor = (ds_config.color_scheme[i],ds_config.color_fade),aspect = DataAspect())
 
         draw_grn!(ax_geno,vertex_top_map[sorted_uep[i]],ds_config.draw_config,ds_config.node_colors,ds_config.fontsize,false,false)
     end
 
     #######################
 
-    ax_mo = Axis(mo_umap[4,1:top_n],ylabel  = L"\text{Probabilty}", xlabel = L"M^{(i)}_{N_i}")
+    ax_mo = Axis(mo_umap[1,1:top_n],ylabel  = L"\text{Probabilty}", xlabel = L"M^{(i)}_{N_i}",title = L"\text{Top %$top_n  M^{(i)}_{N_i} : %$count_top_n % of trajectories}")
 
     CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_uep)
 
@@ -452,7 +451,7 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
 
     progression_cs = palette(:haline,length(tr_top_fitness_rf)+1)
 
-    ax_fitness = Axis(ex1[1:2,1:length(tr_phenotypes)],xlabel = L"\text{Generation}")
+    ax_fitness = Axis(ex1[1:2,1:length(tr_phenotypes)],xlabel = L"\text{Generation}",ylabel = L"\text{Fitness}")
 
     hideydecorations!(ax_fitness,label = false,ticklabels = false,ticks = false,minorticks = false)
 
@@ -466,10 +465,15 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
 
     if h0 != Ni
         v = Int.(floor((h0+Ni)/2))
-        ax_fitness.xticks = ([1,h0,v,Ni],[L"1",L"H_0",L"%$v",L"N_i"])
+        ax_fitness.xticks = ([1,h0,v,Ni],[L"1",L"S_0",L"%$v",L"N_i"])
     else
-        ax_fitness.xticks = ([1,h0],[L"1",L"H_0 = N_i"])
+        ax_fitness.xticks = ([1,h0],[L"1",L"S_0 = N_i"])
     end
+
+    # axislegend(ax_fitness, [rline, cline], [L"\mathcal{F}_R", L"\mathcal{F}_C"], position = :rb,
+    # orientation = :vertical, labelsize = 10., rowgap = 2., framevisible = false, valign = :bottom)
+
+    Legend(ex1[1:2,1:length(tr_phenotypes)],  [rline, cline], [L"\mathcal{F}_R", L"\mathcal{F}_C"], framevisible=false,orientation = :vertical,patchsize = (10, 10),rowgap = 2,halign = :right, valign = :bottom)
 
     ####################
 
@@ -544,7 +548,7 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
 
     CairoMakie.hidedecorations!(ax_rh0,label = false,ticklabels = false,ticks = false,minorticks = false)
 
-    ax_rh0.xticks = (1:4,[L"M^{(i)}_{H_{0}} = M^{(i)}_{N_i}",L"M^{(i)}_{H_{0}} \subset M^{(i)}_{N_i}",L"M^{(i)}_{N_i} \subset M^{(i)}_{H_{0}}",L"\text{MST change}"])
+    ax_rh0.xticks = (1:4,[L"M^{(i)}_{S_{0}} = M^{(i)}_{N_i}",L"M^{(i)}_{S_{0}} \subset M^{(i)}_{N_i}",L"M^{(i)}_{N_i} \subset M^{(i)}_{S_{0}}",L"\text{MST change}"])
 
     for (label, layout) in zip(["A", "B", "C"], [mo_umap, ex1, rmh0])
         Label(layout[1, 1, TopLeft()], label,
@@ -553,6 +557,12 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
             padding = (0,ds_config.caption_padding, ds_config.caption_padding, 0),
             halign = :right)
     end
+
+    Label(ex1[2, 1, TopLeft()], "Ai",
+    fontsize = ds_config.caption_fontsize,
+    font = :bold,
+    padding = (0,ds_config.caption_padding, ds_config.caption_padding, 0),
+    halign = :right)
     
     colgap = 5
     rowgap = 10
