@@ -579,7 +579,7 @@ function noise_mtype_mult_add(w::Matrix{Float64},mut_op::MutationOperatorDual)
 
     mut_op
 
-    choices = sort(sample(mut_op.mutation_weights,n_mut,replace = false))
+    choices = sort(StatsBase.sample(mut_op.mutation_weights,n_mut,replace = false))
     mtype = []
     sizes = []
 
