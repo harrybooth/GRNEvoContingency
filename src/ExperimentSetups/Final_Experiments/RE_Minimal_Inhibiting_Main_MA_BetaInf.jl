@@ -46,7 +46,7 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 ########## Evolutionary Setup ######### 
 
-β = (1.,10000)
+β = (Inf,10000)
 
 grn_parameters = DefaultGRNParameters();
 
@@ -89,7 +89,7 @@ mult_σ = 0.2
 
 mult_noise_distribution = LogNormal(-0.1,mult_σ)
 
-add_σ = 0.5
+add_σ = 1.
 
 additive_noise_distribution = Normal(0.,add_σ)
 

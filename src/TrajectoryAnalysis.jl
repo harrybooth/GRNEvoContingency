@@ -404,6 +404,30 @@ function average_wait_time(tr::Trajectory)
     
 end
 
+function average_wait_time_ext(tr::Trajectory)
+
+    # return [sum(tr.wait_times[1:tr.H0-1])/(tr.H0-1);sum(tr.wait_times[tr.H0]);sum(tr.wait_times[tr.H0+1:end])/(length(tr.wait_times)-tr.H0-1)]
+
+    a = tr.wait_times[2]
+    b = tr.wait_times[2:tr.H0-1]
+    c = tr.wait_times[tr.H0]
+    d = tr.wait_times[tr.H0+1:end]
+
+    all_v = []
+    
+    for v in [a,b,c,d]
+        if length(v) == 0
+            push!(all_v,0.)
+        else
+            push!(all_v,sum(v))
+        end
+    end
+
+    return all_v
+    
+end
+
+
 
 function fitness_restriction_measure(tr,restriction)
     tr.fitness_traj  .<= restriction

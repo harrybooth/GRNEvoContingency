@@ -51,9 +51,9 @@ end
 
 # @everywhere all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main","Final_Experiments/RE_Minimal_Inhibiting_Main"]
 
-@everywhere all_experiments = ["Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_1_Single","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_2_Single","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_3_Single","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_4_Single","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_5_Single"]
+# @everywhere all_experiments = ["Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_1_Single","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_2_Single","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_3_Single","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_4_Single","Final_Experiments/Contingencies/RE_Minimal_Inhibiting_Main_MA_Contingent_5_Single"]
 
-# @everywhere all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main_MA"]
+@everywhere all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main_MA_BetaInf","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_BetaInf","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_BetaInf","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_BetaInf","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_BetaInf","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_BetaInf"]
 
 for exp_name in all_experiments
 
