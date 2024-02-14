@@ -138,7 +138,6 @@ function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_f
 end
 
 
-
 function calculate_epi_class_proportion(epi_class)
     
     total = length(epi_class)

@@ -46,7 +46,7 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 ########## Evolutionary Setup ######### 
 
-β = (Inf,10000)
+β = (1,1e9)
 
 grn_parameters = DefaultGRNParameters();
 
