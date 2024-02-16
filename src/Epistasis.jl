@@ -145,6 +145,13 @@ function calculate_epi_class_proportion(epi_class)
     return [count(x->x==ec,epi_class)/total for ec in [:rse,:se,:ne,:sm]]
 end
 
+function calculate_epi_class_proportion_fw(epi_class,fitness_deltas)
+    
+    total_fitness_change = sum(fitness_deltas)
+
+    return [sum(fitness_deltas[findall(x->x==ec,epi_class)])/total_fitness_change for ec in [:rse,:se,:ne,:sm]]
+end
+
 function calculate_epi_class_proportion(epi_class,epi_class_totals)
     
     return [count(x->x==ec,epi_class) for ec in [:rse,:se,:ne,:sm]] ./ epi_class_totals
