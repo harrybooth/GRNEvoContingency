@@ -168,6 +168,27 @@ function gradient_fitness_r(y)
 
 end
 
+function stripe_indicator(conc,min_stripe_width,lower_bound,upper_bound)
+
+    low = findall(conc .< lower_bound)
+    high = findall(conc .> upper_bound)
+
+    if (length(low) != 0) & (length(high) != 0)
+
+        valid_arrangment = (low[1] < high[1]) & (low[end] > high[end])
+        cts_high_region = !(any([(id > high[1]) & (id < high[end]) for id in low]))
+        msw = (high[1] - low[1] >= min_stripe_width) & (low[end] - high[end] >= min_stripe_width) & (high[end] - high[1] + 1 >= min_stripe_width)
+
+        if valid_arrangment & cts_high_region & msw
+            return 1.
+        else
+            return 0.
+        end
+    else
+        return 0. 
+    end
+
+end
 
 function nstripe_fitness(conc,n_stripe::Int64,min_stripe_width,lower_bound,upper_bound)
 
