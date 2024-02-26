@@ -55,7 +55,7 @@ end
 
 # @everywhere all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge"]
 
-all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main_MA_SI","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_SI","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_SI","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_SI","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_SI","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_SI"]
+all_experiments = ["DeNovoStripe/RE_Minimal_Inhibiting_DeNovo","DeNovoStripe/RE_Minimal_Inhibiting_DeNovo","DeNovoStripe/RE_Minimal_Inhibiting_DeNovo","DeNovoStripe/RE_Minimal_Inhibiting_DeNovo","DeNovoStripe/RE_Minimal_Inhibiting_DeNovo","DeNovoStripe/RE_Minimal_Inhibiting_DeNovo"]
 
 for exp_name in all_experiments
 
