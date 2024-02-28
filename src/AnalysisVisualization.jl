@@ -3288,7 +3288,7 @@ function create_epi_single_portrait_bar!(fig,trajectories,mutation_operator::Uni
 
     scatter_epi_mutn_text = reduce(vcat,[[L"n < S_0" for i in 1:10],[L"n = S_0" for i in 1:10],[L"n > S_0" for i in 1:10]]);
 
-    CairoMakie.barplot!(ax_epi,x_epi_mutn_all,values_epi_mutn_all, color = color_epi_mutn_all, stack = stack_epi_mutn_all, dodge = dodge_epi_mutn_all)
+    CairoMakie.barplot!(ax_epi,x_epi_mutn_all,values_epi_mutn_all, color = color_epi_mutn_all, stack = stack_epi_mutn_all, dodge = dodge_epi_mutn_all,width = width)
 
     # rangebars!(ax_epi,xerr,first.(err_values_epi_mutn),last.(err_values_epi_mutn ); whiskerwidth = 8)
 
@@ -3301,7 +3301,7 @@ function create_epi_single_portrait_bar!(fig,trajectories,mutation_operator::Uni
 
     # max_we = maximum(x_epi_mutn_all[findall(x->x!=0,values_epi_mutn_all)])
 
-    max_we = 5
+    max_we = 4
 
     CairoMakie.xlims!(ax_epi, 2*minimum(xerr) - 1,max_we + 2*(1-minimum(xerr)))
     CairoMakie.ylims!(ax_epi, 0.,1.)
@@ -3358,6 +3358,358 @@ function create_epi_single_portrait_bar!(fig,trajectories,mutation_operator::Uni
     Legend(epi_subplot[1, :, Top()], symbol_epi, labels_epi, framevisible=false,nbanks = 1,orientation = :horizontal,patchsize = (10, 10), colgap = 4, padding=(0.,0.,legend_row_gap,0.))
 
     Legend(wait_subplot[1, :, Bottom()], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), colgap = 4, rowgap = 4, padding=(0.,0.,0f0, evo_config.fontsize+legend_row_gap))
+
+    rowgap!(fig.layout, Relative(0.1))
+    colgap!(fig.layout, Relative(0.01))
+
+end
+
+function create_epi_single_portrait_bar_v1!(fig,trajectories,mut_prob,all_pheno_mut_chf,wait_time_summary,evo_config)
+
+    all_wait_times = reduce(hcat,[average_wait_time_ext(tr) for tr in trajectories]);
+
+    ax_wait_list = []
+
+    ax_wait_list = []
+    ax_wait_2_list = []
+
+    wt_l_list = []
+    wt_s_list = []
+
+
+    # grid_values = Tuple.(findall(ones(Int(floor(sqrt(top_n))),Int(floor(sqrt(top_n)))) .> 0))
+
+    # geno_subplot = fig[1:top_n,1] = GridLayout()
+    # wait_subplot = fig[1:top_n,5:7] = GridLayout()
+    # epi_subplot = fig[1:top_n,2:4] = GridLayout()
+
+    wait_subplot = fig[1,6:8] = GridLayout()
+    epi_subplot = fig[1,1:5] = GridLayout()
+
+    pheno_subplot = fig[2,1:8] = GridLayout()
+
+    null_mut_n = [prob_k_mutations(k,mut_prob,10) for k in 1:10];
+
+    Label
+
+    ax_epi_list = []
+
+    ax_wait = Axis(wait_subplot[1,1],yticklabelsize = 0.8*evo_config.fontsize,yaxisposition = :right, xticklabelsvisible = false, yticksize= 0.25*evo_config.fontsize, title = L"n=1 \text{ } 1<n<S_{0} \text{ }  n=S_{0}  \text{ } n=S_{0}")
+
+    ax_wait_2 = Axis(wait_subplot[1,1], yticklabelcolor = :red,yscale = log10,yticklabelsize = 0.8*evo_config.fontsize,yticksize= 0.25*evo_config.fontsize)
+
+    hidespines!(ax_wait_2 )
+    hideydecorations!(ax_wait_2,label = false,ticklabels = false,ticks = false,minorticks = false)
+    hidexdecorations!(ax_wait_2)
+
+    # #############################
+
+    mut_type_prop_all = []
+    mut_type_time_labels = []
+    mut_type_labels = []
+
+    # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,1,tr.H0-2), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n]) & (tr.H0-2 > 0),trajectories_p))
+
+    mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,1,1), [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]),filter(tr->(tr.H0-2 > 0),trajectories))
+
+    mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3,4])
+    push!(mut_type_time_labels,[1,1,1,1])
+
+    # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,1,tr.H0-2), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n]) & (tr.H0-2 > 0),trajectories_p))
+
+    mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,2,tr.H0-2), [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]),filter(tr->(tr.H0-2 > 2),trajectories))
+
+    mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3,4])
+    push!(mut_type_time_labels,[2,2,2,2])
+
+    # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0-1,tr.H0-1), [:existing,:new,:del]),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n] ,trajectories_p))
+    mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0-1,tr.H0-1), [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]),trajectories)
+
+    mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3,4])
+    push!(mut_type_time_labels,[3,3,3,3])
+
+    # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0,length(tr.topologies)-1), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n])  & (tr.H0 < length(tr.topologies)),trajectories_p))
+
+    mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0,length(tr.topologies)-1), [(true,:additive),(false,:additive),(true,:multiplicative),(false,:multiplicative)]),filter(tr->(tr.H0 < length(tr.topologies)),trajectories))
+
+    mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3,4])
+    push!(mut_type_time_labels,[4,4,4,4])
+
+    mut_type_prop_all = reduce(vcat,mut_type_prop_all)
+
+    mut_type_time_labels = reduce(vcat,mut_type_time_labels)
+    mut_type_labels = reduce(vcat,mut_type_labels); 
+
+    CairoMakie.barplot!(ax_wait,mut_type_time_labels,mut_type_prop_all,stack = mut_type_labels,color = mut_type_labels)
+
+    # ax_wait.xticks = (1:3,[L"t<H_{0}",L"t=H_{0}",L"t>H_{0}" ])
+
+    #format y ticks to latex numbers
+
+    # CairoMakie.hidexdecorations!(ax_wait,label = false,ticklabels = false,ticks = false,minorticks = false)
+    CairoMakie.hidexdecorations!(ax_wait)
+    CairoMakie.hideydecorations!(ax_wait,label = false,ticklabels = false,ticks = false,minorticks = false,grid = false)
+
+    ############################ noise_distribut
+
+    if wait_time_summary == :mean
+
+        mean_wait = mean(all_wait_times,dims = 2)[:,1]
+
+        std_error_wait = std(all_wait_times,dims = 2)[:,1] ./ sqrt(length(sample_id))
+
+        mean_wait_type_labels = [1,2,3,4]
+
+        wt_l = CairoMakie.lines!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,linewidth = evo_config.wait_linewidth)
+        wt_s = CairoMakie.scatter!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,markersize = evo_config.wait_markersize)
+
+        CairoMakie.errorbars!(ax_wait_2,1:length(mean_wait),mean_wait,5 * std_error_wait,color = :red,whiskerwidth = evo_config.wait_markersize/2)
+
+    else
+
+        median_wait_time = mapslices(row->quantile(row, [0.5]),all_wait_times,dims =2)[:,1]
+        lq_wait_time = mapslices(row->quantile(row, [0.25]),all_wait_times,dims =2)[:,1]
+        uq_wait_time = mapslices(row->quantile(row, [0.75]),all_wait_times,dims =2)[:,1]
+
+        median_wait_type_labels = [1,2,3,4]
+
+        wt_l = CairoMakie.lines!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,linewidth = evo_config.wait_linewidth)
+        wt_s = CairoMakie.scatter!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,markersize = evo_config.wait_markersize)
+
+        CairoMakie.rangebars!(ax_wait_2,1:length(median_wait_time),lq_wait_time,uq_wait_time,color = :red,whiskerwidth = evo_config.wait_markersize/2)
+    end
+
+    push!(wt_l_list,wt_l)
+    push!(wt_s_list,wt_s)
+
+    #############################
+
+    ax_epi = Axis(epi_subplot[1,1],yticklabelsize = 10.,xticklabelsize = 10,xlabel = L"\text{weight changes per mutant}",ygridvisible = false,xgridvisible = false)
+
+    epi_counts_1 = reduce(vcat,map(tr->tr.epistasis[1],filter(tr->(tr.H0 > 2),trajectories)));
+    mut_n_counts_1 = reduce(vcat,map(tr->get_mut_n(tr,1,1),filter(tr->(tr.H0 > 2),trajectories)));
+
+    epi_mutn_counts_1 = countmap(zip(epi_counts_1,mut_n_counts_1) |> collect)
+    total_epi_mutn_1 = sum(values(epi_mutn_counts_1))
+    epi_mutn_prop_1 = Dict(key=>value/total_epi_mutn_1 for (key,value) in epi_mutn_counts_1);
+
+    grp_epi_1 = reduce(vcat,[[1,2,3,4] for i in 1:10])
+    grp_epi_label_1 = reduce(vcat,[[:rse,:se,:ne,:sm] for i in 1:10])
+    grp_mutn_1 = reduce(vcat,[[i,i,i,i] for i in 1:10])
+
+    values_epi_mutn_1 = [haskey(epi_mutn_prop_1,key) ? epi_mutn_prop_1[key] : 0. for key in zip(grp_epi_label_1,grp_mutn_1)]
+    counts_epi_mutn_1 = [haskey(epi_mutn_counts_1,key) ? epi_mutn_counts_1[key] : 0. for key in zip(grp_epi_label_1,grp_mutn_1)]
+
+    dodge_epi_mutn_1 = [1 for _ in values_epi_mutn_1]
+    color_epi_mutn_1 = [evo_config_12.pie_colors[i] for i in grp_epi_1];
+
+    ###################
+
+    epi_counts_lS0 = reduce(vcat,map(tr->tr.epistasis[2:tr.H0-2],filter(tr->(tr.H0-2 > 0),trajectories)));
+    mut_n_counts_lS0 = reduce(vcat,map(tr->get_mut_n(tr,2,tr.H0-2),filter(tr->(tr.H0-2 > 0),trajectories)));
+
+    epi_mutn_counts_lS0 = countmap(zip(epi_counts_lS0,mut_n_counts_lS0) |> collect)
+    total_epi_mutn_lS0 = sum(values(epi_mutn_counts_lS0))
+    epi_mutn_prop_lS0 = Dict(key=>value/total_epi_mutn_lS0 for (key,value) in epi_mutn_counts_lS0);
+
+    grp_epi_lS0 = reduce(vcat,[[1,2,3,4] for i in 1:10])
+    grp_epi_label_lS0 = reduce(vcat,[[:rse,:se,:ne,:sm] for i in 1:10])
+    grp_mutn_lS0 = reduce(vcat,[[i,i,i,i] for i in 1:10])
+
+    values_epi_mutn_lS0 = [haskey(epi_mutn_prop_lS0,key) ? epi_mutn_prop_lS0[key] : 0. for key in zip(grp_epi_label_lS0,grp_mutn_lS0)]
+    counts_epi_mutn_lS0 = [haskey(epi_mutn_counts_lS0,key) ? epi_mutn_counts_lS0[key] : 0. for key in zip(grp_epi_label_lS0,grp_mutn_lS0)]
+
+    dodge_epi_mutn_lS0 = [2 for _ in values_epi_mutn_lS0]
+    color_epi_mutn_lS0 = [evo_config_12.pie_colors[i] for i in grp_epi_lS0];
+
+    #############
+
+    epi_counts_S0 = reduce(vcat,map(tr->tr.epistasis[tr.H0-1],trajectories));
+    mut_n_counts_S0 = reduce(vcat,map(tr->get_mut_n(tr,tr.H0-1,tr.H0-1),trajectories));
+
+    epi_mutn_counts_S0 = countmap(zip(epi_counts_S0,mut_n_counts_S0) |> collect)
+    total_epi_mutn_S0 = sum(values(epi_mutn_counts_S0))
+    epi_mutn_prop_S0 = Dict(key=>value/total_epi_mutn_S0 for (key,value) in epi_mutn_counts_S0);
+
+    grp_epi_S0 = reduce(vcat,[[1,2,3,4] for i in 1:10])
+    grp_epi_label_S0 = reduce(vcat,[[:rse,:se,:ne,:sm] for i in 1:10])
+    grp_mutn_S0 = reduce(vcat,[[i,i,i,i] for i in 1:10])
+
+    values_epi_mutn_S0 = [haskey(epi_mutn_prop_S0,key) ? epi_mutn_prop_S0[key] : 0. for key in zip(grp_epi_label_S0,grp_mutn_S0)]
+    counts_epi_mutn_S0 = [haskey(epi_mutn_counts_S0,key) ? epi_mutn_counts_S0[key] : 0. for key in zip(grp_epi_label_S0,grp_mutn_S0)]
+
+    dodge_epi_mutn_S0 = [3 for _ in values_epi_mutn_S0]
+    color_epi_mutn_S0 = [evo_config_12.pie_colors[i] for i in grp_epi_S0];
+
+    ##############
+
+    epi_counts_hS0 = reduce(vcat,map(tr->tr.epistasis[tr.H0:end],trajectories));
+    mut_n_counts_hS0 = reduce(vcat,map(tr->get_mut_n(tr,tr.H0,length(tr.geno_traj)-1),trajectories));
+
+    epi_mutn_counts_hS0 = countmap(zip(epi_counts_hS0,mut_n_counts_hS0) |> collect)
+    total_epi_mutn_hS0 = sum(values(epi_mutn_counts_hS0))
+    epi_mutn_prop_hS0 = Dict(key=>value/total_epi_mutn_hS0 for (key,value) in epi_mutn_counts_hS0);
+
+    grp_epi_hS0 = reduce(vcat,[[1,2,3,4] for i in 1:10])
+    grp_epi_label_hS0 = reduce(vcat,[[:rse,:se,:ne,:sm] for i in 1:10])
+    grp_mutn_hS0 = reduce(vcat,[[i,i,i,i] for i in 1:10])
+
+    values_epi_mutn_hS0 = [haskey(epi_mutn_prop_hS0,key) ? epi_mutn_prop_hS0[key] : 0. for key in zip(grp_epi_label_hS0,grp_mutn_hS0)]
+    counts_epi_mutn_hS0 = [haskey(epi_mutn_counts_hS0,key) ? epi_mutn_counts_hS0[key] : 0. for key in zip(grp_epi_label_hS0,grp_mutn_hS0)]
+
+    dodge_epi_mutn_hS0 = [4 for _ in values_epi_mutn_hS0]
+    color_epi_mutn_hS0 = [evo_config.pie_colors[i] for i in grp_epi_hS0];
+
+    values_epi_mutn_all = reduce(vcat,[values_epi_mutn_1,values_epi_mutn_lS0,values_epi_mutn_S0,values_epi_mutn_hS0])
+    counts_epi_mutn_all = Int.(reduce(vcat,[counts_epi_mutn_1,counts_epi_mutn_lS0,counts_epi_mutn_S0,counts_epi_mutn_hS0]))
+
+    x_epi_mutn_all = reduce(vcat,[grp_mutn_1,grp_mutn_lS0,grp_mutn_S0,grp_mutn_hS0])
+    stack_epi_mutn_all = reduce(vcat,[grp_epi_1,grp_epi_lS0,grp_epi_S0,grp_epi_hS0])
+    color_epi_mutn_all = reduce(vcat,[color_epi_mutn_1,color_epi_mutn_lS0,color_epi_mutn_S0,color_epi_mutn_hS0])
+    dodge_epi_mutn_all = reduce(vcat,[dodge_epi_mutn_1,dodge_epi_mutn_lS0,dodge_epi_mutn_S0,dodge_epi_mutn_hS0]);
+
+    dodge_gap = 0.03 #Makie default
+    gap = 0.2 #Makie default
+    width = 1 #Makie default
+
+    xerr = compute_x(x_epi_mutn_all, width, gap, dodge_epi_mutn_all, dodge_gap)[1:4:end];
+
+    values_epi_mutn_totals = [sum(values_epi_mutn_all[4*(n-1)+1:4*n]) for (n,i) in enumerate(1:4:length(values_epi_mutn_all))];
+    counts_epi_mutn_totals = [sum(counts_epi_mutn_all[4*(n-1)+1:4*n]) for (n,i) in enumerate(1:4:length(counts_epi_mutn_all))];
+
+    epi_mutn_pvalue = 0.01
+    err_values_epi_mutn = reduce(vcat,[confint(MultinomialLRTest(counts_epi_mutn_totals[1:10]),epi_mutn_pvalue),confint(MultinomialLRTest(counts_epi_mutn_totals[11:20]),epi_mutn_pvalue),confint(MultinomialLRTest(counts_epi_mutn_totals[21:30]),epi_mutn_pvalue)]);
+
+    scatter_height_epi_mutn = [maximum([values_epi_mutn_totals[i],values_epi_mutn_totals[10+i],values_epi_mutn_totals[20+i],values_epi_mutn_totals[30+i]]) for i in 1:10]
+
+    scatter_height_epi_mutn = reduce(vcat,[scatter_height_epi_mutn for i in 1:4]);
+    scatter_epi_mutn_mark = reduce(vcat,[[:dtriangle for i in 1:10],[:star5 for i in 1:10],[:utriangle for i in 1:10]]);
+    scatter_epi_mutn_color = reduce(vcat,[[:cyan for i in 1:10],[:orange for i in 1:10],[:purple for i in 1:10]]);
+
+    scatter_epi_mutn_text = reduce(vcat,[[L"n = 1" for i in 1:10],[L"1 < n < S_0" for i in 1:10],[L"n = S_0" for i in 1:10],[L"n > S_0" for i in 1:10]]);
+
+    CairoMakie.barplot!(ax_epi,x_epi_mutn_all,values_epi_mutn_all, color = color_epi_mutn_all, stack = stack_epi_mutn_all, dodge = dodge_epi_mutn_all,width = width)
+
+    # rangebars!(ax_epi,xerr,first.(err_values_epi_mutn),last.(err_values_epi_mutn ); whiskerwidth = 8)
+
+    CairoMakie.lines!(ax_epi,null_mut_n, color = :black, linestyle = :dash, linewidth = evo_config.wait_linewidth)
+    CairoMakie.scatter!(ax_epi,null_mut_n, color = :black,marker = 'x',markersize = evo_config.wait_markersize)
+
+    # CairoMakie.scatter!(ax_epi,xerr, max.(1.4 .* scatter_height_epi_mutn,0.1),color = scatter_epi_mutn_color,marker = scatter_epi_mutn_mark,markersize = evo_config.wait_markersize)
+
+    CairoMakie.text!(ax_epi,xerr, max.(1.05 .* scatter_height_epi_mutn,0.1),text = scatter_epi_mutn_text,rotation = pi/2,fontsize = 10.,align = (:left, :center))
+
+    # max_we = maximum(x_epi_mutn_all[findall(x->x!=0,values_epi_mutn_all)])
+
+    max_we = 4
+
+    CairoMakie.xlims!(ax_epi, 2*minimum(xerr) - 1,max_we + 2*(1-minimum(xerr)))
+    CairoMakie.ylims!(ax_epi, 0.,1.)
+
+    # axislegend!()
+
+    ax_epi.xticks = (1:max_we, string.(1:max_we))
+
+
+    ###############################\
+
+    colgap!(wait_subplot, Relative(0.01))
+    rowgap!(wait_subplot, Relative(0.05))
+
+    colgap!(epi_subplot, Relative(0.01))
+    rowgap!(epi_subplot, Relative(0.01))
+
+    ylabelwl = Label(epi_subplot[1,1,Left()], L"\text{Proportion of mutants}", rotation = pi/2, padding = (2.,30.,0.,0.))
+
+    ylabelwl = Label(wait_subplot[1,1,Left()], L"\text{Average wait time}", rotation = pi/2, padding = (2.,30.,0.,0.), color = :red)
+    ylabelwr = Label(wait_subplot[1,end,Right()], L"\text{Mutant composition}", rotation = pi/2, padding = (30.,0.,0.,0.))
+
+    # title_wt = Label(wait_subplot[1,1:end,TopLeft()], L"\text{Title}", padding = (0.,0.,10.,5.))
+
+    if wait_time_summary == :mean
+        labels_wait =  [L"\mathbb{E}[\text{Total generations}]"]
+    else
+        labels_wait =  [L"\text{Total generations}"]
+    end
+
+    labels_mut =  [L"\text{new:+}",L"\text{existing:+}",L"\text{new:} \times",L"\text{existing:} \times"]
+
+    labels_epi  = [L"\text{TD}",L"\text{SD}",L"\text{TI}",L"\text{SIC}"]
+
+    labels_per = [L"t<S_0",L"t=S_0",L"t>S_0"]
+
+    labels = reduce(vcat,[labels_wait,labels_epi,labels_mut])
+
+    symbol_wait = [[wt_s_list[1], wt_l_list[1]]]
+
+    symbol_mut = [PolyElement(color=c) for c in palette(:viridis, 4)[1:4]]
+
+    symbol_epi = [PolyElement(color=c) for c in evo_config.pie_colors]
+
+    symbol_per = [MarkerElement(color = :cyan, marker = :dtriangle, markersize = evo_config.wait_markersize),MarkerElement(color = :orange, marker = :star5, markersize = evo_config.wait_markersize),MarkerElement(color = :purple, marker = :utriangle, markersize = evo_config.wait_markersize)]
+
+    symbol_wait_all = reduce(vcat,[symbol_wait,symbol_mut])
+    label_wait_all = reduce(vcat,[labels_wait,labels_mut])
+
+    legend_row_gap = 3
+
+    # Legend(epi_subplot[top_n, :, Bottom()], symbol_epi, labels_epi, framevisible=false,nbanks = 1,orientation = :horizontal,patchsize = (10, 10), colgap = 4, padding=(0.,0.,0f0, evo_config.fontsize+2.5*legend_row_gap))
+
+    Legend(epi_subplot[1, :, Top()], symbol_epi, labels_epi, framevisible=false,nbanks = 1,orientation = :horizontal,patchsize = (10, 10), colgap = 4, padding=(0.,0.,legend_row_gap,0.))
+
+    Legend(wait_subplot[1, :, Bottom()], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), colgap = 4, rowgap = 4, padding=(0.,0.,0f0, evo_config.fontsize+legend_row_gap))
+
+    ######################
+
+    ax1 = Axis(pheno_subplot[1,1:4],ygridvisible = false,xgridvisible = false)
+    ax2 = Axis(pheno_subplot[1,5],ygridvisible = false,xgridvisible = false)
+
+    m1_mc = reduce(vcat,[tr_mc[1] for (tr_mc,tr) in zip(all_pheno_mut_chf,trajectories)]);
+    m1s0_mc = reduce(vcat,reduce(vcat,[tr_mc[2:tr.H0-2] for (tr_mc,tr) in zip(all_pheno_mut_chf,trajectories)]));
+    ms0_mc = reduce(vcat,[tr_mc[tr.H0-1] for (tr_mc,tr) in zip(all_pheno_mut_chf,trajectories)]);
+    mend_mc = reduce(vcat,reduce(vcat,[tr_mc[tr.H0:end] for (tr_mc,tr) in zip(all_pheno_mut_chf,trajectories)]));
+
+    hm_mc = reduce(hcat,[[count(x->x==i,v)/length(v) for i in [:clb,:crb,:cbb, :mlb,:mrb,:mbb,:neutral, :other]] for v in [m1_mc,m1s0_mc,ms0_mc,mend_mc]])
+
+    all_mchf = reduce(vcat,reduce(vcat,all_pheno_mut_chf))
+    all_wait_times = reduce(vcat,map(tr->tr.wait_times[2:end],trajectories));
+
+    av_wait_time = reshape([mean(all_wait_times[all_mchf .== i]) for i in [:clb,:crb,:cbb, :mlb,:mrb,:mbb,:neutral, :other]],(1,8))
+
+    CairoMakie.heatmap!(ax1,1:4,1:8, hm_mc |> transpose)
+
+    CairoMakie.text!(ax1,[Point2f(x, y) for x in 1:4 for y in 1:8],text=
+        string.(round.(100 .* vec(hm_mc),digits = 1)) .* "%",
+        align = (:center, :center),
+        color = ifelse.(hm_mc .< 0.1, :white, :black),fontsize = 10.)
+
+    CairoMakie.heatmap!(ax2,av_wait_time,colormap = :thermal)
+
+    CairoMakie.text!(ax2,[Point2f(1, y) for y in 1:8],text=
+        string.(Int.(floor.(vec(av_wait_time)))),
+        align = (:center, :center),
+        color = ifelse.(av_wait_time .< 5000, :white, :black),fontsize = 10.)
+
+    ax1.xticks = (1:4,[L"n=1",L"1<n<S_0",L"n=S_0",L"n>S_0"])
+    ax1.yticks = (1:8,[L"c(L_B)",L"c(R_B)",L"c(LR_B)",L"m(L_B)",L"m(R_B)",L"m(LR_B)",L"\text{Neutral}",L"\text{Other}"])
+
+    hideydecorations!(ax2)
+
+    ax2.xticks = (1:1, [L"\text{Av. wait time}"])
+
+    colgap!(pheno_subplot, Relative(0.01))
 
     rowgap!(fig.layout, Relative(0.1))
     colgap!(fig.layout, Relative(0.01))
