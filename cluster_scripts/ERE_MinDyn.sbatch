@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=RepeatedEvolution_MA_NLarge
+#SBATCH --job-name=RepeatedEvolution_DeNovo
 #SBATCH --ntasks=999
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
