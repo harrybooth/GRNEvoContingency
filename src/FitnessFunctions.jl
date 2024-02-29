@@ -180,12 +180,12 @@ function stripe_indicator(conc,min_stripe_width,lower_bound,upper_bound)
         msw = (high[1] - low[1] >= min_stripe_width) & (low[end] - high[end] >= min_stripe_width) & (high[end] - high[1] + 1 >= min_stripe_width)
 
         if valid_arrangment & cts_high_region & msw
-            return 1.
-        else
             return 0.
+        else
+            return -1.
         end
     else
-        return 0. 
+        return -1. 
     end
 
 end

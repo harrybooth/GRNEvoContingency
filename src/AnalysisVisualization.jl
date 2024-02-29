@@ -1196,7 +1196,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationO
 
 end
 
-function create_evo_summary!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     # all_wait_times = reduce(hcat,[cumulative_wait_time(tr) for tr in trajectories]);
 
@@ -1568,7 +1568,7 @@ function create_evo_summary!(fig,trajectories,top_n,mutation_operator::Union{Mut
 
 end
 
-function create_evo_summary_portrait!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_evo_summary_portrait!(fig,trajectories,top_n,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
 
@@ -1975,7 +1975,7 @@ function create_evo_summary_portrait!(fig,trajectories,top_n,mutation_operator::
 
 end
 
-function create_epi_summary_portrait!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_epi_summary_portrait!(fig,trajectories,top_n,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
 
@@ -2207,7 +2207,7 @@ function create_epi_summary_portrait!(fig,trajectories,top_n,mutation_operator::
 
 end
 
-function create_epi_summary_portrait_v1!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_epi_summary_portrait_v1!(fig,trajectories,top_n,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
 
@@ -2467,7 +2467,7 @@ function create_epi_summary_portrait_v1!(fig,trajectories,top_n,mutation_operato
 end
 
 
-function create_epi_summary_portrait_v2!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_epi_summary_portrait_v2!(fig,trajectories,top_n,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     all_wait_times = reduce(hcat,[average_wait_time_ext(tr) for tr in trajectories]);
 
@@ -2763,7 +2763,7 @@ function compute_x(x, width, gap, dodge, dodge_gap)
     return x .+ width .* shifts
 end
 
-function create_epi_summary_portrait_bar!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},mut_prob,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_epi_summary_portrait_bar!(fig,trajectories,top_n,mutation_operator::MutationOperatorDual,mut_prob,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
 
@@ -3083,7 +3083,7 @@ function create_epi_summary_portrait_bar!(fig,trajectories,top_n,mutation_operat
 
 end
 
-function create_epi_single_portrait_bar!(fig,trajectories,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},mut_prob,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_epi_single_portrait_bar!(fig,trajectories,mutation_operator::MutationOperatorDual,mut_prob,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
 
@@ -3716,7 +3716,7 @@ function create_epi_single_portrait_bar_v1!(fig,trajectories,mut_prob,all_pheno_
 
 end
 
-function create_extensive_epi_summary_portrait_v1!(fig,trajectories,top_n,mutation_operator::Union{MutationOperatorDual,MutationOperatorUniform},sorted_uep, vertex_top_map,wait_time_summary,evo_config)
+function create_extensive_epi_summary_portrait_v1!(fig,trajectories,top_n,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
 
     all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
 
@@ -3972,378 +3972,6 @@ function create_extensive_epi_summary_portrait_v1!(fig,trajectories,top_n,mutati
 
     rowgap!(fig.layout, Relative(0.1))
     colgap!(fig.layout, Relative(0.03))
-
-end
-
-function create_evo_summary!(fig,trajectories,top_n,mutation_operator::MutationOperatorNew,sorted_uep, vertex_top_map,wait_time_summary,evo_config)
-
-    # all_wait_times = reduce(hcat,[cumulative_wait_time(tr) for tr in trajectories]);
-
-    all_wait_times = reduce(hcat,[average_wait_time(tr) for tr in trajectories]);
-
-    ax_wait_list = []
-
-    ax_wait_list = []
-    ax_wait_2_list = []
-
-    wt_l_list = []
-    wt_s_list = []
-
-    min_t_u = -mutation_operator.max_w
-    max_t_u = mutation_operator.max_w
-
-    for n in 1:top_n
-
-        # plot_geno = fig[n, 1] = GridLayout()
-        # plot_wait = fig[n, 2] = GridLayout()
-        # plot_mut_hist = fig[n, 3:4] = GridLayout()
-        # plot_epi_types = fig[n, 5:6] = GridLayout()
-
-        plot_geno = fig[n, 1] = GridLayout()
-        plot_wait = fig[n, 2:4] = GridLayout()
-        plot_mut_hist = fig[n, 5:9] = GridLayout()
-        plot_epi_types = fig[n, 10:13] = GridLayout()
-
-        if n==1
-            ax_geno = Axis(plot_geno[1,1],backgroundcolor = (evo_config.color_scheme[n],evo_config.color_fade),title =L"M^{(i)}_{N_i}",aspect = DataAspect())
-        else
-            ax_geno = Axis(plot_geno[1,1],backgroundcolor = (evo_config.color_scheme[n],evo_config.color_fade),aspect = DataAspect())
-        end
-
-        # top = Int.(reshape(vertex_top_map[sorted_uep[n]],(3,4)))
-
-        # draw_grn_layout!(ax_geno,top,e_width,vertex_size,arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors,false)
-
-        draw_grn!(ax_geno,vertex_top_map[sorted_uep[n]],evo_config.draw_config,evo_config.node_colors,evo_config.fontsize,false,false)
-
-        if n == 1
-            ax_wait = Axis(plot_wait[1,1], title = L"\mathbb{E}[\text{total weight edits}]",yticklabelsize = 0.8*evo_config.fontsize)
-        else
-            ax_wait = Axis(plot_wait[1,1],yticklabelsize = 0.8*evo_config.fontsize)
-        end
-
-        ax_wait_2 = Axis(plot_wait[1,1], yticklabelcolor = :red, yaxisposition = :right,yscale = log10,yticklabelsize = 0.8*evo_config.fontsize)
-
-        hidespines!(ax_wait_2 )
-        hideydecorations!(ax_wait_2,label = false,ticklabels = false,ticks = false,minorticks = false)
-        hidexdecorations!(ax_wait_2)
-
-        # #############################
-
-        mut_type_prop_all = []
-        mut_type_time_labels = []
-        mut_type_labels = []
-
-        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,1,tr.H0-2), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n]) & (tr.H0-2 > 0),trajectories_p))
-
-        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,1,tr.H0-2), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n]) & (tr.H0-2 > 0),trajectories))
-
-        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
-
-        push!(mut_type_prop_all,mut_type_prop_av)
-        push!(mut_type_labels, [1,2,3])
-        push!(mut_type_time_labels,[1,1,1])
-
-        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0-1,tr.H0-1), [:existing,:new,:del]),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n] ,trajectories_p))
-        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,tr.H0-1,tr.H0-1), [:existing,:new,:del]),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n] ,trajectories))
-
-        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
-
-        push!(mut_type_prop_all,mut_type_prop_av)
-        push!(mut_type_labels, [1,2,3])
-        push!(mut_type_time_labels,[2,2,2])
-
-        # mut_type_prop = map(tr->calculate_mut_type_proportion(get_mut_type(tr,tr.H0,length(tr.topologies)-1), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n])  & (tr.H0 < length(tr.topologies)),trajectories_p))
-
-        mut_type_prop = map(tr->calculate_mut_type_count(get_mut_type(tr,tr.H0,length(tr.topologies)-1), [:existing,:new,:del]),filter(tr->(tr.inc_metagraph_vertices[end] == sorted_uep[n])  & (tr.H0 < length(tr.topologies)),trajectories))
-
-        mut_type_prop_av = mean(reduce(hcat,mut_type_prop),dims = 2)[:,1]
-
-        push!(mut_type_prop_all,mut_type_prop_av)
-        push!(mut_type_labels, [1,2,3])
-        push!(mut_type_time_labels,[3,3,3])
-
-        mut_type_prop_all = reduce(vcat,mut_type_prop_all)
-        mut_type_time_labels = reduce(vcat,mut_type_time_labels)
-        mut_type_labels = reduce(vcat,mut_type_labels); 
-
-        CairoMakie.barplot!(ax_wait,mut_type_time_labels,mut_type_prop_all,stack = mut_type_labels,color = mut_type_labels)
-
-        if n == top_n
-            ax_wait.xticks = (1:3,[L"t<H_{0}",L"t=H_{0}",L"t>H_{0}" ])
-        else
-            hidexdecorations!(ax_wait)
-        end
-        
-        #format y ticks to latex numbers
-
-        CairoMakie.hidexdecorations!(ax_wait,label = false,ticklabels = false,ticks = false,minorticks = false)
-        CairoMakie.hideydecorations!(ax_wait,label = false,ticklabels = false,ticks = false,minorticks = false,grid = false)
-
-        push!(ax_wait_list,ax_wait)
-
-        ############################
-
-        sample_id = findall(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)
-
-        if wait_time_summary == :mean
-
-            mean_wait = mean(all_wait_times[:,sample_id],dims = 2)[:,1]
-
-            std_error_wait = std(all_wait_times[:,sample_id],dims = 2)[:,1] ./ sqrt(length(sample_id))
-
-            mean_wait_type_labels = [1,2,3]
-
-            wt_l = CairoMakie.lines!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,linewidth = evo_config.wait_linewidth)
-            wt_s = CairoMakie.scatter!(ax_wait_2,mean_wait_type_labels,mean_wait,color = :red,markersize = evo_config.wait_markersize)
-
-            CairoMakie.errorbars!(ax_wait_2,1:length(mean_wait),mean_wait,5 * std_error_wait,color = :red,whiskerwidth = evo_config.wait_markersize/2)
-
-        else
-
-            median_wait_time = mapslices(row->quantile(row, [0.5]),all_wait_times[:,sample_id],dims =2)[:,1]
-            lq_wait_time = mapslices(row->quantile(row, [0.25]),all_wait_times[:,sample_id],dims =2)[:,1]
-            uq_wait_time = mapslices(row->quantile(row, [0.75]),all_wait_times[:,sample_id],dims =2)[:,1]
-
-            median_wait_type_labels = [1,2,3]
-
-            wt_l = CairoMakie.lines!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,linewidth = evo_config.wait_linewidth)
-            wt_s = CairoMakie.scatter!(ax_wait_2,median_wait_type_labels,median_wait_time,color = :red,markersize = evo_config.wait_markersize)
-
-            CairoMakie.rangebars!(ax_wait_2,1:length(median_wait_time),lq_wait_time,uq_wait_time,color = :red,whiskerwidth = evo_config.wait_markersize/2)
-        end
-
-        push!(ax_wait_2_list,ax_wait_2)
-
-        push!(wt_l_list,wt_l)
-        push!(wt_s_list,wt_s)
-
-        #############################
-
-        if n == 1
-            ax_epi_lH0 = Axis(plot_epi_types[1,1],title = L"t<H_{0}")
-        else
-            ax_epi_lH0 = Axis(plot_epi_types[1,1])
-        end
-
-        epi_counts = reduce(vcat,map(tr->tr.epistasis[1:tr.H0-2],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-        epi_counts_prop = calculate_epi_class_proportion(epi_counts)
-
-        CairoMakie.pie!(ax_epi_lH0,epi_counts_prop,radius = evo_config.pie_radius,color = evo_config.pie_colors,
-        inner_radius = evo_config.pie_inner_radius,
-        strokecolor = :white,
-        strokewidth = evo_config.pie_strokewidth)
-
-        CairoMakie.hidedecorations!(ax_epi_lH0)
-
-        if n == 1
-            ax_epi_H0 = Axis(plot_epi_types[1,2],title = L"t=H_{0}")
-        else
-            ax_epi_H0 = Axis(plot_epi_types[1,2])
-        end
-
-        epi_counts = map(tr->tr.epistasis[tr.H0-1],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories))
-
-        epi_counts_prop = calculate_epi_class_proportion(epi_counts)
-
-        CairoMakie.pie!(ax_epi_H0,epi_counts_prop,radius = evo_config.pie_radius,color = evo_config.pie_colors,
-        inner_radius = evo_config.pie_inner_radius,
-        strokecolor = :white,
-        strokewidth = evo_config.pie_strokewidth)
-
-        CairoMakie.hidedecorations!(ax_epi_H0)
-
-        if n == 1
-            ax_epi_uH0 = Axis(plot_epi_types[1,3],title = L"t>H_{0}")
-        else
-            ax_epi_uH0 = Axis(plot_epi_types[1,3])
-        end
-
-        epi_counts = reduce(vcat,map(tr->tr.epistasis[tr.H0:end],filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-        epi_counts_prop = calculate_epi_class_proportion(epi_counts)
-
-        CairoMakie.pie!(ax_epi_uH0,epi_counts_prop,radius = evo_config.pie_radius,color = evo_config.pie_colors,
-        inner_radius = evo_config.pie_inner_radius,
-        strokecolor = :white,
-        strokewidth = evo_config.pie_strokewidth)
-
-        CairoMakie.hidedecorations!(ax_epi_uH0)
-
-        ###############################\
-
-        bins = 50
-
-        for type in [:new,:existing]
-
-            if type == :existing
-                mut_noise_dist = mutation_operator.noise_distribution;
-            else
-                mut_noise_dist = Uniform(-mutation_operator.max_w,mutation_operator.max_w);
-            end
-
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,1,tr.H0-2),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                if n==1
-                    ax1 = Axis(plot_mut_hist[1,1],title = L"t<H_{0}")
-                else
-                    ax1 = Axis(plot_mut_hist[1,1])
-                end
-            else
-                ax1 = Axis(plot_mut_hist[2,1])
-            end
-
-            if type == :existing
-                CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-            else
-                CairoMakie.hist!(ax1,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-            end
-
-            min_t = minimum(mut_size)
-            max_t = maximum(mut_size)
-
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
-
-            CairoMakie.lines!(ax1,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
-            CairoMakie.vlines!(ax1,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
-
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0-1,tr.H0-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                if n==1
-                    ax2 = Axis(plot_mut_hist[1,2],title = L"t=H_{0}")
-                else
-                    ax2 = Axis(plot_mut_hist[1,2])
-                end
-            else
-                ax2 = Axis(plot_mut_hist[2,2])
-            end
-
-            min_t = minimum(mut_size)
-            max_t = maximum(mut_size)
-
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
-
-            if type == :existing
-                CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-            else
-                CairoMakie.hist!(ax2,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-            end
-
-            CairoMakie.lines!(ax2,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
-            CairoMakie.vlines!(ax2,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
-
-            mut_size = reduce(vcat,map(tr->get_mut_size_by_type(tr,type,tr.H0,length(tr.geno_traj)-1),filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)))
-
-            if type == :existing
-                if n==1
-                    ax3 = Axis(plot_mut_hist[1,3],title = L"t>H_{0}")
-                else
-                    ax3 = Axis(plot_mut_hist[1,3])
-                end
-            else
-                ax3 = Axis(plot_mut_hist[2,3])
-            end
-
-            min_t = minimum(mut_size)
-            max_t = maximum(mut_size)
-
-            norm_pdf = [pdf(mut_noise_dist,t) for t in LinRange(min_t,max_t,100)];
-
-            if type == :existing
-                CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[1])
-            else
-                CairoMakie.hist!(ax3,mut_size,bins = bins,normalization = :pdf,color = palette(:viridis, 3)[2])
-            end
-
-            CairoMakie.lines!(ax3,LinRange(min_t,max_t,100),norm_pdf,color = :red,linewidth = evo_config.wait_linewidth)
-            CairoMakie.vlines!(ax3,0,color = :red,linestyle = "--",linewidth = evo_config.wait_linewidth)
-
-            # linkxaxes!([ax1,ax2,ax3]...)
-            # linkyaxes!([ax1,ax2,ax3]...)
-
-            hidedecorations!(ax1)
-            hidedecorations!(ax2)
-            hidedecorations!(ax3)
-        end
-
-        # colgap!(plot_geno,10)
-        # rowgap!(plot_geno,10)
-    
-        # colgap!(plot_wait, 10)
-        # rowgap!(plot_wait, 10)
-
-        # colgap!(plot_mut_hist, 10)
-        # rowgap!(plot_mut_hist, 2)
-
-        # colgap!(plot_epi_types, 10)
-        # rowgap!(plot_epi_types, 10)
-
-        colgap!(plot_geno,Relative(0.01))
-        rowgap!(plot_geno,Relative(0.05))
-    
-        colgap!(plot_wait, Relative(0.01))
-        rowgap!(plot_wait, Relative(0.05))
-
-        colgap!(plot_mut_hist, Relative(0.01))
-        rowgap!(plot_mut_hist, Relative(0.05))
-
-        colgap!(plot_epi_types, Relative(0.01))
-        rowgap!(plot_epi_types, Relative(0.05))
-    end
-
-    # labels = [L"\text{RSE}",L"\text{Sign epistasis}",L"\text{No epistasis}",L"\text{Single mutation}"]
-
-    # Legend(fig[top_n+1, 9:13], [PolyElement(color=c) for c in colors], labels, framevisible=false,nbanks = 2,orientation = :horizontal)
-
-    # colors = palette(:viridis, 3)
-
-    # Legend(fig[top_n+1,2:8],
-    #     vcat([[wt_s_list[1], wt_l_list[1]]],[PolyElement(color=c) for c in colors]),
-    #     vcat([L"\mathbb{E}[\text{time to accept}]"],[L"\text{weight edits : existing}",L"\text{weight edits : new}",L"\text{weight edits : remove}"]),framevisible=false,nbanks = 2,orientation = :horizontal)
-
-    # labels_wait =  vcat([L"\mathbb{E}[\text{time to accept}]"],[L"\text{weight edits : existing}",L"\text{weight edits : new}",L"\text{weight edits : remove}"])
-
-    # labels_wait =  [L"\mathbb{E}[\text{time to accept}]"]
-
-    if wait_time_summary == :mea
-        labels_wait =  [L"\mathbb{E}[\text{total generations}]"]
-    else
-        labels_wait =  [L"\text{total generations - [25%,50%,75%] quantiles}"]
-    end
-
-    labels_mut =  [L"\text{weight edits : existing}",L"\text{weight edits : new}"]
-
-    labels_epi  = [L"\text{RSE}",L"\text{Sign epistasis}",L"\text{No epistasis}",L"\text{Single mutation}"]
-
-    labels = vcat(labels_wait,labels_epi)
-
-    symbol_wait = [[wt_s_list[1], wt_l_list[1]]]
-
-    symbol_mut = [PolyElement(color=c) for c in palette(:viridis, 3)[1:2]]
-
-    symbol_epi = [PolyElement(color=c) for c in evo_config.pie_colors]
-
-    symbol_all = vcat(symbol_wait,symbol_epi)
-
-    # Legend(fig[top_n+1, :], symbol_all, labels, framevisible=false,nbanks = 1,orientation = :horizontal,patchsize = (10, 10), rowgap = 10,colgap = 10)
-
-    # Legend(fig[top_n, 4:13, Bottom()], symbol_all, labels, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = 10,colgap = 10)
-
-    legend_row_gap = 2
-
-    Legend(fig[top_n, 2:4, Bottom()], symbol_wait, labels_wait, framevisible=false,nbanks =1,orientation = :horizontal,patchsize = (10, 10),rowgap = legend_row_gap,colgap = 2,padding=(10.0f0, 10.0f0, 0f0, evo_config.fontsize+1.5*legend_row_gap))
-
-    Legend(fig[top_n, 5:9, Bottom()], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = legend_row_gap,colgap = 2)
-    Legend(fig[top_n,  10:13, Bottom()], symbol_epi, labels_epi, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), rowgap = legend_row_gap,colgap = 2)
-
-    linkyaxes!(ax_wait_list...)
-    linkyaxes!(ax_wait_2_list...)
-
-    rowgap!(fig.layout, Relative(0.01))
-    colgap!(fig.layout, Relative(0.01))
 
 end
 
@@ -6838,3 +6466,19 @@ function first_phenotypes!(fig,trajectories,n_weight,mut_prob,original_phenotype
     Legend(fig[3, :, Bottom()], symbol_epi, labels_epi, framevisible=false,nbanks = 1,orientation = :horizontal,patchsize = (10, 10), colgap = 4, padding=(0.,0.,0.,100.))
 
 end
+
+
+custom_neglog_formatter(values) = map(
+    v -> "-10" * Makie.UnicodeFun.to_superscript(round(Int64, v)),
+    values
+	)
+
+custom_poslog_formatter(values) = map(
+    v -> "10" * Makie.UnicodeFun.to_superscript(round(Int64, v)),
+    values
+    )
+
+custom_log_formatter(values) = map(
+    v -> "10" * Makie.UnicodeFun.to_superscript(round(Int64, v)),
+    values
+    )
