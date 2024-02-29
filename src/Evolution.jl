@@ -247,7 +247,6 @@ function noise_specified(w::Vector{Float64},mut_id::Vector{Int64},mut_size::Vect
     return new_w
 end
 
-
 # Selection 
 
 function fixation_probability(Δf,β)

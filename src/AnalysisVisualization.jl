@@ -5949,11 +5949,53 @@ function plot_mst_explanation!(fig,trajectories,example_id,draw_config,draw_conf
         CairoMakie.lines!(ax1,mst_pheno[3,:], color = :black, linewidth = 4.)
     end
 
-    draw_grn_mutant!(ax_geno,mst_network,orig_network,draw_config,draw_config_generator,node_colors,fontsize,annotate)
+    draw_grn_mutant!(ax_geno,mst_network,orig_network,draw_config,draw_config_generator,node_colors,fontsize,:red,annotate,false)
 
     # draw_grn_layout_mutant!(ax_geno,reshape(orig_network,(3,4)),reshape(mst_network,(3,4)),1.2*e_width,1.5*vertex_size,1.5*arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors)
 
     hidedecorations!(ax)
+
+    hidedecorations!(ax1)
+    hidedecorations!(ax2)
+
+end
+
+function plot_sf_explanation!(fig,trajectories,example_id,draw_config,draw_config_generator,node_colors,fontsize,annotate,twin_axis)
+
+    ax1 = Axis(fig[1,2])
+    ax2 = Axis(fig[1,2])
+    ax_geno = Axis(fig[1,1],backgroundcolor = RGBf(0.98, 0.98, 0.98))
+
+    development = DefaultGRNSolver()
+
+    tr = trajectories[example_id]
+
+    no_stripe = tr.geno_traj[tr.H0-1]
+    stripe = tr.geno_traj[tr.H0]
+
+    # stripe_network = abs.(stripe) .* no_stripe
+
+    orig_pheno = Individual(reshape(no_stripe,(3,4)),grn_parameters,development).phenotype.u[end]
+    stripe_pheno = Individual(reshape(stripe,(3,4)),grn_parameters,development).phenotype.u[end]
+
+    x=LinRange(0,1,Nc)
+    if twin_axis
+        CairoMakie.lines!(ax1,x,orig_pheno[3,:], color = :black, linewidth = 4.)
+        CairoMakie.lines!(ax2,x,stripe_pheno[3,:], color = :red, linewidth = 4., linestyle = :dash)
+    else
+        CairoMakie.lines!(ax1,x,orig_pheno[3,:], color = :black, linewidth = 4.)
+        CairoMakie.lines!(ax1,x,stripe_pheno[3,:], color = :red, linewidth = 4., linestyle = :dash)
+    end
+
+    CairoMakie.lines!(ax1,x,y->10*morph(y),color = node_colors[4], linewidth = 4.)
+
+    # draw_grn_mutant!(ax_geno,no_stripe,stripe,draw_config,draw_config_generator,node_colors,fontsize,annotate)
+
+    draw_grn_mutant!(ax_geno,no_stripe,stripe,draw_config,draw_config_generator,node_colors,fontsize,:red,annotate,false)
+
+    # draw_grn_layout_mutant!(ax_geno,reshape(orig_network,(3,4)),reshape(mst_network,(3,4)),1.2*e_width,1.5*vertex_size,1.5*arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors)
+
+    hidedecorations!(ax_geno)
 
     hidedecorations!(ax1)
     hidedecorations!(ax2)
