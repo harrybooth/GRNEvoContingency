@@ -448,12 +448,12 @@ function SSWM_Evolution_RI(start_network_int::Matrix{Int64},grn_parameters::GRNP
     
     development = DefaultGRNSolver()
 
-    start_network = rand(-max_w,max_w,(3,4)) .* start_network_int
+    start_network = rand(0.,0.2*max_w,(3,4)) .* start_network_int
     
     founder = Individual(start_network,grn_parameters,development)
 
     while !(SciMLBase.successful_retcode(founder.phenotype.retcode))
-        start_network = rand(Uniform(-0.2*max_w,0.2*max_w),3,4) .* start_network_int
+        start_network = rand(0.,0.2*max_w,(3,4)) .* start_network_int
         founder = Individual(start_network,grn_parameters,development)
     end
 

@@ -27,7 +27,7 @@ include(srcdirx("TissueModel_ND.jl"))
 
 ########## data load ######### 
 
-start_network_int = [0 0 0 1; 0 0 0 0; 1 0 0 0]
+start_network_int = [0 0 0 1; 0 0 0 0; -1 0 0 0]
 
 ########## Topologies ###########
 
