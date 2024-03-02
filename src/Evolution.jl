@@ -444,6 +444,77 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
 end
 
+function SSWM_Evolution_RI(start_network_int::Matrix{Int64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
+    
+    development = DefaultGRNSolver()
+
+    start_network = rand(-max_w,max_w,(3,4)) .* start_network_int
+    
+    founder = Individual(start_network,grn_parameters,development)
+
+    while !(SciMLBase.successful_retcode(founder.phenotype.retcode))
+        start_network = rand(Uniform(-0.2*max_w,0.2*max_w),3,4) .* start_network_int
+        founder = Individual(start_network,grn_parameters,development)
+    end
+
+    founder_fitness = fitness_function(founder.phenotype)
+
+    population = Population(founder,founder_fitness,false)
+
+    gen = 0
+    wait_time = 1
+
+    converged = false
+
+    full_weights = false
+
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
+
+    while has_not_converged(population,tolerance) && gen < max_gen
+
+        mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(population.dominant_individual,mutate_function,development)
+
+        if m_valid && SciMLBase.successful_retcode(mutant.phenotype.retcode)
+            strong_selection!(population,mutant,β,fitness_function)
+        else
+            population.has_fixed = false
+        end
+
+        # push!(evo_trace.fitness_trajectory,population.fitness)
+        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
+        if population.has_fixed
+            push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.fitness_trajectory,population.fitness)
+            push!(evo_trace.wait_times,wait_time)
+            push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
+            if !isnothing(m_choices)
+                push!(evo_trace.mut_choices,m_choices)
+                push!(evo_trace.mut_type,m_type)
+                push!(evo_trace.mut_sizes,m_sizes)
+            end
+            wait_time = 1
+        else
+            wait_time += 1
+        end
+
+        gen += 1
+    end
+
+    if !has_not_converged(population,tolerance)
+        evo_trace.converged = true
+        # final_network = copy(evo_trace.traversed_networks[end])
+        # if minimum(abs.(final_network[final_network .!= 0.])) > 0.1*maximum(abs.(final_network))  
+        #     evo_trace.full_weights = true
+        # end
+    else
+        push!(evo_trace.wait_times,wait_time)
+    end
+
+    return evo_trace
+
+end
+
 function SSWM_Evolution_Rel(start_network::Matrix{Float64},grn_parameters::GRNParameters,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
 
     p = (start_network,grn_parameters.degradation)

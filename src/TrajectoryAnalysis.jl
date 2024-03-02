@@ -427,8 +427,6 @@ function average_wait_time_ext(tr::Trajectory)
     
 end
 
-
-
 function fitness_restriction_measure(tr,restriction)
     tr.fitness_traj  .<= restriction
 end
@@ -656,7 +654,6 @@ function assign_predictions_sk!(tr::Trajectory,model,prediction_type,predict_lab
 
 end
 
-
 function assign_mss_prediction_errors!(tr::Trajectory,metric)
 
     tr.mss_prediction_error = [Distances.evaluate(metric,vcat(pred,[0.,0.]),tr.minimal_stripe_subgraphs[tr.H0]) for pred in tr.mss_predictions]
@@ -766,7 +763,6 @@ function relative_top_edit_restriction_measure(tr,restriction,label_type)
         (tr.top_edits./ tr.top_edits[end]) .<= restriction
     end
 end
-
 
 function masked_hamming_restriction_measure(tr,restriction,label_type)
     if label_type == :H0

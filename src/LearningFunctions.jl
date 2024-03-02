@@ -77,3 +77,22 @@ function create_train_test_id_split_multilabel(y,train_test_split = 0.8)
     return train_id, test_id
 
 end
+
+function create_train_test_id_split_cond_multilabel(y,train_test_split = 0.8)
+
+    all_train = []
+    all_test = []
+
+    for label in unique(y[:,1])
+        sample_y = findall(x->x==label,y[:,1])
+        train,test = create_train_test_id_split(y[sample_y,2],train_test_split)
+        push!(all_train,sample_y[train])
+        push!(all_test,sample_y[test])
+    end
+
+    train_id = reduce(vcat,all_train)
+    test_id = reduce(vcat,all_test)
+
+    return train_id, test_id
+
+end
