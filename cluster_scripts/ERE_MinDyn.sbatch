@@ -4,7 +4,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
 #SBATCH --time=24:00:00
-#SBATCH --partition=cpu
+#SBATCH --partition=ncpu
 #SBATCH --mail-user=harry.booth@crick.ac.uk
 #SBATCH --mail-type=ALL
 
