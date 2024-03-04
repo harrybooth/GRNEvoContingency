@@ -1714,10 +1714,16 @@ function create_pred_accuracy_fig!(fig_sub,streak,label_streak,predict_colors,to
     rowgap!(fig_sub, Relative(0.02))
 end
 
-function find_candidates(all_target_networks,contin_target,top_n,model_gtl)
+function find_candidates(founder,all_target_networks,contin_target,top_n,model_gtl,test_indices,pred_grid,prob_grid,fitness_grid,sample_points,min_prob)
 
     contin_choices = []
     contin_prob = []
+
+    founder_fitness = fitness_function(founder.phenotype)
+
+    sample_grid = [[w1,w2] for w1 in sample_points, w2 in sample_points]
+
+    sample_grid_v = reduce(hcat,vec(sample_grid));
 
     for n in 1:top_n+1
 
@@ -1739,7 +1745,7 @@ function find_candidates(all_target_networks,contin_target,top_n,model_gtl)
     
         ###############
     
-        contin_choice = first(Tuple(get_max_prob_point(n1,n2,pred_grid,prob_grid,fitness_grid,contin_target[n],1e-3)))
+        contin_choice = first(Tuple(get_max_prob_point(n1,n2,pred_grid,prob_grid,fitness_grid,contin_target[n],min_prob,founder_fitness)))
     
         w1 = sample_grid_v[1,contin_choice]
         w2 = sample_grid_v[2,contin_choice]
@@ -1778,7 +1784,9 @@ function create_fm_result_fig!(fig_result_sub,fig_fl_sub,plot_save_dir,founder,a
         n1 = findall(x->x == t1,test_indices)[1]
         n2 = findall(x->x == t2,test_indices)[1]
 
-        prob_fv = [log10(fixation_probability_kim(0.,f,β[1],β[2])) for f in fitness_grid[n1,n2,:] .- founder_fitness[2]]
+        # prob_fv = [log10(fixation_probability_kim(0.,f,β[1],β[2])) for f in fitness_grid[n1,n2,:] .- founder_fitness[2]]
+
+        prob_fv = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
 
         push!(fitness_prob_all,prob_fv)
     end
@@ -1889,7 +1897,7 @@ function create_fm_result_fig!(fig_result_sub,fig_fl_sub,plot_save_dir,founder,a
         rnc1 = contin_choices[n][t1...]
         rnc2 = contin_choices[n][t2...]
 
-        fit_v = log10.([fixation_probability_kim(f - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
+        fit_v = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
 
         hm = CairoMakie.heatmap!(axm_fit,sample_points,sample_points,reshape(fit_v,(N_sample,N_sample)),colormap = cgrad(:viridis), colorrange = (min_prob,0.), lowclip = :black)
 
@@ -1948,6 +1956,146 @@ function create_fm_result_fig!(fig_result_sub,fig_fl_sub,plot_save_dir,founder,a
     end
 
     linkyaxes!(ax_list...)
+
+    colgap!(fig_fl_sub, Relative(0.01))
+    rowgap!(fig_fl_sub, Relative(0.005))
+
+    colgap!(fig_result_sub, Relative(0.02))
+    rowgap!(fig_result_sub, Relative(0.075))
+end
+
+function create_fm_result_partial_fig!(fig_result_sub,fig_fl_sub,founder,all_target_networks,top_n,sample_points)
+
+    ax_list = []
+
+    vpreds = []
+    vbars = []
+
+    fitness_prob_all = []
+
+    founder_fitness = fitness_function(founder.phenotype)
+
+    sample_grid = [[w1,w2] for w1 in sample_points, w2 in sample_points]
+
+    sample_grid_v = reduce(hcat,vec(sample_grid));
+
+    for n in 1:top_n+1
+
+        mut_id = Tuple.(findall(x->x!=0,reshape(all_target_networks[n][2],(3,4)) .!= reshape(all_target_networks[n][1],(3,4))))
+
+        t1 = mut_id[1]
+        t2 = mut_id[2]
+
+        n1 = findall(x->x == t1,test_indices)[1]
+        n2 = findall(x->x == t2,test_indices)[1]
+
+        # prob_fv = [log10(fixation_probability_kim(0.,f,β[1],β[2])) for f in fitness_grid[n1,n2,:] .- founder_fitness[2]]
+
+        prob_fv = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
+
+        push!(fitness_prob_all,prob_fv)
+    end
+
+    prob_v = reduce(vcat,fitness_prob_all)
+    min_prob = minimum(prob_v[prob_v .> log10(2e-53)])
+
+    for n in 1:top_n+1
+
+        if n == 1
+            ax = Axis(fig_result_sub[1,n],ylabel  = L"\text{Freq}", xlabel = L"M^{(i)}_{N_i}")
+            hidexdecorations!(ax)
+        else
+            ax = Axis(fig_result_sub[1,n],xlabel = L"M^{(i)}_{N_i}")
+            hideydecorations!(ax)
+            hidexdecorations!(ax)
+        end
+
+        axm_fit = Axis(fig_fl_sub[1,n])
+        axm_pred = Axis(fig_fl_sub[2,n])
+
+        #################
+
+        ########################### Grids
+        
+        resultant_network = all_target_networks[n][2]
+        resultant_network_m = reshape(resultant_network,(3,4))
+
+        start_network = all_target_networks[n][1]
+        start_network_m = reshape(start_network,(3,4))
+
+        mut_id = Tuple.(findall(x->x!=0,reshape(all_target_networks[n][2],(3,4)) .!= reshape(all_target_networks[n][1],(3,4))))
+
+        t1 = mut_id[1]
+        t2 = mut_id[2]
+
+        n1 = findall(x->x == t1,test_indices)[1]
+        n2 = findall(x->x == t2,test_indices)[1]
+
+        ##############
+
+        ylabelwl = Label(fig_fl_sub[1:2,n,Left()], weight_names_latex_m[t2...],  padding = (0.,2.,0.,0.))
+        ylabelwl = Label(fig_fl_sub[1,n,Bottom()], "",  padding = (0.,0.,5.,0.))
+
+        sn1 = start_network_m[t1...]
+        sn2 = start_network_m[t2...]
+
+        rn1 = resultant_network_m[t1...]
+        rn2 = resultant_network_m[t2...]
+
+        fit_v = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
+
+        hm = CairoMakie.heatmap!(axm_fit,sample_points,sample_points,reshape(fit_v,(N_sample,N_sample)),colormap = cgrad(:viridis), colorrange = (min_prob,0.), lowclip = :black)
+
+        if n == 1 
+            cb = Colorbar(fig_fl_sub[1:2, top_n+2], hm;
+            minorticksvisible=true,width = 5.,tickformat = custom_log_formatter,ticklabelsize = 9.
+                )
+        end
+
+        max_ent = maximum(1 .- entropy_grid[n1,n2,:])
+        min_ent = minimum(1 .- entropy_grid[n1,n2,:])
+
+        pred_vc = [log10(fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2])) >  min_prob ? (predict_colors[c[1]],c[2]) : :black for (c,f) in zip(zip(pred_grid[n1,n2,:],prob_grid[n1,n2,:]),fitness_grid[n1,n2,:])]
+
+        CairoMakie.scatter!(axm_pred,sample_grid_v, color = pred_vc, markersize = 2.)
+
+        CairoMakie.scatter!(axm_pred,reshape([sn1,sn2],(2,1)), color = :yellow, markersize = 3.)
+        CairoMakie.scatter!(axm_pred,reshape([rn1,rn2],(2,1)), color = :cyan, markersize = 3.)
+
+        arrow_start = [Point2f(sn1,sn2)]
+        arrow_dir = [Vec2f(rn1-sn1,rn2-sn2)]
+
+        CairoMakie.arrows!(axm_pred,arrow_start,arrow_dir,arrowsize = 5., color = :cyan)
+        CairoMakie.arrows!(axm_fit,arrow_start,arrow_dir,arrowsize = 5., color = :cyan)
+
+        xmin = ceil(Int,sn1 - quantile(mutation_op.additive_noise_distribution,mut_q))
+        xmax = ceil(Int,sn1 + quantile(mutation_op.additive_noise_distribution,mut_q))
+
+        ymin = ceil(Int,sn2 - quantile(mutation_op.additive_noise_distribution,mut_q))
+        ymax = ceil(Int,sn2 + quantile(mutation_op.additive_noise_distribution,mut_q))
+
+        axm_pred.xlabel = weight_names_latex_m[t1...]
+
+        CairoMakie.xlims!(axm_pred,xmin,xmax)
+        CairoMakie.ylims!(axm_pred,ymin,ymax)
+
+        hidexdecorations!(axm_pred,label = false)
+        hideydecorations!(axm_pred,label = false)
+
+        CairoMakie.xlims!(axm_fit,xmin,xmax)
+        CairoMakie.ylims!(axm_fit,ymin,ymax)
+
+        hidexdecorations!(axm_fit,label = false)
+        hideydecorations!(axm_fit,label = false)
+
+        vlines!(axm_pred,0., linestyle = :dash, color = :black, linewidth = 1.)
+        hlines!(axm_pred,0., linestyle = :dash, color = :black, linewidth = 1.)
+
+        vlines!(axm_fit,0., linestyle = :dash, color = :black, linewidth = 1.)
+        hlines!(axm_fit,0., linestyle = :dash, color = :black, linewidth = 1.)
+    end
+
+    # linkyaxes!(ax_list...)
 
     colgap!(fig_fl_sub, Relative(0.01))
     rowgap!(fig_fl_sub, Relative(0.005))
@@ -2135,6 +2283,46 @@ function create_full_prediction_summary!(fig,trajectories_p,sorted_uep,top_n,con
             padding = (0,ds_config.caption_padding, ds_config.caption_padding, 0),
             halign = :right)
     end
+
+    colgap!(fig.layout, Relative(0.025))
+    rowgap!(fig.layout, Relative(0.005))
+
+end
+
+
+function create_full_prediction_summary_nr!(fig,trajectories_p,sorted_uep,top_n,predict_colors,sample_points,ds_config)
+
+    fig_ex = fig[1:4,1:top_n+2] = GridLayout()
+
+    ######### Example
+
+    example_mst = 4
+
+    tr_choice = 3404
+
+    create_example_traj_fig!(fig_ex,trajectories_p,sorted_uep,example_mst,tr_choice,ds_config,predict_colors,top_n)
+
+    ############# Pred accuracy
+
+    fig_n  = fig[5,1:top_n+2] = GridLayout()
+
+    create_pred_accuracy_fig!(fig_n,streak,label_streak,predict_colors,top_n)
+
+    ############ Contin Double
+
+    fig_fit = fig[6:7,1:top_n+2] = GridLayout()
+    fig_d = fig[8:10,1:top_n+2] = GridLayout()
+
+    create_fm_result_partial_fig!(fig_d,fig_fit,founder,all_target_networks,top_n,sample_points)
+
+    # ############ works
+
+    fig_hist = fig[11,1:3] = GridLayout()
+    fig_pie = fig[11,4:6] = GridLayout()
+
+    ############
+
+    fig_l = fig[12,1:top_n+2] = GridLayout()
 
     colgap!(fig.layout, Relative(0.025))
     rowgap!(fig.layout, Relative(0.005))

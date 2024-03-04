@@ -44,10 +44,12 @@ function assign_mst_label(v,top_vertex_map,predict_id,vertex_to_predict_label)
     end
 end
 
-function get_max_prob_point(n1,n2,pred_grid,prob_grid,fitness_grid,pred_choice,fitness_tol)
+function get_max_prob_point(n1,n2,pred_grid,prob_grid,fitness_grid,pred_choice,fitness_tol,founder_fitness)
 
-    fitness_valid = findall(x->x>fitness_tol,fitness_grid[n1,n2,:,:])
-    pred_valid = findall(x->x==pred_choice,pred_grid[n1,n2,:,:])
+    fit_v = [fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]]
+
+    fitness_valid = findall(x->x>fitness_tol,fit_v)
+    pred_valid = first.(Tuple.(findall(x->x==pred_choice,pred_grid[n1,n2,:,:])))
 
     valid = fitness_valid ∩ pred_valid
 
@@ -63,7 +65,9 @@ end
 
 function get_max_prob_point(n1,n2,pred_grid,prob_grid,fitness_grid,pred_choice,fitness_tol,top_choice,sample_grid_v)
 
-    fitness_valid = first.(Tuple.(findall(x->x>fitness_tol,fitness_grid[n1,n2,:,:])))
+    fit_v = [fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]]
+
+    fitness_valid = first.(Tuple.(findall(x->x>fitness_tol,fit_v)))
     pred_valid = first.(Tuple.(findall(x->x==pred_choice,pred_grid[n1,n2,:,:])))
     top_valid_1 = findall(x->sign(x) == sign(top_choice[1]),sample_grid_v[1,:])
     top_valid_2 = findall(x->sign(x) == sign(top_choice[2]),sample_grid_v[2,:])
@@ -137,8 +141,8 @@ function plot_pairwise_fitness_landscape!(fig,test_indices,sample_points,founder
     for (n1,t1) in enumerate(test_indices)
         for (n2,t2) in enumerate(test_indices)
             if n1 < n2
-                # fit_v = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
-                fit_v = log10.([fixation_probability_kim(f - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
+                fit_v = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
+                # fit_v = log10.([fixation_probability_kim(f - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
 
                 min_prob = minimum(fit_v[fit_v .> log10(2e-53)])
                 push!(all_min_prob,min_prob)
@@ -156,9 +160,9 @@ function plot_pairwise_fitness_landscape!(fig,test_indices,sample_points,founder
                 sn1 = start_network[t1...]
                 sn2 = start_network[t2...]
 
-                fit_v = log10.([fixation_probability_kim(f - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
+                # fit_v = log10.([fixation_probability_kim(f - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
 
-                # fit_v = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
+                fit_v = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
 
                 pred_vc = [p >  min_prob ? (predict_colors[c[1]],c[2]) : :black for (c,p) in zip(zip(pred_grid[n1,n2,:],prob_grid[n1,n2,:]),fit_v)]
 
