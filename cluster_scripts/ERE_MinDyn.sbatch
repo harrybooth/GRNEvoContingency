@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --job-name=RepeatedEvolution_Contin
-#SBATCH --ntasks=1499
+#SBATCH --ntasks=999
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
 #SBATCH --time=24:00:00
-#SBATCH --partition=ncpu
+#SBATCH --partition=cpu
 #SBATCH --mail-user=harry.booth@crick.ac.uk
 #SBATCH --mail-type=ALL
 
