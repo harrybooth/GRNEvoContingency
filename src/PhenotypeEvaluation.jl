@@ -2,90 +2,52 @@ function new_phenotype(ind::Individual,new_w::Matrix{Float64},development)
     Individual(remake(ind.genotype, p = (new_w,ind.genotype.p[2:end]...)),development).phenotype.u[end][3,:]
 end
 
-function pheno_characterise(conc,sharp_cell_number,lower_bound,upper_bound,min_stripe_width)
+function pheno_characterise(conc,lower_bound,upper_bound,min_stripe_width)
 
     low = findall(conc .< lower_bound)
     high = findall(conc .> upper_bound)
 
     left_transition = nothing
-    left_sharp = nothing
-
     right_transition = nothing
-    right_sharp = nothing
 
-    max_height = maximum(conc)
-
-    low_segments = []
-    high_segments = []
-    current_low_width = 0.
-    current_upper_width = 0.
-
-    for c in conc
-        if c < lower_bound
-            push!(high_segments,current_upper_width)
-            current_low_width += 1.
-            current_upper_width = 0.
-        elseif c > upper_bound
-            push!(low_segments,current_low_width)
-            current_low_width = 0.
-            current_upper_width += 1.
-        end
-    end
-
-    push!(high_segments,current_upper_width)
-    push!(low_segments,current_low_width)
-
-    valid_low = filter(x->x>=min_stripe_width,low_segments)
-    valid_high = filter(x->x>=min_stripe_width,high_segments)
-
-    valid_pattern = ((length(valid_low)) == (length(valid_high)+1)) & all((conc[1:min_stripe_width] .< lower_bound)) & all(conc[end-min_stripe_width:end] .< lower_bound)
+    max_height = round(maximum(conc), digits = 6)
 
     if (length(low) != 0) & (length(high) != 0)
 
         if low[1] < high[1] # first low cell is before first high cell --> left boundary
-            if high[1] >= min_stripe_width
+            if high[1] - low[1] >= min_stripe_width
                 left_transition = high[1] # true
-                if high[1] - low[1] > sharp_cell_number
-                    left_sharp = true
-                else
-                    left_sharp = false
-                end
             end
 
-            if high[end] < low[end]
-                if (high[end] < Nc - min_stripe_width) & valid_pattern
-                    right_transition = high[end] # true
-                    if low[end] - high[end] > sharp_cell_number
-                        right_sharp = true
+            if low[end] > high[end]
+                if (high[end] - high[1] + 1 >= min_stripe_width) & (low[end] - high[end] >= min_stripe_width)
+                    cts_high_region = !(any([(id > high[1]) & (id < high[end]) for id in low]))
+                    if cts_high_region
+                        right_transition = high[end] # true
                     end
                 end
             end
         else # first high cell is before first low cell --> right boundary, could be left transition but would be inverse
-            if low[1] >= min_stripe_width
+            if (low[1] - high[1] >= min_stripe_width)
                 right_transition = low[1]
-                if low[1] - high[1] > sharp_cell_number
-                    right_sharp = true
-                else
-                    right_sharp = false
-                end
             end
         end
 
     end
 
-    return (left_transition,left_sharp,right_transition,right_sharp,max_height)
+    return (left_transition,right_transition,max_height)
 
 end
 
 function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
 
-    mutant_profile = [:nothing]
+    mutant_profile = [:neutral]
 
     left_boundary_was_present  = ph_profile_1[1] != nothing
-    right_boundary_was_present = ph_profile_1[3] != nothing
+    right_boundary_was_present = ph_profile_1[2] != nothing
 
     left_boundary_now_present = ph_profile_2[1] != nothing
-    right_boundary_now_present = ph_profile_2[3] != nothing
+    right_boundary_now_present = ph_profile_2[2] != nothing
 
 
     if left_boundary_now_present & (! left_boundary_was_present)
@@ -123,7 +85,7 @@ function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
 
     elseif right_boundary_now_present & right_boundary_was_present
 
-        move_boundary = ph_profile_1[3] != ph_profile_2[3]
+        move_boundary = ph_profile_1[2] != ph_profile_2[2]
 
         if move_boundary
             push!(mutant_profile, :mrb)
@@ -138,7 +100,7 @@ function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
 
 
     if length(mutant_profile) == 1
-        if ph_profile_2[5] > thresh_p*ph_profile_1[5]
+        if ph_profile_2[3] > thresh_p*ph_profile_1[3]
             push!(mutant_profile,:grow)
         end
     end
@@ -166,3 +128,4 @@ function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
         return [mutant_profile[1]]
     end
 end
+
