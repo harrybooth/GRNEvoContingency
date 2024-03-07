@@ -894,7 +894,7 @@ function create_epi_single_portrait_bar_v1!(fig,trajectories,mut_prob,all_pheno_
 
     ax_epi = Axis(epi_subplot[1,1],yticklabelsize = 10.,xticklabelsize = 10,xlabel = L"\text{weight changes per mutant}",ygridvisible = false,xgridvisible = false)
 
-    epi_counts_1 = reduce(vcat,map(tr->tr.epistasis[1],filter(tr->(tr.H0 > 2),trajectories)));
+    epi_counts_1 = reduce(vcat,map(tr->tr.epistasis[1][1],filter(tr->(tr.H0 > 2),trajectories)));
     mut_n_counts_1 = reduce(vcat,map(tr->get_mut_n(tr,1,1),filter(tr->(tr.H0 > 2),trajectories)));
 
     epi_mutn_counts_1 = countmap(zip(epi_counts_1,mut_n_counts_1) |> collect)
@@ -913,7 +913,7 @@ function create_epi_single_portrait_bar_v1!(fig,trajectories,mut_prob,all_pheno_
 
     ###################
 
-    epi_counts_lS0 = reduce(vcat,map(tr->tr.epistasis[2:tr.H0-2],filter(tr->(tr.H0-2 > 0),trajectories)));
+    epi_counts_lS0 = reduce(vcat,map(tr->first.(tr.epistasis[2:tr.H0-2]),filter(tr->(tr.H0-2 > 0),trajectories)));
     mut_n_counts_lS0 = reduce(vcat,map(tr->get_mut_n(tr,2,tr.H0-2),filter(tr->(tr.H0-2 > 0),trajectories)));
 
     epi_mutn_counts_lS0 = countmap(zip(epi_counts_lS0,mut_n_counts_lS0) |> collect)
@@ -932,7 +932,7 @@ function create_epi_single_portrait_bar_v1!(fig,trajectories,mut_prob,all_pheno_
 
     #############
 
-    epi_counts_S0 = reduce(vcat,map(tr->tr.epistasis[tr.H0-1],trajectories));
+    epi_counts_S0 = reduce(vcat,map(tr->tr.epistasis[tr.H0-1][1],trajectories));
     mut_n_counts_S0 = reduce(vcat,map(tr->get_mut_n(tr,tr.H0-1,tr.H0-1),trajectories));
 
     epi_mutn_counts_S0 = countmap(zip(epi_counts_S0,mut_n_counts_S0) |> collect)
@@ -951,7 +951,7 @@ function create_epi_single_portrait_bar_v1!(fig,trajectories,mut_prob,all_pheno_
 
     ##############
 
-    epi_counts_hS0 = reduce(vcat,map(tr->tr.epistasis[tr.H0:end],trajectories));
+    epi_counts_hS0 = reduce(vcat,map(tr->first.(tr.epistasis[tr.H0:end]),trajectories));
     mut_n_counts_hS0 = reduce(vcat,map(tr->get_mut_n(tr,tr.H0,length(tr.geno_traj)-1),trajectories));
 
     epi_mutn_counts_hS0 = countmap(zip(epi_counts_hS0,mut_n_counts_hS0) |> collect)

@@ -541,6 +541,23 @@ function assign_predictions!(tr::Trajectory,model,prediction_type,predict_label_
 
 end
 
+function assign_shap!(tr::Trajectory,model,prediction_type)
+
+    if prediction_type == :tt
+        tt = reduce(hcat,tr.topologies)
+        tt_dtrain = xgboost.DMatrix(tt[1:10,1:tr.H0-1] |> transpose |> collect, feature_types = c_types, feature_names = weight_names)
+        tr.other = model.predict(tt_dtrain,pred_contribs = true)
+
+    elseif prediction_type == :gt
+        gt = reduce(hcat,tr.geno_traj)
+        gt_dtrain = xgboost.DMatrix(gt[1:10,1:tr.H0-1] |> transpose |> collect, feature_names = weight_names)
+        tr.other = model.predict(gt_dtrain,pred_contribs = true)
+    else
+        nothing
+    end
+
+end
+
 function assign_predictions_joint!(tr,model_label,all_models_mss,predict_label_to_vertex,top_vertex_map)
 
         gt = reduce(hcat,tr.geno_traj)

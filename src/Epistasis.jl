@@ -224,6 +224,48 @@ function evaluate_epistasis_class_shapley(mut_tuple,grn_parameters,development,f
     return rtype,[1.]
 end
 
+function evaluate_epistasis_class_full(mut_tuple,grn_parameters,development,fitness_function,mut_op::MutationOperatorDual)
+
+    n_mut = length(mut_tuple[:weight_id])
+
+    if n_mut > 1
+
+        mut_combi = [[bit == '1' ? true : false for bit in string(i;base = 2,pad = n_mut)] for i in 1:2^n_mut-1]
+
+        prob_mutant = []
+
+        for mut_id in mut_combi[1:end]
+
+            new_network = noise_specified(mut_tuple[:start_network],mut_tuple[:weight_id][mut_id],mut_tuple[:mut_size][mut_id],mut_tuple[:mut_type][mut_id],mut_op)
+
+            mutant = Individual(reshape(new_network,(3,4)),grn_parameters,development)
+
+            mutant_fitness = fitness_function(mutant.phenotype)
+
+            # fix_p = fixation_probability(mutant_fitness[1] - mut_tuple[:start_fitness_tuple][1],mutant_fitness[2] - mut_tuple[:start_fitness_tuple][2],β)
+
+            Δf1 = mutant_fitness[1] - mut_tuple[:start_fitness_tuple][1]
+            Δf2 = mutant_fitness[2] - mut_tuple[:start_fitness_tuple][2]
+
+            Δf = Δf1 != 0. ? Δf1 : Δf2
+
+            # fix_p = fixation_probability_kim(mutant_fitness[1] - mut_tuple[:start_fitness_tuple][1],mutant_fitness[2] - mut_tuple[:start_fitness_tuple][2],β[1],β[2])
+
+            # push!(accept_new_mutant,fix_p > 0)
+
+            push!(prob_mutant,Δf)
+
+        end
+
+        ratio_new_mutant = prob_mutant ./ prob_mutant[end]
+
+        return vcat([0.],ratio_new_mutant)
+
+    else
+        return [0.,1.]
+    end
+end
+
 function calculate_epi_class_proportion(epi_class)
     
     total = length(epi_class)
@@ -255,6 +297,11 @@ end
 
 function evaluate_epistasis_types_shap!(tr,grn_parameters,development,fitness_function,mut_op::MutationOperatorDual,fitness_eps)
     all_class_epi = map(mi->evaluate_epistasis_class_shapley(mi,grn_parameters,development,fitness_function,mut_op,fitness_eps),tr.mutant_info);
+    tr.epistasis = all_class_epi
+end
+
+function evaluate_epistasis_types_full!(tr,grn_parameters,development,fitness_function,mut_op::MutationOperatorDual)
+    all_class_epi = map(mi->evaluate_epistasis_class_full(mi,grn_parameters,development,fitness_function,mut_op),tr.mutant_info);
     tr.epistasis = all_class_epi
 end
 
