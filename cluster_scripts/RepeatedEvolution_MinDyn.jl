@@ -55,13 +55,7 @@ end
 
 # @everywhere all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge"]
 
-all_experiments = ["DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_Contingent_1",
-                    "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_Contingent_2",
-                    "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_Contingent_3",
-                    "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_Contingent_4",
-                    "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_Contingent_5",
-                    "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_ContingentOS_1",
-                    "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_ContingentOS_2",
+all_experiments = ["DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_ContingentOS_2",
                     "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_ContingentOS_3",
                     "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_ContingentOS_4",
                     "DeNovoStripe/Contingencies/RE_Minimal_Inhibiting_DN_ContingentOS_5"]

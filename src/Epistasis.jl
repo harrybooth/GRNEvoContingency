@@ -94,6 +94,30 @@ end
 #     return rtype
 # end
 
+function characterise_epistasis(combi_result,fitness_eps)
+
+    if length(combi_result) > 2
+        ratio_new_mutant = combi_result ./ combi_result[end]
+
+        accept_new_mutant = ratio_new_mutant[2:end-1] .>= 1 - fitness_eps
+
+        if isnan(combi_result[end])
+            rtype = :neutral
+        elseif !any(accept_new_mutant)
+            rtype = :rse
+        elseif all(accept_new_mutant)
+            rtype = :ne
+        else
+            rtype = :se
+        end
+
+        return rtype,combi_result
+    else
+        return :sm, combi_result
+    end
+end
+
+
 function evaluate_epistasis_class(mut_tuple,grn_parameters,development,fitness_function,mut_op::MutationOperatorDual)
 
     n_mut = length(mut_tuple[:weight_id])
