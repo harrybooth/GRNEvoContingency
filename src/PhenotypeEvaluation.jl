@@ -63,7 +63,11 @@ function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
         move_boundary = ph_profile_1[1] != ph_profile_2[1]
 
         if move_boundary
-            push!(mutant_profile, :mlb)
+            if right_boundary_now_present
+                push!(mutant_profile, :mlb_wbb)
+            else
+                push!(mutant_profile, :mlb_wlb)
+            end
         end
 
     elseif (! left_boundary_now_present) & left_boundary_was_present
@@ -88,7 +92,11 @@ function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
         move_boundary = ph_profile_1[2] != ph_profile_2[2]
 
         if move_boundary
-            push!(mutant_profile, :mrb)
+            if left_boundary_now_present
+                push!(mutant_profile, :mrb_wbb)
+            else
+                push!(mutant_profile, :mrb_wrb)
+            end
         end
 
     elseif (! right_boundary_now_present) & right_boundary_was_present
@@ -107,7 +115,7 @@ function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
 
 
     if (:mlb ∈ mutant_profile) & (:mrb ∈ mutant_profile)
-        mutant_profile = [:nothing,:mbb]
+        mutant_profile = [:nothing,:mbb_wbb]
     end
 
     if (:clb ∈ mutant_profile) & (:crb ∈ mutant_profile)
