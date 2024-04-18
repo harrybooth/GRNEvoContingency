@@ -509,3 +509,24 @@ function draw_grn_mutant!(ax,network_old,network_new,draw_config::DrawGRNConfig,
     draw_grn!(ax,network_additions,reverse_list,draw_config_new,node_colors,fs,annotate,gene_letters)
 
 end
+
+function draw_grn_mst!(ax,network_old,network_new,draw_config::DrawGRNConfig,draw_config_generator,node_colors,fs,arrow_color,annotate = false,gene_letters = false)
+
+    unchanged_network = Int.(network_old .== network_new) .* network_new
+    network_additions = Int.(network_old .!= network_new) .* network_new
+
+    network_new_m = reshape(network_new,(3,4))
+
+    reverse_list = Tuple.(findall(network_new_m .!= 0))
+
+    arrow_attr_new = (; linewidth = draw_config.arrow_attr.linewidth, color = arrow_color)
+
+    draw_config_new = draw_config_generator()
+
+    draw_config_new.arrow_attr = arrow_attr_new
+
+    draw_grn!(ax,unchanged_network,reverse_list,draw_config_new,node_colors,fs,annotate,gene_letters)
+
+    draw_grn!(ax,network_additions,reverse_list,draw_config,node_colors,fs,annotate,gene_letters)
+
+end

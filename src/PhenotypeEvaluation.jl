@@ -107,9 +107,24 @@ function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
     end
 
 
+    # if length(mutant_profile) == 1
+    #     if ph_profile_2[3] > thresh_p*ph_profile_1[3]
+    #         if right_boundary_was_present & left_boundary_was_present
+    #             push!(mutant_profile,:grow)
+    #     end
+    # end
+
     if length(mutant_profile) == 1
         if ph_profile_2[3] > thresh_p*ph_profile_1[3]
-            push!(mutant_profile,:grow)
+            if right_boundary_was_present & left_boundary_was_present
+                push!(mutant_profile,:grow_wbb)
+            elseif right_boundary_was_present
+                push!(mutant_profile,:grow_wrb)
+            elseif left_boundary_was_present
+                push!(mutant_profile,:grow_wlb)
+            else
+                push!(mutant_profile,:grow_wnb)
+            end
         end
     end
 

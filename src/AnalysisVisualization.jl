@@ -119,6 +119,158 @@ function plot_mst_explanation!(fig,trajectories,example_id,draw_config,draw_conf
 
 end
 
+function plot_mst_explanation_S0!(fig,tr,draw_config,draw_config_generator,node_colors,fontsize,annotate,twin_axis,lw)
+
+    ax1_S0 = Axis(fig[1,2])
+    ax2_S0 = Axis(fig[1,2])
+    ax_geno_S0 = Axis(fig[1,1],backgroundcolor = RGBf(0.98, 0.98, 0.98),aspect = DataAspect())
+
+    development = DefaultGRNSolver()
+
+    mst = tr.minimal_stripe_subgraphs[tr.H0]
+
+    orig_network = tr.geno_traj[tr.H0]
+    mst_network = abs.(mst) .* orig_network
+
+    orig_pheno = Individual(reshape(orig_network,(3,4)),grn_parameters,development).phenotype.u[end]
+    mst_pheno = Individual(reshape(mst_network,(3,4)),grn_parameters,development).phenotype.u[end]
+
+    if twin_axis
+        CairoMakie.lines!(ax1_S0,orig_pheno[3,:], color = :red, linewidth = lw)
+        CairoMakie.lines!(ax2_S0,mst_pheno[3,:], color = :black, linewidth = lw)
+    else
+        CairoMakie.lines!(ax1_S0,orig_pheno[3,:], color = :red, linewidth = lw)
+        CairoMakie.lines!(ax1_S0,mst_pheno[3,:], color = :black, linewidth = lw)
+    end
+
+    draw_grn_mutant!(ax_geno_S0,mst_network,orig_network,draw_config,draw_config_generator,node_colors,fontsize,:red,annotate,false)
+
+    # draw_grn_layout_mutant!(ax_geno,reshape(orig_network,(3,4)),reshape(mst_network,(3,4)),1.2*e_width,1.5*vertex_size,1.5*arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors)
+
+    # hidedecorations!(ax_S0)
+
+    hidedecorations!(ax1_S0, label = false)
+    hidedecorations!(ax2_S0)
+
+    ###############
+
+    ax1 = Axis(fig[2,2],xlabel = L"\text{Tissue}")
+    ax2 = Axis(fig[2,2])
+    ax_geno = Axis(fig[2,1],backgroundcolor = RGBf(0.98, 0.98, 0.98),aspect = DataAspect())
+
+    development = DefaultGRNSolver()
+
+    mst = tr.minimal_stripe_subgraphs[end]
+
+    orig_network = tr.geno_traj[end]
+    mst_network = abs.(mst) .* orig_network
+
+    orig_pheno = Individual(reshape(orig_network,(3,4)),grn_parameters,development).phenotype.u[end]
+    mst_pheno = Individual(reshape(mst_network,(3,4)),grn_parameters,development).phenotype.u[end]
+
+    if twin_axis
+        CairoMakie.lines!(ax1,orig_pheno[3,:], color = :red, linewidth = lw)
+        CairoMakie.lines!(ax2,mst_pheno[3,:], color = :black, linewidth = lw)
+    else
+        CairoMakie.lines!(ax1,orig_pheno[3,:], color = :red, linewidth = lw)
+        CairoMakie.lines!(ax1,mst_pheno[3,:], color = :black, linewidth = lw)
+    end
+
+    draw_grn_mutant!(ax_geno,mst_network,orig_network,draw_config,draw_config_generator,node_colors,fontsize,:red,annotate,false)
+
+    # draw_grn_layout_mutant!(ax_geno,reshape(orig_network,(3,4)),reshape(mst_network,(3,4)),1.2*e_width,1.5*vertex_size,1.5*arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors)
+
+    # hidedecorations!(ax_S0)
+
+    ylabel = Label(fig[1,1,Left()], L"\text{Concentration}", rotation = pi/2, padding = (2.,30.,0.,0.))
+
+    hidedecorations!(ax1, label = false)
+    hidedecorations!(ax2)
+
+    rowgap!(fig, Relative(0.05))
+    colgap!(fig, Relative(0.01))
+
+end
+
+function plot_mst_explanation_S0_Seperate!(fig,tr,draw_config,draw_config_generator,node_colors,fontsize,annotate,twin_axis,lw)
+
+    ax1_S0 = Axis(fig[1,3])
+    ax2_S0 = Axis(fig[1,3])
+    ax_full_S0 = Axis(fig[1,1],backgroundcolor = RGBf(0.98, 0.98, 0.98),aspect = DataAspect())
+    ax_mst_S0 = Axis(fig[1,2],backgroundcolor = RGBf(0.98, 0.98, 0.98),aspect = DataAspect())
+
+    development = DefaultGRNSolver()
+
+    mst = tr.minimal_stripe_subgraphs[tr.H0]
+
+    orig_network = tr.geno_traj[tr.H0]
+    mst_network = abs.(mst) .* orig_network
+
+    orig_pheno = Individual(reshape(orig_network,(3,4)),grn_parameters,development).phenotype.u[end]
+    mst_pheno = Individual(reshape(mst_network,(3,4)),grn_parameters,development).phenotype.u[end]
+
+    if twin_axis
+        CairoMakie.lines!(ax1_S0,orig_pheno[3,:], color = :black, linewidth = lw)
+        CairoMakie.lines!(ax2_S0,mst_pheno[3,:], color = :red, linewidth = lw)
+    else
+        CairoMakie.lines!(ax1_S0,orig_pheno[3,:], color = :black, linewidth = lw)
+        CairoMakie.lines!(ax1_S0,mst_pheno[3,:], color = :red, linewidth = lw)
+    end
+
+    draw_grn!(ax_full_S0,orig_network,draw_config,node_colors,fontsize,false,false)
+    draw_grn_mst!(ax_mst_S0,mst_network,orig_network,draw_config,draw_config_generator,node_colors,fontsize,:red,annotate,false)
+
+    # draw_grn_layout_mutant!(ax_geno,reshape(orig_network,(3,4)),reshape(mst_network,(3,4)),1.2*e_width,1.5*vertex_size,1.5*arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors)
+
+    # hidedecorations!(ax_S0)
+
+    hidedecorations!(ax1_S0, label = false)
+    hidedecorations!(ax2_S0)
+
+    ###############
+
+    ax1 = Axis(fig[2,3],xlabel = L"\text{Tissue}")
+    ax2 = Axis(fig[2,3])
+    ax_full = Axis(fig[2,1],backgroundcolor = RGBf(0.98, 0.98, 0.98),aspect = DataAspect())
+    ax_mst = Axis(fig[2,2],backgroundcolor = RGBf(0.98, 0.98, 0.98),aspect = DataAspect())
+
+    development = DefaultGRNSolver()
+
+    mst = tr.minimal_stripe_subgraphs[end]
+
+    orig_network = tr.geno_traj[end]
+    mst_network = abs.(mst) .* orig_network
+
+    orig_pheno = Individual(reshape(orig_network,(3,4)),grn_parameters,development).phenotype.u[end]
+    mst_pheno = Individual(reshape(mst_network,(3,4)),grn_parameters,development).phenotype.u[end]
+
+    if twin_axis
+        CairoMakie.lines!(ax1,orig_pheno[3,:], color = :black, linewidth = lw)
+        CairoMakie.lines!(ax2,mst_pheno[3,:], color = :red, linewidth = lw)
+    else
+        CairoMakie.lines!(ax1,orig_pheno[3,:], color = :black, linewidth = lw)
+        CairoMakie.lines!(ax1,mst_pheno[3,:], color = :red, linewidth = lw)
+    end
+
+    draw_grn!(ax_full,orig_network,draw_config,node_colors,fontsize,false,false)
+    draw_grn_mst!(ax_mst,mst_network,orig_network,draw_config,draw_config_generator,node_colors,fontsize,:red,annotate,false)
+
+    # draw_grn_layout_mutant!(ax_geno,reshape(orig_network,(3,4)),reshape(mst_network,(3,4)),1.2*e_width,1.5*vertex_size,1.5*arrow_size,arrow_shift,sw,fixed_layout,selfedge_size,node_colors)
+
+    # hidedecorations!(ax_S0)
+
+    ylabel = Label(fig[1,1,Left()], L"\text{Concentration}", rotation = pi/2, padding = (2.,30.,0.,0.))
+    ylabel = Label(fig[1,2,Top()], L"W^{(i)}_{S_0} \text{  } W^{(i)}_{N_{i}}")
+    ylabel = Label(fig[1,3,Top()],L"\text{  } M^{(i)}_{S_0} \text{  } M^{(i)}_{N_{i}}", color = :red)
+
+    hidedecorations!(ax1, label = false)
+    hidedecorations!(ax2)
+
+    rowgap!(fig, Relative(0.05))
+    colgap!(fig, Relative(0.01))
+
+end
+
 function plot_sf_explanation!(fig,trajectories,example_id,draw_config,draw_config_generator,node_colors,fontsize,annotate,twin_axis)
 
     ax1 = Axis(fig[1,2])
@@ -402,6 +554,8 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
     ax_rh0.xticks = (1:4,[L"M^{(i)}_{S_{0}} = M^{(i)}_{N_i}",L"M^{(i)}_{S_{0}} \subset M^{(i)}_{N_i}",L"M^{(i)}_{N_i} \subset M^{(i)}_{S_{0}}",L"\text{MST change}"])
 
     CairoMakie.ylims!(ax_rh0,0.,1.)
+
+    ax_rh0.yticks = ([0.,0.5,1.],[L"\text{0}",L"\text{50}",L"\text{100}"])
 
     for (label, layout) in zip(["A", "C", "E"], [mo_umap, ex1, rmh0])
         Label(layout[1, 1, TopLeft()], label,
@@ -1112,11 +1266,14 @@ function create_epi_single_portrait_bar_v1!(fig,trajectories,mut_prob,all_pheno_
 end
 
 function draw_comm_graph!(fig)
+
     Random.seed!(1234567)
 
     arrow_colors = shuffle([i for i in palette(:Dark2_8)])
 
-    arrow_colors = vcat([:black,:grey,RGBf(0.98, 0.98, 0.98)],arrow_colors)
+    # arrow_colors = vcat([:black,:grey,RGBf(0.98, 0.98, 0.98)],arrow_colors)
+
+    arrow_colors = vcat([:black,palette(:seaborn_dark)[end]],arrow_colors)
 
     adj_mat = zeros(4,4)
 
@@ -1140,7 +1297,7 @@ function draw_comm_graph!(fig)
 
     ax_comm = Axis(fig[1,1],backgroundcolor = RGBf(0.98, 0.98, 0.98),xlabelpadding=0.,ylabelpadding = 0.,aspect = DataAspect())
 
-    graphplot!(ax_comm,comm_graph,layout = Spring(pin=pin, seed=11),edge_color = arrow_colors[3:end],node_color = backgroundcolor = RGBf(0.98, 0.98, 0.98),node_size = 80.,edge_width = lw,arrow_size = 30.,node_attr = (;strokewidth = lw,strokecolor = :black))
+    graphplot!(ax_comm,comm_graph,layout = Spring(pin=pin, seed=11),edge_color = arrow_colors[2:end],node_color = RGBf(0.98, 0.98, 0.98),node_size = 80.,edge_width = lw,arrow_size = 30.,selfedge_size=0.4,node_attr = (;strokewidth = lw,strokecolor = :black))
 
     hidedecorations!(ax_comm)  # hides ticks, grid and lables
     hidespines!(ax_comm)
@@ -1190,6 +1347,8 @@ function create_epi_single_portrait_bar_v2!(fig,trajectories,mut_prob,all_pheno_
     hidexdecorations!(ax_wait_2)
 
     ax_prop.xticks = (1:4,[L"n=1",L"1 < n < S_0",L"n=S_{0}", L"n>S_{0}"])
+    ax_prop.yticks = ([0.,0.5,1.],[L"0",L"50", L"100"])
+    ax_wait.yticks = ([0.,0.5,1.],[L"0",L"50", L"100"])
 
     ###############################
 
@@ -1197,7 +1356,8 @@ function create_epi_single_portrait_bar_v2!(fig,trajectories,mut_prob,all_pheno_
 
     arrow_colors = shuffle([i for i in palette(:Dark2_8)])
 
-    arrow_colors = vcat([:black,:grey,RGBf(0.98, 0.98, 0.98)],arrow_colors)
+    # arrow_colors = vcat([:black,:grey,RGBf(0.98, 0.98, 0.98)],arrow_colors)
+    arrow_colors = vcat([wait_color,palette(:seaborn_dark)[end]],arrow_colors)
 
     ph_id = findall(tr->(tr.H0-2 > 0),trajectories)
 
@@ -1211,12 +1371,14 @@ function create_epi_single_portrait_bar_v2!(fig,trajectories,mut_prob,all_pheno_
     mtp_3 = map(x->x[1],mtp_3)
     mtp_4 = map(x->x[1],reduce(vcat,mtp_4));
 
-    pheno_edge_order = [:neutral,:other,:placeholder,:clb,:crb,:cbb,:mlb_wlb,:crb_wlb,:mrb_wrb,:clb_wrb,:mbb_wbb]
+    # pheno_edge_order = [:neutral,:other,:placeholder,:clb,:crb,:cbb,:mlb_wlb,:crb_wlb,:mrb_wrb,:clb_wrb,:mbb_wbb]
 
-    mtp_1_prop = calculate_mut_type_proportion(mtp_1,pheno_edge_order)
-    mtp_2_prop = calculate_mut_type_proportion(mtp_2,pheno_edge_order)
-    mtp_3_prop = calculate_mut_type_proportion(mtp_3,pheno_edge_order)
-    mtp_4_prop = calculate_mut_type_proportion(mtp_4,pheno_edge_order);
+    pheno_edge_order = [[:neutral],[:other_wnb],[:clb],[:crb],[:cbb],[:mlb_wlb,:other_wlb],[:crb_wlb],[:mrb_wrb,:other_wrb],[:clb_wrb],[:mbb_wbb,:other_wbb]]
+
+    mtp_1_prop = calculate_mut_type_proportion_list(mtp_1,pheno_edge_order)
+    mtp_2_prop = calculate_mut_type_proportion_list(mtp_2,pheno_edge_order)
+    mtp_3_prop = calculate_mut_type_proportion_list(mtp_3,pheno_edge_order)
+    mtp_4_prop = calculate_mut_type_proportion_list(mtp_4,pheno_edge_order);
 
     m_prop_all = []
     m_pheno_labels = []

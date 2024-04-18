@@ -409,6 +409,13 @@ function calculate_mut_type_proportion(mut_type,types)
     return [count(x->x==ec,mut_type)/total for ec in types]
 end
 
+function calculate_mut_type_proportion_list(mut_type,types)
+    
+    total = length(mut_type)
+
+    return [count(x->x ∈ ec,mut_type)/total for ec in types]
+end
+
 function calculate_mut_type_count(mut_type,types)
 
     return [count(x->x==ec,mut_type) for ec in types]
