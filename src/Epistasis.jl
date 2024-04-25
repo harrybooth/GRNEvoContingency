@@ -390,6 +390,18 @@ function get_mut_type(tr,range_l,range_u)
 
 end
 
+function get_mut_type_full(tr,range_l,range_u)
+
+    d = [mi[:mut_type] for mi in tr.mutant_info[range_l:range_u]]
+
+    if length(d) >= 1
+        return d
+    else
+        return []
+    end
+
+end
+
 function get_mut_n(tr,range_l,range_u)
 
     d = [length(mi[:weight_id]) for mi in tr.mutant_info[range_l:range_u]]
