@@ -55,7 +55,7 @@ end
 
 # @everywhere all_experiments = ["Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge","Final_Experiments/RE_Minimal_Inhibiting_Main_MA_NLarge"]
 
-all_experiments = ["DeNovoStripe/RE_Minimal_Activating_DeNovo","DeNovoStripe/RE_Minimal_Activating_DeNovo","DeNovoStripe/RE_Minimal_Activating_DeNovo"]
+all_experiments = ["DeNovoStripe/RE_Minimal_Inhibiting_DeNovo_SingleMutation_SmallN"]
 
 for exp_name in all_experiments
 
