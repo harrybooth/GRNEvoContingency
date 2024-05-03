@@ -448,3 +448,16 @@ function nothing_new_in_common(target_top,new_network,initial_network)
     return result
 
 end 
+
+function get_mut_weight_full(tr,range_l,range_u,weight_loop_dict)
+
+    d = [[weight_loop_dict[x] for x in mi[:weight_id]] for mi in tr.mutant_info[range_l:range_u]]
+
+    if length(d) >= 1
+        return d
+    else
+        return []
+    end
+
+end
+

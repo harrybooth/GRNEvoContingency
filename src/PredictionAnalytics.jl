@@ -135,9 +135,46 @@ function produce_prob_calibration_curve_binomial!(fig,y_train_gtl,gtl_prob_train
     ax_test.xticks = hist_edges_middle
 end
 
-function find_streak(tr,m_type)
+function find_streak_gt(tr,m_type)
 
     pred_error = tr.gt_prediction_error[:,1]
+    S0 = tr.H0
+
+    if m_type == :fitness
+        m = tr.fitness_traj
+    else
+        m = tr.weight_edits
+    end
+
+    l_id = filter(x->x!=1,sort(findall(p->p==1,pred_error[1:S0-1])))
+
+    if length(l_id) > 0
+        contender = []
+        for l in l_id
+            streak_length = 0 
+            for p in pred_error[l:S0-1]
+                if p == 1
+                    streak_length+=1
+                end
+            end
+            if streak_length == length(l:S0-1)
+                push!(contender,m[l]/m[S0])
+            end
+        end
+
+        if length(contender) > 0
+            return contender[1]
+        else
+            return 1
+        end
+    else
+        return 1
+    end
+end
+
+function find_streak_tt(tr,m_type)
+
+    pred_error = tr.tt_prediction_error[:,1]
     S0 = tr.H0
 
     if m_type == :fitness

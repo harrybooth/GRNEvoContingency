@@ -2179,6 +2179,172 @@ function create_epi_single_portrait_bar_v3!(fig,trajectories,mut_prob,all_pheno_
 
 end
 
+function identify_loop_mutations!(fig,trajectories,evo_config,weight_loop_dict)
+
+    wait_subplot = fig[1,1] = GridLayout()
+
+    ax_wait = Axis(wait_subplot[1,1],yticklabelsize = 0.8*evo_config.fontsize,yaxisposition = :right, xticklabelsvisible = false, yticksize= 0.25*evo_config.fontsize,xgridvisible = false,ygridvisible = false)
+
+    wait_color = :black
+
+    ph_id = findall(tr->(tr.H0-2 > 0),trajectories)
+
+    CairoMakie.ylims!(ax_wait,0,1.2)
+
+
+
+    ###############################
+
+    mut_type_prop_all = []
+    mut_type_time_labels = []
+    mut_type_labels = []
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full(tr,1,1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = [count(x->m ∈ x,mut_type_prop) for m in [:morph_loop,:ac_loop,:abc_loop]] ./ length(mut_type_prop)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3])
+    push!(mut_type_time_labels,[1,1,1])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full(tr,2,tr.H0-2,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = [count(x->m ∈ x,mut_type_prop) for m in [:morph_loop,:ac_loop,:abc_loop]] ./ length(mut_type_prop)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3])
+    push!(mut_type_time_labels,[2,2,2])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full(tr,tr.H0-1,tr.H0-1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = [count(x->m ∈ x,mut_type_prop) for m in [:morph_loop,:ac_loop,:abc_loop]] ./ length(mut_type_prop)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3])
+    push!(mut_type_time_labels,[3,3,3])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full(tr,tr.H0,length(tr.topologies)-1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = [count(x->m ∈ x,mut_type_prop) for m in [:morph_loop,:ac_loop,:abc_loop]] ./ length(mut_type_prop)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3])
+    push!(mut_type_time_labels,[4,4,4])
+
+    mut_type_prop_all = reduce(vcat,mut_type_prop_all)
+
+    mut_type_time_labels = reduce(vcat,mut_type_time_labels)
+    mut_type_labels = reduce(vcat,mut_type_labels); 
+
+    CairoMakie.barplot!(ax_wait,mut_type_time_labels,mut_type_prop_all,dodge = mut_type_labels,color = mut_type_labels,bar_labels = :y,colormap = [:red, :green, :blue],label_formatter = x-> "$(round(x*100,digits = 1))%",label_size = 10.)
+
+    # CairoMakie.hidexdecorations!(ax_wait,ticklabels = false)
+    CairoMakie.hideydecorations!(ax_wait,label = false)
+
+    ax_wait.xticks = (1:4,[L"n=1",L"1 < n < S_0",L"n=S_{0}", L"n>S_{0}"])
+    ###############################\
+
+    labels_mut =  [L"\text{m/a pathway}",L"\text{a/c pathway}",L"\text{a/b/c pathway}"]
+
+    symbol_mut = [PolyElement(color=c) for c in [:red, :green, :blue]]
+
+    legend_row_gap = 3
+
+    Legend(wait_subplot[1, :, Bottom()], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), colgap = 4, rowgap = 4, padding=(0.,0.,0f0, evo_config.fontsize+legend_row_gap))
+
+
+end
+
+function count_label(vector_label,label)
+    c = sum(vector_label .== label)
+    if c >= 3
+        return 3
+    else
+        return c
+    end
+end
+
+function identify_loop_mutations_nweight!(fig,trajectories,evo_config,weight_loop_dict)
+
+    wait_subplot = fig[1,1] = GridLayout()
+
+    ax_wait = Axis(wait_subplot[1,1],yticklabelsize = 0.8*evo_config.fontsize,yaxisposition = :right, xticklabelsvisible = false, yticksize= 0.25*evo_config.fontsize,xgridvisible = false,ygridvisible = false)
+
+    wait_color = :black
+
+    ph_id = findall(tr->(tr.H0-2 > 0),trajectories)
+
+    CairoMakie.ylims!(ax_wait,0,1.2)
+
+
+    ###############################
+
+    mut_type_prop_all = []
+    mut_type_time_labels = []
+    mut_type_labels = []
+    mut_type_stack = []
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full(tr,1,1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = reduce(vcat,[[count(x->x==n,v) for n in [1,2,3]] for v in [map(x->count_label(x,m),mut_type_prop) for m in [:morph_loop,:ac_loop,:abc_loop]]]) ./ length(mut_type_prop)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,1,1,2,2,2,3,3,3])
+    push!(mut_type_stack, [1,2,3,1,2,3,1,2,3])
+    push!(mut_type_time_labels,[1,1,1,1,1,1,1,1,1])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full(tr,2,tr.H0-2,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = reduce(vcat,[[count(x->x==n,v) for n in [1,2,3]] for v in [map(x->count_label(x,m),mut_type_prop) for m in [:morph_loop,:ac_loop,:abc_loop]]])./ length(mut_type_prop)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,1,1,2,2,2,3,3,3])
+    push!(mut_type_stack, [1,2,3,1,2,3,1,2,3])
+    push!(mut_type_time_labels,[2,2,2,2,2,2,2,2,2])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full(tr,tr.H0-1,tr.H0-1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = reduce(vcat,[[count(x->x==n,v) for n in [1,2,3]] for v in [map(x->count_label(x,m),mut_type_prop) for m in [:morph_loop,:ac_loop,:abc_loop]]])./ length(mut_type_prop)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,1,1,2,2,2,3,3,3])
+    push!(mut_type_stack, [1,2,3,1,2,3,1,2,3])
+    push!(mut_type_time_labels,[3,3,3,3,3,3,3,3,3])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full(tr,tr.H0,length(tr.topologies)-1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = reduce(vcat,[[count(x->x==n,v) for n in [1,2,3]] for v in [map(x->count_label(x,m),mut_type_prop) for m in [:morph_loop,:ac_loop,:abc_loop]]])./ length(mut_type_prop)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,1,1,2,2,2,3,3,3])
+    push!(mut_type_stack, [1,2,3,1,2,3,1,2,3])
+    push!(mut_type_time_labels,[4,4,4,4,4,4,4,4,4])
+
+    mut_type_prop_all = reduce(vcat,mut_type_prop_all)
+
+    mut_type_time_labels = reduce(vcat,mut_type_time_labels)
+    mut_type_labels = reduce(vcat,mut_type_labels); 
+    mut_type_stack = reduce(vcat,mut_type_stack)
+
+    CairoMakie.barplot!(ax_wait,mut_type_time_labels,mut_type_prop_all,dodge = mut_type_labels,stack = mut_type_stack,color = mut_type_stack,label_formatter = x-> "$(round(x*100,digits = 1))%",label_size = 10.)
+
+    # CairoMakie.hidexdecorations!(ax_wait,ticklabels = false)
+    CairoMakie.hideydecorations!(ax_wait,label = false)
+
+    ax_wait.xticks = (1:4,[L"n=1",L"1 < n < S_0",L"n=S_{0}", L"n>S_{0}"])
+
+    ###############################\
+
+    labels_mut =  [L"\text{m/a pathway}",L"\text{a/c pathway}",L"\text{a/b/c pathway}"]
+
+    symbol_mut = [PolyElement(color=c) for c in [:red, :green, :blue]]
+
+    legend_row_gap = 3
+
+    Legend(wait_subplot[2, :], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), colgap = 4, rowgap = 4, padding=(0.,0.,0f0, evo_config.fontsize+legend_row_gap))
+
+
+end
 
 function create_weight_edit_summary!(fig,n,trajectories,mutation_operator::MutationOperatorDual,sorted_uep, vertex_top_map, evo_config,color_scheme)
 
@@ -2689,7 +2855,7 @@ function create_example_traj_fig!(fig_sub,trajectories,sorted_uep,example_mst,tr
     end
 
     ax_prob = Axis(fig_sub[1:3,1:n_networks], ylabel = L"\text{Probability}",ygridvisible = false,xgridvisible = false)
-    ax_pro = Axis(fig_sub[1:3,1:n_networks],yaxisposition = :right, yticklabelcolor = :green)
+    ax_pro = Axis(fig_sub[1:3,1:n_networks],yaxisposition = :right, yticklabelcolor = :green,ylabel = L"\text{Cumul. changes}", ylabelcolor = :green)
 
     hidespines!(ax_pro)
     hideydecorations!(ax_pro,label = false,ticklabels = false,ticks = false,minorticks = false)
@@ -2736,7 +2902,7 @@ function create_pred_accuracy_fig!(fig_sub,streak,label_streak,predict_colors,to
         if n == 1
             ax = Axis(fig_sub[1,n],ylabel  = L"\text{C.D.F}",xgridvisible = false,ygridvisible = false)
         elseif n == 3
-            ax = Axis(fig_sub[1,n],xlabel = L"\text{Earliest correct prediction, as % of cumulative mutations at } S_0",xgridvisible = false,ygridvisible = false)
+            ax = Axis(fig_sub[1,n],xlabel = L"\text{Earliest correct prediction, as fraction of cumulative mutations at } S_0",xgridvisible = false,ygridvisible = false)
             hideydecorations!(ax)
         else
             ax = Axis(fig_sub[1,n],xgridvisible = false,ygridvisible = false)
@@ -2775,6 +2941,64 @@ function create_pred_accuracy_fig!(fig_sub,streak,label_streak,predict_colors,to
         ax_hist.yticks = ([0.,0.2,0.4], ["0","0.2","0.4"])
 
         CairoMakie.ylims!(ax,0.,0.8)
+
+        # axislegend(ax,[l1],[L"\text{CDF}"], position = :lt)
+
+    end
+
+    linkyaxes!(ax_list...)
+    linkyaxes!(ax_list_h...)
+
+    colgap!(fig_sub, Relative(0.02))
+    rowgap!(fig_sub, Relative(0.02))
+end
+
+function create_pred_accuracy_fig_nn!(fig_sub,streak,label_streak,predict_colors,top_n)
+
+    ax_list = []
+    ax_list_h = []
+
+    vl = []
+
+    for n in 1:top_n+1
+
+        if n == 1
+            ax = Axis(fig_sub[1,n],ylabel  = L"\text{C.D.F}",xgridvisible = false,ygridvisible = false)
+        elseif n == 3
+            ax = Axis(fig_sub[1,n],xlabel = L"\text{Earliest correct prediction, as fraction of cumulative mutations at } S_0",xgridvisible = false,ygridvisible = false)
+            hideydecorations!(ax)
+        else
+            ax = Axis(fig_sub[1,n],xgridvisible = false,ygridvisible = false)
+            hideydecorations!(ax)
+        end
+
+        if n == top_n+1
+            ax_hist = Axis(fig_sub[1,n],ylabel  = L"\text{P.D.F}",xgridvisible = false,ygridvisible = false,yaxisposition = :right)
+            hideydecorations!(ax_hist,label = false,ticklabels = false,ticks = false,minorticks = false)
+            hidexdecorations!(ax_hist)
+        else
+            ax_hist = Axis(fig_sub[1,n],xgridvisible = false,ygridvisible = false)
+            hidespines!(ax_hist)
+            hideydecorations!(ax_hist)
+            hidexdecorations!(ax_hist)
+        end
+
+        n_trials = sum(label_streak .== n)
+
+        cum_streak = [sum(streak[label_streak .== n] .<= i)/n_trials for i in 0:0.1:1-eps()];
+
+        cum_streak = vcat(cum_streak,[cum_streak[end]])
+
+        CairoMakie.hist!(ax_hist,streak[label_streak .== n], nbins = 100, color = predict_colors[n], normalization = :probability)
+
+        l1 = CairoMakie.lines!(ax,0:0.1:1,cum_streak,color = predict_colors[n], linestyle = :dash)
+
+        push!(ax_list,ax)
+        push!(ax_list_h,ax_hist)
+
+        push!(vl,l1)
+
+        ax.xticks = ([0.,0.5,1.], ["0","0.5","1"])
 
         # axislegend(ax,[l1],[L"\text{CDF}"], position = :lt)
 

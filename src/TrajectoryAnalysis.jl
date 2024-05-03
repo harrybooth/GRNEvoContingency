@@ -66,88 +66,88 @@ mutable struct Trajectory
     
 end
 
-function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tuple::Vector{Tuple{Float64, Float64}},wait_times,mut_types::Any,weight_names)
+# function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tuple::Vector{Tuple{Float64, Float64}},wait_times,mut_types::Any,weight_names)
 
-    geno_traj = [collect(i) for i in eachcol(geno_traj_m)]
+#     geno_traj = [collect(i) for i in eachcol(geno_traj_m)]
 
-    ######## process trajectory data
+#     ######## process trajectory data
 
-    topologies = map(w->Int.(sign.(w)),geno_traj)
+#     topologies = map(w->Int.(sign.(w)),geno_traj)
 
-    wait_times_v = vcat([1.],wait_times)
+#     wait_times_v = vcat([1.],wait_times)
 
-    n_accepted_mutants = length(fitness_traj_tuple)-1
-    n_generated_mutants = length(fitness_traj_tuple)-1
-    acceptance_ratio = n_accepted_mutants / n_generated_mutants
+#     n_accepted_mutants = length(fitness_traj_tuple)-1
+#     n_generated_mutants = length(fitness_traj_tuple)-1
+#     acceptance_ratio = n_accepted_mutants / n_generated_mutants
 
-    mutation_number = [i for i in 0:n_accepted_mutants]
-    stripe_indicator =  map(ft->ft[1] == 0,fitness_traj_tuple)
-    H0 = minimum(findall(stripe_indicator))
+#     mutation_number = [i for i in 0:n_accepted_mutants]
+#     stripe_indicator =  map(ft->ft[1] == 0,fitness_traj_tuple)
+#     H0 = minimum(findall(stripe_indicator))
 
-    fitness_traj_add = map(ft->add_fitness(ft),fitness_traj_tuple)
-    top_edits = compute_cumulative_edits(reduce(hcat,topologies))
-    weight_edits = nothing 
-    masked_hamming_distance_H0 = nothing
-    masked_hamming_distance = nothing
+#     fitness_traj_add = map(ft->add_fitness(ft),fitness_traj_tuple)
+#     top_edits = compute_cumulative_edits(reduce(hcat,topologies))
+#     weight_edits = nothing 
+#     masked_hamming_distance_H0 = nothing
+#     masked_hamming_distance = nothing
 
-    initial_fitness = fitness_traj_add[1]
-    final_fitness = fitness_traj_add[end]
+#     initial_fitness = fitness_traj_add[1]
+#     final_fitness = fitness_traj_add[end]
 
-    ######## MST
+#     ######## MST
 
-    minimal_stripe_subgraphs = nothing 
-    metagraph_vertices = nothing
-    metagraph_parents = nothing
+#     minimal_stripe_subgraphs = nothing 
+#     metagraph_vertices = nothing
+#     metagraph_parents = nothing
 
-    ######## generate mutation data
+#     ######## generate mutation data
 
-    weight_id = get_mutation_id(geno_traj_m)
-    weight_noise = get_mutant_dist(geno_traj_m)
+#     weight_id = get_mutation_id(geno_traj_m)
+#     weight_noise = get_mutant_dist(geno_traj_m)
 
-    fitness_delta = get_fitness_delta(fitness_traj_add)
+#     fitness_delta = get_fitness_delta(fitness_traj_add)
 
-    n_weight_changes = map(m->length(m),weight_id)
+#     n_weight_changes = map(m->length(m),weight_id)
 
-    weight_id_label = map(v->join(map(x->weight_names[x],v),"|"),weight_id)
+#     weight_id_label = map(v->join(map(x->weight_names[x],v),"|"),weight_id)
 
-    start_fitness = fitness_traj_add[1:end-1]
-    start_fitness_tuple = fitness_traj_tuple[1:end-1]
-    mutant_fitness = fitness_traj_add[2:end]
+#     start_fitness = fitness_traj_add[1:end-1]
+#     start_fitness_tuple = fitness_traj_tuple[1:end-1]
+#     mutant_fitness = fitness_traj_add[2:end]
 
-    start_network = [collect(v) for v in eachcol(geno_traj_m[:,1:end-1])]
+#     start_network = [collect(v) for v in eachcol(geno_traj_m[:,1:end-1])]
 
-    mutant_info = [(weight_id = weight_id[n],weight_id_label = weight_id_label[n],mut_type = mut_types[n], mut_size = weight_noise[n],start_fitness = start_fitness[n],start_fitness_tuple = start_fitness_tuple[n],mutant_fitness = mutant_fitness[n],fitness_delta = fitness_delta[n],start_network = start_network[n]) for n in 1:length(weight_id)]
+#     mutant_info = [(weight_id = weight_id[n],weight_id_label = weight_id_label[n],mut_type = mut_types[n], mut_size = weight_noise[n],start_fitness = start_fitness[n],start_fitness_tuple = start_fitness_tuple[n],mutant_fitness = mutant_fitness[n],fitness_delta = fitness_delta[n],start_network = start_network[n]) for n in 1:length(weight_id)]
 
-    ####### predictions
+#     ####### predictions
 
-    parent_inclusion_indicator = nothing
+#     parent_inclusion_indicator = nothing
 
-    tt_label_probabilities = nothing
-    tt_label_predictions = nothing
-    tt_label_entropies = nothing
-    tt_prediction_error = nothing
+#     tt_label_probabilities = nothing
+#     tt_label_predictions = nothing
+#     tt_label_entropies = nothing
+#     tt_prediction_error = nothing
 
-    gt_label_probabilities = nothing
-    gt_label_predictions = nothing
-    gt_label_entropies = nothing
-    gt_prediction_error = nothing
+#     gt_label_probabilities = nothing
+#     gt_label_predictions = nothing
+#     gt_label_entropies = nothing
+#     gt_prediction_error = nothing
 
-    mss_probabilities = nothing
-    mss_predictions = nothing
-    mss_entropies = nothing
-    mss_prediction_error = nothing
+#     mss_probabilities = nothing
+#     mss_predictions = nothing
+#     mss_entropies = nothing
+#     mss_prediction_error = nothing
 
-    train_test_indicator = nothing
-    train_test_indicator_mss = nothing
-    embeddings = nothing
-    other = nothing
+#     train_test_indicator = nothing
+#     train_test_indicator_mss = nothing
+#     embeddings = nothing
+#     other = nothing
 
-    ####### instantiate 
+#     ####### instantiate 
 
-    Trajectory(sim_id,geno_traj,topologies,n_accepted_mutants,acceptance_ratio,mutation_number,stripe_indicator,H0,wait_times_v,fitness_traj_add,fitness_traj_tuple,top_edits,weight_edits,masked_hamming_distance_H0,masked_hamming_distance,initial_fitness,final_fitness,mutant_info,metagraph_vertices,metagraph_parents,minimal_stripe_subgraphs,parent_inclusion_indicator,
-                                                                                                            tt_label_probabilities,tt_label_predictions,tt_label_entropies,tt_prediction_error,gt_label_probabilities,gt_label_predictions,gt_label_entropies,gt_prediction_error,
-                                                                                                            mss_probabilities,mss_predictions,mss_entropies,mss_prediction_error,train_test_indicator,train_test_indicator_mss,embeddings,other)
-end
+#     Trajectory(sim_id,geno_traj,topologies,n_accepted_mutants,acceptance_ratio,mutation_number,stripe_indicator,H0,wait_times_v,fitness_traj_add,fitness_traj_tuple,top_edits,weight_edits,masked_hamming_distance_H0,masked_hamming_distance,initial_fitness,final_fitness,mutant_info,metagraph_vertices,metagraph_parents,minimal_stripe_subgraphs,parent_inclusion_indicator,
+#                                                                                                             tt_label_probabilities,tt_label_predictions,tt_label_entropies,tt_prediction_error,gt_label_probabilities,gt_label_predictions,gt_label_entropies,gt_prediction_error,
+#                                                                                                             mss_probabilities,mss_predictions,mss_entropies,mss_prediction_error,train_test_indicator,train_test_indicator_mss,embeddings,other)
+# end
 
 function Trajectory(sim_id::Int64,geno_traj_m::Matrix{Float64},fitness_traj_tuple::Vector{Tuple{Float64, Float64}},wait_times,mut_choices::Any,mut_types::Any,mut_sizes::Any,weight_names)
 
@@ -499,7 +499,7 @@ function assign_predictions!(tr::Trajectory,model,prediction_type,predict_label_
 
     if prediction_type == :tt
         tt = reduce(hcat,tr.topologies)
-        tt_dtrain = xgboost.DMatrix(tt[1:10,:] |> transpose |> collect, feature_types = c_types, feature_names = weight_names)
+        tt_dtrain = xgboost.DMatrix(tt[1:10,:] |> transpose |> collect, feature_names = weight_names)
         tr.tt_label_probabilities = model.predict(tt_dtrain)
         tr.tt_label_predictions = mapslices(p->predict_label_to_vertex[argmax(p)],tr.tt_label_probabilities,dims = 2)
         tr.tt_label_entropies = mapslices(p->entropy(p),tr.tt_label_probabilities,dims = 2);

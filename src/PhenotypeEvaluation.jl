@@ -144,3 +144,21 @@ function characterise_mutation(ph_profile_1,ph_profile_2,thresh_p)
     end
 end
 
+function get_first_boundary(tr)
+    lb = findall(x->x==[:clb],tr)
+    rb = findall(x->x==[:crb],tr)
+    bb = findall(x->x==[:cbb],tr)
+
+    v_list = []
+    for v in [lb,rb,bb]
+        if length(v) > 0
+            push!(v_list,minimum(v))
+        else
+            push!(v_list,Inf)
+        end
+    end
+
+    return argmin(v_list)
+end
+
+
