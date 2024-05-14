@@ -7,6 +7,7 @@
 #SBATCH --partition=ncpu
 #SBATCH --mail-user=harry.booth@crick.ac.uk
 #SBATCH --mail-type=ALL
+#SBATCH --mpi=none
 
 # Initialise Julia
 ml Julia/1.8.2-linux-x86_64
