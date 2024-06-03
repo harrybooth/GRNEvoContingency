@@ -194,7 +194,7 @@ function instability_lean(network_1,network_2,N_interp_points,grn_parameters,dev
 
     itp_ll = InterpolatedLandscapeLean(network_1,network_2,N_interp_points,grn_parameters,development,fitness_function);
 
-    return 0.5*(itp_ll.slice_fitnesses[1] + itp_ll.slice_fitnesses[end] + 2) - minimum(itp_ll.slice_fitnesses .+ 1)
+    return Int(all(itp_ll.slice_fitnesses .== 0))
 
 end
 
@@ -213,7 +213,7 @@ function InterpolatedLandscapeLean(start_network_v::Vector{Float64},end_network_
 
     origin = Individual(genotype,phenotype)
 
-    origin_fitness = fitness_function(origin.phenotype) 
+    origin_fitness = fitness_function(origin.phenotype)[1]
 
     ######
 
@@ -240,7 +240,7 @@ function InterpolatedLandscapeLean(start_network_v::Vector{Float64},end_network_
             mutant = Individual(remake(origin.genotype, p = (new_w,origin.genotype.p[2:end]...)),development)
 
             if mutant.phenotype.retcode == ReturnCode.Terminated
-                mutant_fitness = fitness_function(mutant.phenotype)
+                mutant_fitness = fitness_function(mutant.phenotype)[1]
             else
                 mutant_fitness = -1.
             end
