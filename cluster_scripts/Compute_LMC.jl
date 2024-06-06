@@ -58,7 +58,7 @@ for exp_name in all_experiments
 
     @everywhere include(srcdirx("ExperimentSetups/" * $exp_name * ".jl"))
 
-    end_networks = load(srcdirx("ExperimentSetups/DeNovoStripe/all_end_networks.jld2"))
+    end_networks = load(srcdirx("ExperimentSetups/DeNovoStripe/all_end_networks.jld2"))["data"]
 
     sendto(workers(), end_networks=end_networks)
 
