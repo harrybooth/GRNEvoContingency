@@ -52,7 +52,7 @@ end
 
 @everywhere all_experiments = ["DeNovoStripe/RE_Minimal_Inhibiting_DeNovo"]
 
-N_interp_points = 20
+@everywhere N_interp_points = 10
 
 for exp_name in all_experiments
 
