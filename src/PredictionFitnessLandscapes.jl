@@ -134,7 +134,7 @@ function plot_pairwise_fitness_landscape!(fig,test_indices,sample_points,founder
     start_network = founder.genotype.p[1]
     founder_fitness = fitness_function(founder.phenotype)
 
-    msf = 5.
+    msf = 7.
 
     all_min_prob = []
 

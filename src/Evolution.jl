@@ -258,7 +258,7 @@ function fixation_probability(Δf1,Δf2,β)
 end
 
 function fixation_probability_kim(Δf,β,N)
-    (1 - exp(-2*β*Δf)) / (1 - exp(-2*β*N*Δf))
+    Δf != 0 ? (1 - exp(-2*β*Δf)) / (1 - exp(-2*β*N*Δf)) : 1/N
 end
 
 function fixation_probability_kim(Δf1,Δf2,β,N)
@@ -818,3 +818,150 @@ function SSWM_MSelection(start_network::Matrix{Float64},grn_parameters::GRNParam
     return evo_trace
 end
 
+function Seq_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParameters,max_gen::Int64,N_population_size::Int64,p_change_state::Float64,mutate_function)
+
+    p = (start_network,grn_parameters.degradation)
+    
+    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+
+    development = DefaultGRNSolver()
+    
+    founder = Individual(grn,development)
+
+    population = [founder for _ in 1:N_population_size]
+
+    gen = 0
+    wait_time = 1
+
+    # evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
+
+    env_state = 1
+
+    fitness_1 = []
+    fitness_2 = []
+    fitness_3 = []
+    fitness_all = []
+
+    all_env_states = [env_state]
+
+    while gen < max_gen
+
+        if rand() < p_change_state
+            env_state = rand([1,2,3])
+        end
+
+        fitnesses = [env_state == 2 ? indi.phenotype.u[end][3,env_state] : 1/deg_rate_g - indi.phenotype.u[end][3,env_state] for indi in population]
+
+        mutant_prop = ceil.(fitnesses ./ sum(fitnesses))
+
+        population_new = []
+
+        for (n,indi) in enumerate(population)
+            n_mutants = 0
+            while n_mutants < mutant_prop[n]
+                mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(indi,mutate_function,development)
+                if m_valid && SciMLBase.successful_retcode(mutant.phenotype.retcode)
+                    push!(population_new,mutant)
+                    n_mutants += 1
+                end
+            end
+        end
+
+        population_new = vcat(population,population_new)
+        fitnesses_new = [env_state == 2 ? indi.phenotype.u[end][3,env_state] : 1/deg_rate_g - indi.phenotype.u[end][3,env_state] for indi in population_new]
+
+        population = population_new[sortperm(fitnesses_new,rev = true)][1:N_population_size]
+
+        av_f1 = mean([1/deg_rate_g - indi.phenotype.u[end][3,1] for indi in population])
+        av_f2 = mean([indi.phenotype.u[end][3,2] for indi in population])
+        av_f3 = mean([1/deg_rate_g - indi.phenotype.u[end][3,3] for indi in population])
+        av_all = mean([minimum([1/deg_rate_g - indi.phenotype.u[end][3,1],indi.phenotype.u[end][3,2],1/deg_rate_g - indi.phenotype.u[end][3,3]]) for indi in population])
+
+        push!(fitness_1,av_f1)
+        push!(fitness_2,av_f2)
+        push!(fitness_3,av_f3)
+        push!(fitness_all,av_all)
+
+        push!(all_env_states,env_state)
+
+        gen += 1
+    end
+    return population,fitness_1,fitness_2,fitness_3,fitness_all,all_env_states
+
+end
+
+function Seq_Evolution_NC(start_network::Matrix{Float64},grn_parameters::GRNParameters,max_gen::Int64,N_population_size::Int64,p_change_state::Float64,mutate_function)
+
+    p = (start_network,grn_parameters.degradation)
+    
+    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+
+    development = DefaultGRNSolver()
+    
+    founder = Individual(grn,development)
+
+    population = [founder for _ in 1:N_population_size]
+
+    gen = 0
+    wait_time = 1
+
+    # evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
+
+    env_state = 1
+
+    fitness_1 = []
+    fitness_2 = []
+    fitness_3 = []
+    fitness_all = []
+
+    all_env_states = [env_state]
+
+    t1 = findall(x->tissue[x] < 1/3,1:Nc)
+    t2 = findall(x->(tissue[x] >= 1/3) & (tissue[x] <= 2/3),1:Nc)
+    t3 = findall(x->tissue[x] > 2/3,1:Nc)
+
+    while gen < max_gen
+
+        if rand() < p_change_state
+            env_state = rand(1:Nc)
+        end
+
+        fitnesses = [(tissue[env_state] >= 1/3) & (tissue[env_state] <= 2/3) ? indi.phenotype.u[end][3,env_state] : 1/deg_rate_g - indi.phenotype.u[end][3,env_state] for indi in population]
+
+        mutant_prop = ceil.(fitnesses ./ sum(fitnesses))
+
+        population_new = []
+
+        for (n,indi) in enumerate(population)
+            n_mutants = 0
+            while n_mutants < mutant_prop[n]
+                mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(indi,mutate_function,development)
+                if m_valid && SciMLBase.successful_retcode(mutant.phenotype.retcode)
+                    push!(population_new,mutant)
+                    n_mutants += 1
+                end
+            end
+        end
+
+        population_new = vcat(population,population_new)
+        fitnesses_new =  [(tissue[env_state] >= 1/3) & (tissue[env_state] <= 2/3) ? indi.phenotype.u[end][3,env_state] : 1/deg_rate_g - indi.phenotype.u[end][3,env_state] for indi in population_new]
+
+        population = population_new[sortperm(fitnesses_new,rev = true)][1:N_population_size]
+
+        av_f1 = mean([minimum(1/deg_rate_g .- indi.phenotype.u[end][3,t1]) for indi in population])
+        av_f2 = mean([minimum(indi.phenotype.u[end][3,t2]) for indi in population])
+        av_f3 = mean([minimum(1/deg_rate_g .- indi.phenotype.u[end][3,t3]) for indi in population])
+        av_all = mean([minimum([minimum(1/deg_rate_g .- indi.phenotype.u[end][3,t1]),minimum(indi.phenotype.u[end][3,t2]) ,minimum(1/deg_rate_g .- indi.phenotype.u[end][3,t3]) ]) for indi in population])
+
+        push!(fitness_1,av_f1)
+        push!(fitness_2,av_f2)
+        push!(fitness_3,av_f3)
+        push!(fitness_all,av_all)
+
+        push!(all_env_states,env_state)
+
+        gen += 1
+    end
+    return population,fitness_1,fitness_2,fitness_3,fitness_all,all_env_states
+
+end

@@ -41,14 +41,26 @@ function plot_convergence_rate!(ax,conv_time,n_trials,max_gen)
 
     cum_conv = [sum(conv_time .< i)/n_trials for i in 1:max_gen];
 
-    CairoMakie.lines!(ax,cum_conv,color = :blue,linewidth = 4.)
+    CairoMakie.lines!(ax,cum_conv,color = :blue,linewidth = 2.)
 
-    ax.title = "A. Convergence Rate"
-
-    ax.xlabel = "Number of generations"
-    ax.ylabel = "% of trajectories converged"
+    ax.xlabel = L"\text{Number of generations}"
+    ax.ylabel = L"\text{% of trajectories converged}"
 
 end
+
+
+function plot_convergence_rate!(ax,conv_time,n_trials,max_gen,title)
+
+    cum_conv = [sum(conv_time .< i)/n_trials for i in 1:max_gen];
+
+    CairoMakie.lines!(ax,cum_conv,color = :blue,linewidth = 2.)
+
+    ax.xlabel = L"\text{Number of generations}"
+    ax.ylabel = L"\text{% of trajectories converged}"
+    ax.title = title
+
+end
+
 
 function draw_example_network!(fig,network,show_pheno,draw_config,node_colors,fs)
 
@@ -588,6 +600,141 @@ function plot_dynamical_summary_portrait!(fig,trajectories,embedding,top_n,minim
 
     colgap!(rmh0,colgap)
     rowgap!(rmh0, rowgap)
+
+    rowgap!(fig.layout, Relative(0.01))
+    colgap!(fig.layout, Relative(0.01))
+
+end
+
+function plot_dynamical_summary_portrait_reduced!(fig,trajectories,embedding,top_n,minimal_motif_count,sorted_uep,sorted_counts_uep,mst_conf_int,end_parents,vertex_top_map,example_mst,tr_choice,ds_config,exp_letter)
+
+    # trajectories_p_d = filter(tr->tr.inc_metagraph_vertices[end] ∈ sorted_uep[1:top_n],trajectories);
+
+    mo_umap = fig[:,:] = GridLayout()
+
+    top_n_dict = Dict(v_id=>pos for (pos,v_id) in enumerate(sorted_uep[1:top_n]))
+
+    #### Motif Distribution
+
+    color_sorted_counts_uep = [i <= top_n ? ds_config.color_scheme[i] : :grey for i in 1:length(sorted_counts_uep)]
+
+    # view_sorted_uep_id = sorted_counts_uep .> minimal_motif_count
+
+    view_sorted_uep_id = [i <= top_n for i in 1:length(sorted_counts_uep)]
+
+    # other = mean(sorted_counts_uep[.!view_sorted_uep_id])
+
+    other = sum(sorted_counts_uep[.!view_sorted_uep_id])
+
+    n_norm = sum(sorted_counts_uep)
+
+    sorted_uep_proportions = vcat(sorted_counts_uep[view_sorted_uep_id],[other]) ./ n_norm 
+
+    view_color_sorted_uep = vcat(color_sorted_counts_uep[view_sorted_uep_id],[:grey])
+
+    # conf_int_choices = mst_conf_int[view_sorted_uep_id]
+
+    # push!(conf_int_choices,(minimum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm,maximum(sorted_counts_uep[.!view_sorted_uep_id]) / n_norm))
+
+    conf_int_choices = copy(mst_conf_int)
+
+    ##############
+
+    # ax1 = Axis(mo_umap[1:2,1:top_n],title = L"\text{Top %$top_n }" * string(top_n) * " MST : " * string(sum(sorted_counts_uep[1:top_n])) * " trajectories", xlabel = L"\text{Dynamics: UMAP 1}", ylabel = L"\text{Dynamics: UMAP 2}")
+
+    count_top_n = round(sum(sorted_uep_proportions[1:top_n])*100, digits = 2)
+
+    for i in 1:top_n
+
+        ax_geno = Axis(mo_umap[3,i], backgroundcolor = (ds_config.color_scheme[i],ds_config.color_fade),aspect = DataAspect())
+
+        draw_grn!(ax_geno,vertex_top_map[sorted_uep[i]],ds_config.draw_config,ds_config.node_colors,ds_config.fontsize,false,false)
+    end
+
+    #######################
+
+    ax_mo = Axis(mo_umap[1:2,1:top_n],ylabel  = L"\text{Probabilty}", xlabel = L"M^{(i)}_{N_i}",title = L"\text{Top %$top_n  M^{(i)}_{N_i} : %$count_top_n % of trajectories}")
+
+    CairoMakie.barplot!(ax_mo,sorted_uep_proportions,color = view_color_sorted_uep)
+
+    CairoMakie.errorbars!(ax_mo,1:length(sorted_uep_proportions),sorted_uep_proportions,sorted_uep_proportions .- first.(conf_int_choices),last.(conf_int_choices) .- sorted_uep_proportions,color = :black,whiskerwidth = ds_config.fitness_markersize/2)
+
+    ax_mo.xticks = (1:length(sorted_uep_proportions),vcat(string.(1:length(sorted_uep_proportions[1:end-1])),["Other"]))
+
+    CairoMakie.hidedecorations!(ax_mo,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    ###################
+
+
+    all_prop  = []
+    all_dodge  = []
+    all_x  = []
+
+    for n in 1:top_n+1
+
+        if n == top_n+1
+            pop = filter(tr->!(tr.inc_metagraph_vertices[end] ∈  sorted_uep[1:top_n]),trajectories)
+        else
+            pop = filter(tr->tr.inc_metagraph_vertices[end] == sorted_uep[n],trajectories)
+        end
+
+        pop_equal = filter(tr->tr.minimal_stripe_subgraphs[tr.H0] == tr.minimal_stripe_subgraphs[end], pop)
+
+        pop_H0_incl_N = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[end],tr.minimal_stripe_subgraphs[tr.H0])) & !(tr.minimal_stripe_subgraphs[end] == tr.minimal_stripe_subgraphs[tr.H0]),pop)
+
+        pop_N_incl_H0 = filter(tr->Bool(test_inclusion(tr.minimal_stripe_subgraphs[tr.H0],tr.minimal_stripe_subgraphs[end])) & !(tr.minimal_stripe_subgraphs[end] == tr.minimal_stripe_subgraphs[tr.H0]),pop)
+
+        n_pop = length(pop)
+
+        proportions = [length(pop_equal),length(pop_H0_incl_N),length(pop_N_incl_H0),length(pop) - length(pop_equal) - length(pop_N_incl_H0) - length(pop_H0_incl_N)]
+
+        @assert sum(proportions) == n_pop
+
+        x = [1,2,3,4]
+
+        dodge = [n,n,n,n]
+
+        push!(all_prop,proportions ./ n_pop)
+        push!(all_dodge,dodge)
+        push!(all_x,x)
+
+    end
+
+    ax_rh0 = Axis(mo_umap[4,:],alignmode=Mixed(top=0), ylabel = L"\text{% of trajectories}")
+
+    x = reduce(vcat,all_x)
+    dodge = reduce(vcat,all_dodge)
+    proportions = reduce(vcat,all_prop)
+
+    CairoMakie.barplot!(ax_rh0,x,proportions,color = [n==top_n+1 ? :grey : ds_config.color_scheme[n] for n in dodge],dodge = dodge)
+
+    CairoMakie.hidedecorations!(ax_rh0,label = false,ticklabels = false,ticks = false,minorticks = false)
+
+    ax_rh0.xticks = (1:4,[L"M^{(i)}_{S_{0}} = M^{(i)}_{N_i}",L"M^{(i)}_{S_{0}} \subset M^{(i)}_{N_i}",L"M^{(i)}_{N_i} \subset M^{(i)}_{S_{0}}",L"\text{MST change}"])
+
+    CairoMakie.ylims!(ax_rh0,0.,1.)
+
+    ax_rh0.yticks = ([0.,0.5,1.],[L"\text{0}",L"\text{50}",L"\text{100}"])
+
+    for (label, layout) in zip([exp_letter], [mo_umap])
+        Label(layout[1, 1, TopLeft()], label,
+            fontsize = ds_config.caption_fontsize,
+            font = :bold,
+            padding = (0,ds_config.caption_padding, ds_config.caption_padding, 0),
+            halign = :right)
+    end
+
+    # Label(mo_umap[3, 1, TopLeft()], "B",
+    # fontsize = ds_config.caption_fontsize,
+    # font = :bold,
+    # padding = (0,ds_config.caption_padding, ds_config.caption_padding, 0),
+    # halign = :right)
+    
+    colgap = 5
+    rowgap = 10
+
+    colgap!(mo_umap,colgap)
+    rowgap!(mo_umap, rowgap)
 
     rowgap!(fig.layout, Relative(0.01))
     colgap!(fig.layout, Relative(0.01))
@@ -2213,10 +2360,10 @@ function create_epi_single_portrait_bar_v4!(fig,trajectories,mut_prob,all_pheno_
 
     # title = L"n=1 \text{|} 1<n<S_{0} \text{|}  n=S_{0}  \text{|} n=S_{0}"
 
-    wait_color = :black
+    wait_color = :cyan
 
     ax_prop = Axis(pheno_prop_subplot[1,1],yticklabelsize = 0.8*evo_config.fontsize,yaxisposition = :right, yticksize= 0.25*evo_config.fontsize,xticklabelrotation = pi/2,xlabelpadding = 0.,xgridvisible = false,ygridvisible = false)
-    ax_wait_2 = Axis(pheno_prop_subplot[1,1], yticklabelcolor = wait_color,yscale = log10,yticklabelsize = 0.8*evo_config.fontsize,yticksize= 0.25*evo_config.fontsize,xgridvisible = false,ygridvisible = false)
+    ax_wait_2 = Axis(pheno_prop_subplot[1,1], yticklabelcolor = :black,yscale = log10,yticklabelsize = 0.8*evo_config.fontsize,yticksize= 0.25*evo_config.fontsize,xgridvisible = false,ygridvisible = false)
 
     hidespines!(ax_wait_2 )
     hideydecorations!(ax_wait_2,label = false,ticklabels = false,ticks = false,minorticks = false)
@@ -2233,7 +2380,7 @@ function create_epi_single_portrait_bar_v4!(fig,trajectories,mut_prob,all_pheno_
     arrow_colors = shuffle([i for i in palette(:Dark2_8)])
 
     # arrow_colors = vcat([:black,:grey,RGBf(0.98, 0.98, 0.98)],arrow_colors)
-    arrow_colors = vcat([wait_color,palette(:seaborn_dark)[end]],arrow_colors)
+    arrow_colors = vcat([:black,palette(:seaborn_dark)[end]],arrow_colors)
 
     ph_id = findall(tr->(tr.H0-2 > 0),trajectories)
 
@@ -3550,7 +3697,7 @@ function create_fm_result_fig!(fig_result_sub,fig_fl_sub,plot_save_dir,founder,a
     end
 
     prob_v = reduce(vcat,fitness_prob_all)
-    min_prob = minimum(prob_v[prob_v .> log10(2e-20)])
+    min_prob = minimum(prob_v[prob_v .> log10(2e-10)])
 
     for n in 1:top_n+1
 
@@ -3657,7 +3804,7 @@ function create_fm_result_fig!(fig_result_sub,fig_fl_sub,plot_save_dir,founder,a
 
         fit_v = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
 
-        hm = CairoMakie.heatmap!(axm_fit,sample_points,sample_points,reshape(fit_v,(N_sample,N_sample)),colormap = cgrad(:viridis), colorrange = (min_prob,0.), lowclip = :black)
+        hm = CairoMakie.heatmap!(axm_fit,sample_points,sample_points,reshape(fit_v,(N_sample,N_sample)),colormap = cgrad(:thermal), colorrange = (min_prob,0.), lowclip = :black)
 
         if n == 1 
             cb = Colorbar(fig_fl_sub[1:2, top_n+2], hm;
@@ -3673,12 +3820,23 @@ function create_fm_result_fig!(fig_result_sub,fig_fl_sub,plot_save_dir,founder,a
 
         fit_v = log10.([fixation_probability_kim(f[1] - founder_fitness[1],f[2] - founder_fitness[2],β[1],β[2]) for f in fitness_grid[n1,n2,:]])
 
-        pred_vc = [p >  min_prob ? (predict_colors[c[1]],c[2]) : :black for (c,p) in zip(zip(pred_grid[n1,n2,:],prob_grid[n1,n2,:]),fit_v)]
+        # pred_vc = [p >  min_prob ? (predict_colors[c[1]],c[2]) : :black for (c,p) in zip(zip(pred_grid[n1,n2,:],prob_grid[n1,n2,:]),fit_v)]
 
-        CairoMakie.scatter!(axm_pred,sample_grid_v, color = pred_vc, markersize = 2.)
+        # CairoMakie.scatter!(axm_pred,sample_grid_v, color = pred_vc, markersize = 2.)
 
-        CairoMakie.scatter!(axm_pred,reshape([sn1,sn2],(2,1)), color = :pink, markersize = 3.)
-        CairoMakie.scatter!(axm_pred,reshape([rn1,rn2],(2,1)), color = :cyan, markersize = 3.)
+        pred_vc = [p >  min_prob ? c[1] : 6 for (c,p) in zip(zip(pred_grid[n1,n2,:],prob_grid[n1,n2,:]),fit_v)];
+
+        if n!=5
+            CairoMakie.heatmap!(axm_pred,sample_points,sample_points,reshape(pred_vc,(N_sample,N_sample)),colormap = vcat(predict_colors,[:black]))
+        else
+            CairoMakie.heatmap!(axm_pred,sample_points,sample_points,reshape(pred_vc,(N_sample,N_sample)),colormap = [:grey,:black])
+        end
+
+        CairoMakie.scatter!(axm_pred,reshape([sn1,sn2],(2,1)), color = :cyan, markersize = 3.)
+        CairoMakie.scatter!(axm_pred,reshape([rn1,rn2],(2,1)), color = :pink, markersize = 3.)
+
+        # CairoMakie.scatter!(axm_pred,reshape([sn1,sn2],(2,1)), color = :black, markersize = 3.)
+        # CairoMakie.scatter!(axm_pred,reshape([rn1,rn2],(2,1)), color = :black, markersize = 3.)
 
         vlines!(axm_pred,0., linestyle = :dash, color = :black, linewidth = 1.)
         hlines!(axm_pred,0., linestyle = :dash, color = :black, linewidth = 1.)
@@ -3688,11 +3846,18 @@ function create_fm_result_fig!(fig_result_sub,fig_fl_sub,plot_save_dir,founder,a
 
         arrow_dir_c = [Vec2f(rnc1-sn1,rnc2-sn2)]
 
-        CairoMakie.arrows!(axm_pred,arrow_start,arrow_dir,arrowsize = 5., color = :cyan)
-        CairoMakie.arrows!(axm_fit,arrow_start,arrow_dir,arrowsize = 5., color = :cyan)
+        CairoMakie.arrows!(axm_pred,arrow_start,arrow_dir,arrowsize = 5., color = :pink)
+        CairoMakie.arrows!(axm_fit,arrow_start,arrow_dir,arrowsize = 5., color = :pink)
 
-        CairoMakie.arrows!(axm_pred,arrow_start,arrow_dir_c,arrowsize = 5., color = :pink)
-        CairoMakie.arrows!(axm_fit,arrow_start,arrow_dir_c,arrowsize = 5., color = :pink)
+        CairoMakie.arrows!(axm_pred,arrow_start,arrow_dir_c,arrowsize = 5., color = :cyan)
+        CairoMakie.arrows!(axm_fit,arrow_start,arrow_dir_c,arrowsize = 5., color = :cyan)
+
+
+        # CairoMakie.arrows!(axm_pred,arrow_start,arrow_dir,arrowsize = 5., color = :black)
+        # CairoMakie.arrows!(axm_fit,arrow_start,arrow_dir,arrowsize = 5., color = :black)
+
+        # CairoMakie.arrows!(axm_pred,arrow_start,arrow_dir_c,arrowsize = 5., color = :black)
+        # CairoMakie.arrows!(axm_fit,arrow_start,arrow_dir_c,arrowsize = 5., color = :black)
 
         xmin = ceil(Int,sn1 - quantile(mutation_op.additive_noise_distribution,mut_q))
         xmax = ceil(Int,sn1 + quantile(mutation_op.additive_noise_distribution,mut_q))
@@ -4053,7 +4218,7 @@ function create_full_prediction_summary!(fig,trajectories_p,sorted_uep,top_n,con
 
 end
 
-function create_full_prediction_summary_epi!(fig,trajectories_p,sorted_uep,top_n,contingency_data,contin_choices,predict_label_to_vertex,vertex_to_predict_label,mut_q,fitness_eps,sample_points,predict_colors,fs_default,evo_config,ds_config,fontsize)
+function create_full_prediction_summary_epi!(fig,trajectories_p,sorted_uep,top_n,contingency_data,contin_choices,predict_label_to_vertex,vertex_to_predict_label,mut_q,fitness_eps,sample_points,predict_colors,fs_default,evo_config,ds_config,fontsize,streak,label_streak)
 
     fig_ex = fig[1:4,1:top_n+2] = GridLayout()
 
@@ -4065,11 +4230,15 @@ function create_full_prediction_summary_epi!(fig,trajectories_p,sorted_uep,top_n
 
     create_example_traj_fig!(fig_ex,trajectories_p,sorted_uep,example_mst,tr_choice,ds_config,predict_colors,top_n)
 
+    print("1")
+
     ############# Pred accuracy
 
     fig_n  = fig[5,1:top_n+2] = GridLayout()
 
     create_pred_accuracy_fig!(fig_n,streak,label_streak,predict_colors,top_n)
+
+    print("1")
 
     ############ Contin Double
 
@@ -4094,6 +4263,8 @@ function create_full_prediction_summary_epi!(fig,trajectories_p,sorted_uep,top_n
 
     Legend(fig_l[1, 1],[vbars[end],vpreds[1]],[L"\text{Realised/Null distributions}", L"\text{Predicted outcome probabilities}"],framevisible=false, nbanks = 2)
 
+    print("1")
+
     # ############ works
 
     fig_hist = fig[12,1:3] = GridLayout()
@@ -4108,12 +4279,9 @@ function create_full_prediction_summary_epi!(fig,trajectories_p,sorted_uep,top_n
     se_2mut_id = findall(x->(x[1] == :se) & (length(x[2]) == 4), all_epi);
     shap_m_se = abs.(reduce(vcat,map(x->sum(abs.(x),dims = 1),all_shap[se_2mut_id]))) |> transpose |> collect
 
-    epi_m_se = reduce(hcat,map(x->x[2][2:3],all_epi[se_2mut_id])) 
-
-    epi_c_se = epi_m_se .> 1 - fitness_eps
-
-    deleterious = [epi_m_se[.!epi_c_se[:,n],n][1] < 0 for n in 1:size(epi_m_se,2)];
-
+    epi_c_rse = reduce(hcat,map(x->accept_ratio(x[2],fitness_eps),all_epi[rse_2mut_id])) 
+    epi_c_se = reduce(hcat,map(x->accept_ratio(x[2],fitness_eps),all_epi[se_2mut_id])) 
+    
     epi_ratio_se = reduce(vcat,[shap_m_se[epi_c_se[:,n],n] ./ shap_m_se[.!epi_c_se[:,n],n] for n in 1:size(epi_c_se,2)]);
 
     ax_box = Axis(fig_hist[1,1],ygridvisible = false,xgridvisible = false, xlabel = L"\text{Shapley ratio, } \Phi_{\text{carrier}} / \Phi_{\text{hitchhike}}", ylabel = L"\text{Freq.}")
@@ -4123,6 +4291,8 @@ function create_full_prediction_summary_epi!(fig,trajectories_p,sorted_uep,top_n
     CairoMakie.vlines!(ax_box,1., color = :red, linestyle = :dash)
 
     # create_ent_hist_fig!(fig_hist,fig_pie,trajectories_p,vertex_to_predict_label,top_n,predict_colors,evo_config)
+
+    print("1")
 
     ############
 
