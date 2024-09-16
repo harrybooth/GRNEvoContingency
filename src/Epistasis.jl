@@ -319,3 +319,14 @@ function get_mut_weight_full(tr,range_l,range_u,weight_loop_dict)
 
 end
 
+function get_mut_weight_full_new(tr,range_l,range_u,weight_loop_dict)
+
+    d = [[(weight_loop_dict[x],t[1]) for (x,t) in zip(mi[:weight_id],mi[:mut_type])] for mi in tr.mutant_info[range_l:range_u]]
+
+    if length(d) >= 1
+        return d
+    else
+        return []
+    end
+
+end

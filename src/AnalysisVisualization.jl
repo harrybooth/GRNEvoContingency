@@ -41,7 +41,9 @@ function plot_convergence_rate!(ax,conv_time,n_trials,max_gen)
 
     cum_conv = [sum(conv_time .< i)/n_trials for i in 1:max_gen];
 
-    CairoMakie.lines!(ax,cum_conv,color = :blue,linewidth = 2.)
+    # CairoMakie.lines!(ax,cum_conv,color = :blue,linewidth = 2.,label = L"P_s = 10000 \text{, M-WC}")
+
+    CairoMakie.lines!(ax,cum_conv,color = :orange,linewidth = 2.,label = L"P_s = 100 \text{, S-WC}")
 
     ax.xlabel = L"\text{Number of generations}"
     ax.ylabel = L"\text{% of trajectories converged}"
@@ -2854,6 +2856,82 @@ function identify_loop_mutations!(fig,trajectories,evo_config,weight_loop_dict)
 
 
 end
+
+function identify_loop_mutations_new!(fig,trajectories,evo_config,weight_loop_dict)
+
+    wait_subplot = fig[1,1] = GridLayout()
+
+    ax_wait = Axis(wait_subplot[1,1],yticklabelsize = 0.8*evo_config.fontsize,yaxisposition = :right, xticklabelsvisible = false, yticksize= 0.25*evo_config.fontsize,xgridvisible = false,ygridvisible = false)
+
+    wait_color = :black
+
+    ph_id = findall(tr->(tr.H0-2 > 0),trajectories)
+
+    CairoMakie.ylims!(ax_wait,0,1.2)
+
+
+    ###############################
+
+    mut_type_prop_all = []
+    mut_type_time_labels = []
+    mut_type_labels = []
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full_new(tr,1,1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = [count(x->m ∈ x,mut_type_prop) for m in [(:morph_loop,1),(:ac_loop,:new),(:abc_loop,1)]] ./ length(ph_id)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3])
+    push!(mut_type_time_labels,[1,1,1])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full_new(tr,2,tr.H0-2,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = [count(x->m ∈ x,mut_type_prop) for m in [(:morph_loop,1),(:ac_loop,:new),(:abc_loop,1)]] ./ length(ph_id)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3])
+    push!(mut_type_time_labels,[2,2,2])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full_new(tr,tr.H0-1,tr.H0-1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = [count(x->m ∈ x,mut_type_prop) for m in [(:morph_loop,1),(:ac_loop,:new),(:abc_loop,1)]] ./ length(ph_id)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3])
+    push!(mut_type_time_labels,[3,3,3])
+
+    mut_type_prop = reduce(vcat,[get_mut_weight_full_new(tr,tr.H0,length(tr.topologies)-1,weight_loop_dict) for tr in trajectories[ph_id]])
+
+    mut_type_prop_av = [count(x->m ∈ x,mut_type_prop) for m in [(:morph_loop,1),(:ac_loop,1),(:abc_loop,1)]] ./ length(ph_id)
+
+    push!(mut_type_prop_all,mut_type_prop_av)
+    push!(mut_type_labels, [1,2,3])
+    push!(mut_type_time_labels,[4,4,4])
+
+    mut_type_prop_all = reduce(vcat,mut_type_prop_all)
+
+    mut_type_time_labels = reduce(vcat,mut_type_time_labels)
+    mut_type_labels = reduce(vcat,mut_type_labels); 
+
+    CairoMakie.barplot!(ax_wait,mut_type_time_labels,mut_type_prop_all,dodge = mut_type_labels,color = mut_type_labels,bar_labels = :y,colormap = [:red, :green, :blue],label_formatter = x-> "$(round(x*100,digits = 1))%",label_size = 10.)
+
+    # CairoMakie.hidexdecorations!(ax_wait,ticklabels = false)
+    CairoMakie.hideydecorations!(ax_wait,label = false)
+
+    ax_wait.xticks = (1:4,[L"n=1",L"1 < n < S_0",L"n=S_{0}", L"n>S_{0}"])
+    ###############################\
+
+    labels_mut =  [L"\text{m/a pathway}",L"\text{a/c pathway}",L"\text{a/b/c pathway}"]
+
+    symbol_mut = [PolyElement(color=c) for c in [:red, :green, :blue]]
+
+    legend_row_gap = 3
+
+    Legend(wait_subplot[1, :, Bottom()], symbol_mut, labels_mut, framevisible=false,nbanks = 2,orientation = :horizontal,patchsize = (10, 10), colgap = 4, rowgap = 4, padding=(0.,0.,0f0, evo_config.fontsize+legend_row_gap))
+
+
+end
+
 
 function count_label(vector_label,label)
     c = sum(vector_label .== label)
