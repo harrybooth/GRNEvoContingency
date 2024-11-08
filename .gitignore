@@ -11,6 +11,7 @@ notebooks/
 notebooks_save/
 old/
 research/
+src_analysis/
 summary_docs/
 
 **/data/sims
