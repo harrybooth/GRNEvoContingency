@@ -1,50 +1,3 @@
-
-function characterise_epistasis(combi_result,fitness_eps) # main
-
-    if length(combi_result) > 2
-        ratio_new_mutant = combi_result ./ combi_result[end]
-
-        accept_new_mutant = ratio_new_mutant[2:end-1] .>= 1 - fitness_eps
-
-        if isnan(combi_result[end])
-            rtype = :neutral
-        elseif !any(accept_new_mutant)
-            rtype = :rse
-        elseif all(accept_new_mutant)
-            rtype = :ne
-        else
-            rtype = :se
-        end
-
-        return rtype,combi_result
-    else
-        return :sm, combi_result
-    end
-end
-
-# function characterise_epistasis_deltas(combi_result,fitness_eps) # main
-
-#     if length(combi_result) > 2
-#         ratio_new_mutant = combi_result ./ (combi_result[end] - fitness_eps)
-
-#         accept_new_mutant = ratio_new_mutant[2:end-1] .>= 1
-
-#         if abs(combi_result[end]) <= fitness_eps
-#             rtype = :neutral
-#         elseif !any(accept_new_mutant)
-#             rtype = :rse
-#         elseif all(accept_new_mutant)
-#             rtype = :ne
-#         else
-#             rtype = :se
-#         end
-
-#         return rtype,combi_result
-#     else
-#         return :sm, combi_result
-#     end
-# end
-
 function characterise_epistasis_deltas(combi_result,fitness_eps) # main
 
     if length(combi_result) > 2
@@ -63,49 +16,6 @@ function characterise_epistasis_deltas(combi_result,fitness_eps) # main
         return rtype,combi_result
     else
         return :sm, combi_result
-    end
-end
-
-
-function evaluate_epistasis_class_full(mut_tuple,grn_parameters,development,fitness_function,mut_op::MutationOperatorDual) # main
-
-    n_mut = length(mut_tuple[:weight_id])
-
-    if n_mut > 1
-
-        mut_combi = [[bit == '1' ? true : false for bit in string(i;base = 2,pad = n_mut)] for i in 1:2^n_mut-1]
-
-        prob_mutant = []
-
-        for mut_id in mut_combi[1:end]
-
-            new_network = noise_specified(mut_tuple[:start_network],mut_tuple[:weight_id][mut_id],mut_tuple[:mut_size][mut_id],mut_tuple[:mut_type][mut_id],mut_op)
-
-            mutant = Individual(reshape(new_network,(3,4)),grn_parameters,development)
-
-            mutant_fitness = fitness_function(mutant.phenotype)
-
-            # fix_p = fixation_probability(mutant_fitness[1] - mut_tuple[:start_fitness_tuple][1],mutant_fitness[2] - mut_tuple[:start_fitness_tuple][2],β)
-
-            Δf1 = mutant_fitness[1] - mut_tuple[:start_fitness_tuple][1]
-            Δf2 = mutant_fitness[2] - mut_tuple[:start_fitness_tuple][2]
-
-            Δf = Δf1 != 0. ? Δf1 : Δf2
-
-            # fix_p = fixation_probability_kim(mutant_fitness[1] - mut_tuple[:start_fitness_tuple][1],mutant_fitness[2] - mut_tuple[:start_fitness_tuple][2],β[1],β[2])
-
-            # push!(accept_new_mutant,fix_p > 0)
-
-            push!(prob_mutant,Δf)
-
-        end
-
-        ratio_new_mutant = prob_mutant ./ prob_mutant[end]
-
-        return vcat([0.],ratio_new_mutant)
-
-    else
-        return [0.,1.]
     end
 end
 
@@ -186,7 +96,6 @@ function evaluate_epistasis_types_full_deltas!(tr,grn_parameters,development,fit
     all_class_epi = map(mi->evaluate_epistasis_class_full_deltas(mi,grn_parameters,development,fitness_function,mut_op),tr.mutant_info);
     tr.epistasis = all_class_epi
 end
-
 
 function get_mut_size_by_type(tr,type,range_l,range_u)
 

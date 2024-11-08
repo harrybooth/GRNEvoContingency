@@ -86,7 +86,6 @@ function get_max_prob_point(n1,n2,pred_grid,prob_grid,fitness_grid,pred_choice,f
 
 end
 
-
 function create_pairwise_fitness_landscape(founder,development,model_gtl,test_indices,N_sample,sample_points)
 
     sample_grid = [[w1,w2] for w1 in sample_points, w2 in sample_points]

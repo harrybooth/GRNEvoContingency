@@ -48,7 +48,18 @@ network_topology_dict = Dict("feed_forward"=>w_feed_forward,"mutual_inh"=>w_mutu
 
 max_w = 10.
 
-# fitness_function = s -> fitness_evaluation(s,x->malt_fitness(x,n_stripe),output_gene);
+n_stripe = 1
+
+min_width = 5
+
+lower_bound = 5.
+
+upper_bound = 10.
+
+max_conc = 20.
+
+fitness_function = s -> fitness_evaluation(s,x->(stripe_indicator(x,min_width,lower_bound,upper_bound),malt_fitness_absolute(x,n_stripe,max_conc)),output_gene);
+
 
 tolerance = 0.9
 
