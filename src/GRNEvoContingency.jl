@@ -51,7 +51,7 @@ function Individual(genotype::DEProblem,development::DESystemSolver)
     Individual(genotype,phenotype)
 end
 
-function Individual(start_network::Matrix{Float16},grn_parameters::GRNParameters,development::DESystemSolver)
+function Individual(start_network::Matrix{Float64},grn_parameters::GRNParameters,development::DESystemSolver)
 
     p = (start_network,grn_parameters.degradation)
 
