@@ -365,6 +365,42 @@ end
 
 # Minimal Networks
 
+function mask(network,topology)
+
+    new_network = copy(network)
+
+    z0 = findall(x->x == 0,topology)
+
+    new_network[z0] .= 0.
+
+    return new_network
+
+end
+
+function mask_bool(network,mask)
+
+    new_network = copy(network)
+
+    z0 = findall(x->!x,mask)
+
+    new_network[z0] .= 0.
+
+    return new_network
+
+end
+
+function mask_by_id(network,keep_id)
+
+    new_network = copy(network)
+
+    z0 = findall(x->!(x ∈ keep_id),1:length(network))
+
+    new_network[z0] .= 0.
+
+    return new_network
+
+end
+
 function find_minimal_network(network,grn_parameters,development,fitness_function)
 
     size_S = length(network)
