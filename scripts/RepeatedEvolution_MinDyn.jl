@@ -13,7 +13,7 @@ using ClusterManagers
 
 projectdir_static = dirname(Base.active_project())
 
-cluster_calc = true
+cluster_calc = false
 
 if !cluster_calc
     @quickactivate "GRNEvoContingency"
@@ -46,7 +46,7 @@ end
 
 @everywhere include(srcdirx("GRNEvoContingency.jl"))
 
-all_experiments = ["DeNovoStripe/RE_Minimal_Inhibiting_DeNovo"]
+all_experiments = ["DeNovoStripe/RE_Minimal_Inhibiting_DeNovo_test"]
 
 for exp_name in all_experiments
 
@@ -72,65 +72,76 @@ for exp_name in all_experiments
 
     conv = map(x->x.converged,sim)
 
-    fitness_traj_conv = map(et->et.fitness_trajectory,sim[conv]);
+    print(sum(conv))
 
-    end_networks = map(et->et.traversed_networks[end],sim[conv]);
-    end_networks_t2s = map(et->et.traversed_t2s[end],sim[conv]);
+    if sum(conv) != 0
 
-    # stripe_achieved = map(x->minimum(findall(x->x[1] == 0.,unique(x))),fitness_traj_conv);
+        fitness_traj_conv = map(et->et.fitness_trajectory,sim[conv]);
 
-    stripe_achieved = map(ft->minimum(findall(x->x[1] == 0.,ft)),fitness_traj_conv);
+        end_networks = map(et->et.traversed_networks[end],sim[conv]);
+        end_networks_t2s = map(et->et.traversed_t2s[end],sim[conv]);
 
-    first_stripe_networks = [et.traversed_networks[id] for (et,id) in zip(sim[conv],stripe_achieved)];
+        # stripe_achieved = map(x->minimum(findall(x->x[1] == 0.,unique(x))),fitness_traj_conv);
 
-    ########################################
+        stripe_achieved = map(ft->minimum(findall(x->x[1] == 0.,ft)),fitness_traj_conv);
 
-    sendto(workers(), end_networks=end_networks)
-    sendto(workers(), end_networks_t2s=end_networks_t2s)
+        first_stripe_networks = [et.traversed_networks[id] for (et,id) in zip(sim[conv],stripe_achieved)];
 
-    n_networks = length(end_networks)
+        ########################################
 
-    end_networks_dyn_cell = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(end_networks,end_networks_t2s));
-    end_networks_dyn_av = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(end_networks,end_networks_t2s));
+        sendto(workers(), end_networks=end_networks)
+        sendto(workers(), end_networks_t2s=end_networks_t2s)
 
-    end_X_cell = reduce(hcat,end_networks_dyn_cell)
-    end_X_av = reduce(hcat,end_networks_dyn_av)
+        n_networks = length(end_networks)
 
-    # dmat_m_cell = pairwise(d_metric,end_X_cell,dims = 2)
-    # dmat_m_av = pairwise(d_metric,end_X_av,dims = 2)
+        end_networks_dyn_cell = pmap(nt->get_rel_dyn_vector(nt[1],nt[2],n_steps,save_id),zip(end_networks,end_networks_t2s));
+        end_networks_dyn_av = pmap(nt->get_av_dyn_vector(nt[1],nt[2],n_steps,n_segments),zip(end_networks,end_networks_t2s));
 
-    ########################################
+        print(length(end_networks_dyn_cell))
 
-    sendto(workers(), first_stripe_networks=first_stripe_networks)
+        end_X_cell = reduce(hcat,end_networks_dyn_cell)
+        end_X_av = reduce(hcat,end_networks_dyn_av)
 
-    min_end_networks = pmap(n->find_minimal_network(vec(n)[1:10],grn_parameters,DefaultGRNSolver(),fitness_function),end_networks);
-    min_first_stripe_networks = pmap(n->find_minimal_network(vec(n)[1:10],grn_parameters,DefaultGRNSolver(),fitness_function),first_stripe_networks);
-
-    ########################################
-
-    fulld = Dict{String, Any}()
-
-    fulld["fitness_traj"] = map(et->et.fitness_trajectory,sim)
-    fulld["wait_times"] = map(et->et.wait_times,sim)
-    fulld["t2s_traj"] = map(et->et.traversed_t2s,sim)
-    fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
-    fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)
-    fulld["mut_choices"] = map(et->et.mut_choices,sim)
-    fulld["mut_type"] = map(et->et.mut_type,sim)
-    fulld["mut_sizes"] = map(et->et.mut_sizes,sim)
-
-    fulld["dmat_X_cell"] = end_X_cell
-    fulld["dmat_X_av"] = end_X_av
-
-    fulld["min_end_networks"] = min_end_networks
-    fulld["min_fs_networks"] = min_first_stripe_networks
+        # dmat_m_cell = pairwise(d_metric,end_X_cell,dims = 2)
+        # dmat_m_av = pairwise(d_metric,end_X_av,dims = 2)
 
 
-    fulld["fs_id"] = stripe_achieved
-    fulld["converged"]  = conv
- 
-    @tag!(fulld)
+        ########################################
 
-    safesave(datadirx("exp_raw",exp_name * "_RawData.jld2"), fulld)
+        sendto(workers(), first_stripe_networks=first_stripe_networks)
+
+        min_end_networks = pmap(n->find_minimal_network(vec(n)[1:10],grn_parameters,DefaultGRNSolver(),fitness_function),end_networks);
+        min_first_stripe_networks = pmap(n->find_minimal_network(vec(n)[1:10],grn_parameters,DefaultGRNSolver(),fitness_function),first_stripe_networks);
+
+        ########################################
+
+        fulld = Dict{String, Any}()
+
+        fulld["fitness_traj"] = map(et->et.fitness_trajectory,sim)
+        fulld["wait_times"] = map(et->et.wait_times,sim)
+        fulld["t2s_traj"] = map(et->et.traversed_t2s,sim)
+        fulld["geno_traj"] = map(et->reduce(hcat,map(x->vec(x),et.traversed_networks)),sim)
+        fulld["retcodes"] = map(et->map(x-> x == ReturnCode.Terminated ? 1 : 0,et.retcodes),sim)
+        fulld["mut_choices"] = map(et->et.mut_choices,sim)
+        fulld["mut_type"] = map(et->et.mut_type,sim)
+        fulld["mut_sizes"] = map(et->et.mut_sizes,sim)
+
+        fulld["dmat_X_cell"] = end_X_cell
+        fulld["dmat_X_av"] = end_X_av
+
+        fulld["min_end_networks"] = min_end_networks
+        fulld["min_fs_networks"] = min_first_stripe_networks
+
+
+        fulld["fs_id"] = stripe_achieved
+        fulld["converged"]  = conv
+    
+        @tag!(fulld)
+
+        safesave(datadirx("exp_raw",exp_name * "_RawData.jld2"), fulld)
+
+    else
+        print("No converged trajectories. Aborting further analysis.")
+    end
 
 end

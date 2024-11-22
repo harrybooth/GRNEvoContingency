@@ -17,6 +17,8 @@ summary_docs/
 
 **/data/sims
 **/data/exp_pro
+**/data/exp_raw
+**/data/exp_summaries
 **/data/backup
 **/old/old_data
 
