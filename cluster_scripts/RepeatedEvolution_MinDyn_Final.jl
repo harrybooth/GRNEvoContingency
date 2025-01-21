@@ -42,7 +42,7 @@ end
 
 @everywhere include(srcdirx("GRNEvoContingency.jl"))
 
-all_experiments = ["DeNovoStripe/RE_Minimal_Inhibiting_DeNovo_test"]
+all_experiments = ["DeNovoStripe/AdditionalAnalysis/RE_MinimalInhibiting_MultiMorphogen","DeNovoStripe/AdditionalAnalysis/RE_MinimalInhibiting_IC_1","DeNovoStripe/AdditionalAnalysis/RE_MinimalInhibiting_IC_2","DeNovoStripe/AdditionalAnalysis/RE_MinimalInhibiting_IC_3"]
 
 for exp_name in all_experiments
 
