@@ -15,9 +15,9 @@ projectdir_static = dirname(Base.active_project())
 
 cluster_calc = false
 
-if !cluster_calc
-    @quickactivate "GRNEvoContingency"
-end
+# if !cluster_calc
+#     @quickactivate "GRNEvoContingency"
+# end
 
 if cluster_calc
     n_tasks = parse(Int, ENV["SLURM_NTASKS"])
