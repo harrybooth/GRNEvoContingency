@@ -8,7 +8,7 @@
 #SBATCH --mail-user=harry.booth@crick.ac.uk
 #SBATCH --mail-type=ALL
 #SBATCH --export=SLURM_MPI_TYPE=none
-#SBATCH --nodes = 8
+#SBATCH --nodes=8
 
 # Initialise Julia
 ml Julia/1.8.2-linux-x86_64
