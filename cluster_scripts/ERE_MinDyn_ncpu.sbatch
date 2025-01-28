@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=RepeatedEvolution_NN
-#SBATCH --ntasks=10
-#SBATCH --cpus-per-task=100
+#SBATCH --ntasks=200
+#SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
-#SBATCH --time=12:00:00
+#SBATCH --time=72:00:00
 #SBATCH --partition=ncpu
 #SBATCH --mail-user=harry.booth@crick.ac.uk
 #SBATCH --mail-type=ALL
