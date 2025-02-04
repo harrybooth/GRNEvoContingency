@@ -323,6 +323,51 @@ function malt_fitness_absolute(conc,n_stripe::Int64,max_conc::Float64)
     return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc)
 end
 
+
+function malt_fitness_absolute(conc,n_stripe::Int64,max_conc::Float64)
+
+    Lt = length(conc)
+
+    N = 2*n_stripe + 1
+
+    id_segments = [Int(floor((k-1)*(Lt/N) + 1)) : Int(floor(k*Lt/N)) for k in 1:N]
+
+    high_sum = 0.
+    low_sum = 0.
+
+    for i in 1:N
+        if i % 2 == 0
+            high_sum += sum(conc[id_segments[i]])
+        else
+            low_sum += sum(conc[id_segments[i]])
+        end
+    end
+
+    return ((2/(N-1))*high_sum - (2/(N+1))*low_sum) / ((Lt/N)*max_conc)
+end
+
+function stripe_vary_centre_width(conc,max_conc::Float64,centre_p::Float64,width_p::Float64)
+
+    Lt = length(conc)
+
+    width = width_p*Lt
+    centre = centre_p*Lt
+
+    left_boundary = Int(floor(centre - 0.5*width))
+    right_boundary = Int(ceil(centre + 0.5*width))
+
+    width_pa = (right_boundary - left_boundary) / Lt
+
+    scale_factor = width/(Lt-width)
+
+    low_sum = scale_factor*(sum(conc[1:left_boundary-1]) + sum(conc[right_boundary+1:Lt]))
+    high_sum = sum(conc[left_boundary:right_boundary])
+
+
+    (1/(width_pa*Lt*max_conc))*(high_sum - low_sum)
+end
+
+
 function stripe_indicator(conc,min_stripe_width,lower_bound,upper_bound)
 
     low = findall(conc .< lower_bound)
