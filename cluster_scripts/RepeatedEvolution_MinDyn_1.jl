@@ -42,7 +42,9 @@ end
 
 @everywhere include(srcdirx("GRNEvoContingency.jl"))
 
-all_experiments = ["DeNovoStripe/AdditionalAnalysis/RE_MinimalInhibiting_NoConstraint"]
+all_experiments = ["DeNovoStripe/AdditionalAnalysis/RE_MinimalInhibiting_MultiMorphogen"]
+
+@everywhere multi_morph = true
 
 for exp_name in all_experiments
 
@@ -106,8 +108,13 @@ for exp_name in all_experiments
 
         sendto(workers(), first_stripe_networks=first_stripe_networks)
 
-        min_end_networks = pmap(n->find_minimal_network(vec(n)[1:10],grn_parameters,DefaultGRNSolver(),fitness_function),end_networks);
-        min_first_stripe_networks = pmap(n->find_minimal_network(vec(n)[1:10],grn_parameters,DefaultGRNSolver(),fitness_function),first_stripe_networks);
+        if multi_morph
+            min_end_networks = pmap(n->find_minimal_network(vec(n),grn_parameters,DefaultGRNSolver(),fitness_function),end_networks);
+            min_first_stripe_networks = pmap(n->find_minimal_network(vec(n),grn_parameters,DefaultGRNSolver(),fitness_function),first_stripe_networks);
+        else
+            min_end_networks = pmap(n->find_minimal_network(vec(n)[1:10],grn_parameters,DefaultGRNSolver(),fitness_function),end_networks);
+            min_first_stripe_networks = pmap(n->find_minimal_network(vec(n)[1:10],grn_parameters,DefaultGRNSolver(),fitness_function),first_stripe_networks);
+        end
 
         ########################################
 
