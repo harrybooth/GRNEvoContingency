@@ -42,7 +42,7 @@ end
 
 @everywhere include(srcdirx("GRNEvoContingency.jl"))
 
-all_experiments = ["DeNovoStripe/AdditionalAnalysis/RE_MinimalInhibiting_MultiMorphogen"]
+all_experiments = ["DeNovoStripe/AdditionalAnalysis/RE_Minimal_Inhibiting_LongIt"]
 
 @everywhere multi_morph = true
 
@@ -50,7 +50,7 @@ for exp_name in all_experiments
 
     @everywhere include(srcdirx("ExperimentSetups/" * $exp_name * ".jl"))
 
-    sim = pmap(worker-> SSWM_Evolution(start_network,grn_parameters,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_trials])
+    sim = pmap(worker-> SSWM_Evolution_SolverIt(start_network,grn_parameters,1e6,β,max_gen,tolerance,fitness_function,mutate_function),[worker for worker in 1:n_trials])
 
     n_traj = length(findall(x->all(x.converged),sim))
 

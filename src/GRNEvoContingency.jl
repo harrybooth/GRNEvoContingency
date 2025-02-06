@@ -275,6 +275,69 @@ function SSWM_Evolution(start_network::Matrix{Float64},grn_parameters::GRNParame
 
 end
 
+function SSWM_Evolution_SolverIt(start_network::Matrix{Float64},grn_parameters::GRNParameters,solver_it::Int64,β::Union{Float64,Tuple{Float64,Int64}},max_gen::Int64,tolerance::Float64,fitness_function,mutate_function)
+
+    p = (start_network,grn_parameters.degradation)
+    
+    grn = ODEProblem(gene_regulation_1d!,grn_parameters.g0,(0,Inf),p)
+
+    development = DESystemSolver(Tsit5(),(isoutofdomain=(u,p,t) -> any(x -> x < 0, u), reltol = 1e-6,abstol = 1e-8,callback = TerminateSteadyState(1e-8,1e-6),maxiters = solver_it, verbose = false, save_everystep = false))
+    
+    founder = Individual(grn,development)
+
+    founder_fitness = fitness_function(founder.phenotype)
+
+    population = Population(founder,founder_fitness,false)
+
+    gen = 0
+    wait_time = 1
+
+    converged = false
+
+    full_weights = false
+
+    evo_trace = EvolutionaryTrace([population.dominant_individual.genotype.p[1]],[population.dominant_individual.phenotype.t[end]],[population.fitness],[],[founder.phenotype.retcode],converged,full_weights,(myid(),gethostname()),[1],[1],[start_network],[population.dominant_individual.phenotype.t[end]],[],[],[])
+
+    while has_not_converged(population,tolerance) && gen < max_gen
+
+        mutant,m_choices,m_type,m_sizes,m_valid = create_mutant(population.dominant_individual,mutate_function,development)
+
+        if m_valid && SciMLBase.successful_retcode(mutant.phenotype.retcode)
+            strong_selection!(population,mutant,β,fitness_function)
+        else
+            population.has_fixed = false
+        end
+
+        push!(evo_trace.retcodes,mutant.phenotype.retcode)
+
+        if population.has_fixed
+            push!(evo_trace.traversed_networks,population.dominant_individual.genotype.p[1])
+            push!(evo_trace.fitness_trajectory,population.fitness)
+            push!(evo_trace.wait_times,wait_time)
+            push!(evo_trace.traversed_t2s,population.dominant_individual.phenotype.t[end])
+            if !isnothing(m_choices)
+                push!(evo_trace.mut_choices,m_choices)
+                push!(evo_trace.mut_type,m_type)
+                push!(evo_trace.mut_sizes,m_sizes)
+            end
+            wait_time = 1
+        else
+            wait_time += 1
+        end
+
+        gen += 1
+    end
+
+    if !has_not_converged(population,tolerance)
+        evo_trace.converged = true
+    else
+        push!(evo_trace.wait_times,wait_time)
+    end
+
+    return evo_trace
+
+end
+
 # Fitness functions
 
 function malt_fitness_relative(conc,n_stripe::Int64)
