@@ -39,6 +39,22 @@ function DefaultGRNParameters()
     GRNParameters(deg_rate_g .* ones(Ng),init_conc_g .* ones(Ng,Nc))
 end
 
+function NUGRNParameters(id_large::Vector{Int})
+    g_init = ones(Ng,Nc)
+
+    id_small = [i for i in 1:3 if i ∉ id_large]
+
+    for i in id_small
+        g_init[i,:] .= g_init[i,:] .* init_conc_g
+    end
+
+    for i in id_large
+        g_init[i,:] .= g_init[i,:] .* init_conc_g_large 
+    end
+
+    GRNParameters(deg_rate_g .* ones(Ng),g_init)
+end
+
 # Individual and populations
 
 struct Individual
