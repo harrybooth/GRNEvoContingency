@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=Rsmall_p
-#SBATCH --ntasks=250
+#SBATCH --ntasks=175
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
 #SBATCH --time=72:00:00
