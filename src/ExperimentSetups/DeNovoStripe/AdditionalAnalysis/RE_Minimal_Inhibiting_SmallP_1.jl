@@ -70,7 +70,7 @@ fitness_function = s -> fitness_evaluation(s,x->(stripe_indicator(x,min_width,lo
 
 tolerance = 0.9
 
-mut_prob = 0.01
+mut_prob = 0.025
 
 min_affinity = 1e-3
 

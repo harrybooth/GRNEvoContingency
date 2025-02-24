@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH --job-name=RepeatedEvolution_5
-#SBATCH --ntasks=150
+#SBATCH --job-name=Rsmall_p
+#SBATCH --ntasks=250
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=6G
 #SBATCH --time=72:00:00
